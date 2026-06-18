@@ -6,6 +6,45 @@ A local CLI staffing recommendation engine for Parity Partners. Produces ranked,
 
 Five-stage pipeline: **Ingest → Normalise → Index → Match → Explain**
 
+```
+                         ┌─────────────────────────────────────────────┐
+  demand-supply.xlsx ───►│  1. Ingest & Parse                           │
+  profiles/*.pdf  ──────►│     • Workbook reader (Pydantic models)      │
+  project_feedback/*.md ►│     • Docling PDF extraction (+ OCR)         │
+                         │     • Feedback parser (keyed by email)       │
+                         └───────────────────┬─────────────────────────┘
+                                             ▼
+                         ┌─────────────────────────────────────────────┐
+                         │  2. Normalise & Resolve                      │
+                         │     • Location canonicalisation              │
+                         │     • Dedup by email                         │
+                         │     • Confidence scoring + data-gap flags    │
+                         │     • PII detection/scrubbing (Presidio)     │
+                         └───────────────────┬─────────────────────────┘
+                                             ▼
+                         ┌─────────────────────────────────────────────┐
+                         │  3. Index (one-off / on refresh)             │
+                         │     • Embed skills/roles/profiles            │
+                         │     • Store vectors in Milvus Lite           │
+                         └───────────────────┬─────────────────────────┘
+                                             ▼
+  role (ID | free-text) ─►┌─────────────────────────────────────────────┐
+                         │  4. Match per role                           │
+                         │     a. Hard filters (location, availability) │
+                         │     b. Skill match: static map + vector sim  │
+                         │        (Milvus) + LLM judgment               │
+                         │     c. Score 6 dimensions                    │
+                         │     d. Rank + tiebreak                       │
+                         │     e. Gap analysis if needed                │
+                         └───────────────────┬─────────────────────────┘
+                                             ▼
+                         ┌─────────────────────────────────────────────┐
+                         │  5. Explain & Render (DSPy → OpenRouter)     │
+                         │     • NL explanations grounded in data       │
+                         │     • Text + JSON output, snapshot timestamp │
+                         └─────────────────────────────────────────────┘
+```
+
 - Deterministic scoring core (no LLM in the ranking logic)
 - LLM at the edges only: PDF extraction, semantic assist, explanation generation
 - Stateless per run — reads a snapshot, produces output, no mutable database
