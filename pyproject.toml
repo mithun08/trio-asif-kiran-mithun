@@ -53,3 +53,11 @@ addopts = "--cov=matcher --cov-report=term-missing"
 [tool.mypy]
 strict = true
 packages = ["matcher"]
+
+[[tool.mypy.overrides]]
+module = ["dspy.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["matcher.llm.modules"]
+disable_error_code = ["misc"]
