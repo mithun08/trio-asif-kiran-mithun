@@ -1,0 +1,18 @@
+# skill_adjacency.yaml — static skill synonym / adjacency map
+#
+# Format:
+#   canonical_skill:
+#     - adjacent_skill_1
+#     - adjacent_skill_2
+#
+# Example:
+#   python:
+#     - python3
+#   javascript:
+#     - js
+#     - ecmascript
+#   aws:
+#     - amazon web services
+#     - amazon-web-services
+
+adjacency: {}

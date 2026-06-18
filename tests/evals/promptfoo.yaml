@@ -1,0 +1,8 @@
+description: "Demand-Supply Matcher — Promptfoo eval suite"
+
+providers:
+  - id: openrouter:openai/gpt-4o
+    config:
+      temperature: 0
+
+tests: []

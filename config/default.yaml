@@ -1,0 +1,29 @@
+scoring:
+  weights:
+    skill_match: 0.35
+    feedback_quality: 0.25
+    availability: 0.15
+    adaptability: 0.15
+    supply_state: 0.05
+    performance_trend: 0.05
+
+  thresholds:
+    skill_exact_match: 1.0
+    skill_adjacent_match: 0.70
+    skill_vector_similarity: 0.65
+    hard_filter_availability_days: 30
+
+models:
+  extraction: "openai/gpt-4o-mini"
+  semantic_assist: "openai/gpt-4o-mini"
+  explanation: "openai/gpt-4o"
+  fallback: "anthropic/claude-3-haiku"
+
+llm:
+  temperature: 0
+  cache_dir: ".cache/dspy"
+  max_retries: 3
+
+embedding:
+  model: "text-embedding-3-small"
+  index_dir: ".cache/milvus"
