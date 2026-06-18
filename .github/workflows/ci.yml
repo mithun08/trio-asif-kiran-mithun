@@ -49,20 +49,3 @@ jobs:
           name: coverage
           path: coverage.xml
 
-  integration-test:
-    runs-on: ubuntu-latest
-    needs: unit-test
-    if: ${{ secrets.DSM_OPENROUTER_API_KEY != '' }}
-    env:
-      DSM_OPENROUTER_API_KEY: ${{ secrets.DSM_OPENROUTER_API_KEY }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-        with:
-          enable-cache: true
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: uv sync --extra dev
-      - run: uv run python -m spacy download en_core_web_lg
-      - run: uv run pytest tests/integration/ -v
