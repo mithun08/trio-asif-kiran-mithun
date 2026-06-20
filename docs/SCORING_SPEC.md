@@ -3,10 +3,12 @@
 
 | Field | Value |
 |---|---|
-| Version | 1.0 |
-| Date | 2026-06-15 |
+| Version | 1.1 |
+| Date | 2026-06-17 |
 | Status | Draft for review |
 | Companion | PRD (`PRD_refined.md`), Technical Design Document (`TECHNICAL_DESIGN.md`) |
+
+> **Changes in v1.1** (team guidance 2026-06-17): the headline output moves from a precise match **percentage** to **discrete signals + bands**. The weighted `overall` score is retained but demoted to an internal sort key; per-dimension **bands** (Strong / Partial / Gap) and a **signals-met** count are the primary, human-facing representation. Rationale: continuous percentages built partly on soft/LLM-derived inputs imply a precision they don't have and shuffle run-to-run; discrete signals are stable and explainable. Exact rank order is advisory (see §4).
 
 > **Purpose.** This document closes the FR-18–26 scoring gap: it defines the exact math that turns a (role, consultant) pair into per-dimension scores, a weighted overall score, and a confidence level. It is the authoritative reference for implementing the ranking engine.
 >
@@ -20,9 +22,10 @@
 (role, consultant)
    → 1. Hard filters        → eliminated? → routed to gap analysis (never silently dropped)
    → 2. Per-dimension score → six scores, each 0–100
-   → 3. Weighted aggregate  → overall 0–100
-   → 4. Confidence level    → High / Medium / Low
-   → 5. Explanation         → grounded NL (deterministic ranking, LLM explains)
+   → 3. Weighted aggregate  → overall 0–100 (internal sort key)
+   → 4. Bands + signals     → per-dimension Strong/Partial/Gap; "N of 6 strong"
+   → 5. Confidence level    → High / Medium / Low
+   → 6. Explanation         → grounded NL (deterministic ranking, LLM explains)
 ```
 
 Ranking, weighting, and tiebreaks are **deterministic Python**. The LLM is used only to *extract structured signals* from free text (feedback, profiles) and to *write* explanations — never to set a score or rank directly (see TDD §4.4).
@@ -160,14 +163,31 @@ Direction inferred (LLM/NLP) from feedback over time and beach-feedback trajecto
 
 ---
 
-# 4. Overall Score & Tiebreaks
+# 4. Overall Score, Bands & Tiebreaks
 
+## 4.1 Internal sort key (not the headline output)
 ```
 overall = Σ ( w_i * dimension_i ) / Σ w_i            # 0..100; Σw = 100 by default
 ```
 If a dimension is skipped (e.g. FR-37 no inferable skills), its weight is removed and the remainder renormalised.
 
+The `overall` value is used **only to order candidates**. It is **not** surfaced to the user as a precise match percentage — a `76` vs `74` gap is within the noise of soft/LLM-derived inputs and must not be presented as a meaningful distinction (decision 2026-06-17).
+
+## 4.2 Per-dimension bands (the human-facing representation)
+Each dimension's 0–100 score maps to a band for display (thresholds configurable):
+
+| Band | Condition (default) | Meaning |
+|---|---|---|
+| **Strong** | `≥ band_strong = 75` | Signal clearly met |
+| **Partial** | `≥ band_partial = 40` and `< 75` | Partially met / some risk |
+| **Gap** | `< 40` | Signal not met — a real trade-off |
+
+**Signals-met summary.** Each candidate carries a count of dimensions in the Strong band, e.g. *"5 of 6 strong; 1 gap (availability)"*. This enumerated summary — not the percentage — is the headline a human reads, in keeping with preset, discrete signal matching over runtime percentages.
+
+## 4.3 Tiebreaks & rank stability
 **Tiebreakers (FR-27), in order:** availability (sooner wins) → feedback confidence (more data wins) → supply state (beach > rolling off > new joiner). If still tied, list both at the same rank.
+
+Rank order is **advisory**: minor reshuffling (e.g. #1↔#3) between runs is acceptable, because the output is a recommendation list for human review, not a final decision. Stability is required at the level of **bands and signals**, not exact position.
 
 ---
 
@@ -198,6 +218,8 @@ In addition to Appendix A of the PRD:
 | Supply state | beach / rolloff / newjoiner | 100 / 70 / 40 |
 | Performance trend | improving / stable / declining | 100 / 70 / 30 |
 | Global | `neutral_baseline` (missing soft signals) | 50 |
+| Output | `band_strong` (Strong band floor) | 75 |
+| Output | `band_partial` (Partial band floor) | 40 |
 
 ---
 
@@ -222,21 +244,35 @@ In addition to Appendix A of the PRD:
 | Supply state (5%) | Rolling off | **70** |
 | Performance trend (5%) | Improving (cost −40%, weekly→daily deploys, mentoring) | **100** |
 
-**Overall**
+**Overall (internal sort key)**
 ```
 = 0.35·100 + 0.25·79.5 + 0.15·0 + 0.15·85 + 0.05·70 + 0.05·100
 = 35 + 19.875 + 0 + 12.75 + 3.5 + 5
-= 76.1 / 100
+≈ 76   (used only for ordering — NOT shown as a precise match %)
 ```
+
+**Headline representation (what the tool surfaces)**
+
+| Dimension | Score | Band |
+|---|---|---|
+| Skill | 100 | **Strong** |
+| Feedback | 79.5 | **Strong** |
+| Adaptability | 85 | **Strong** |
+| Supply state | 70 | Partial |
+| Performance trend | 100 | **Strong** |
+| Availability | 0 | **Gap** |
+
+**Signals summary:** *5 of 6 strong; 1 gap (availability).*
 **Confidence:** Medium (exactly 1 Parity project + verified skills). Plus **availability-uncertainty warning** (low-confidence roll-off, ~57 days past start, client pushing to extend).
 
-**Interpretation the tool would surface:** *Perfect skills and payments-domain fit, strong client pull — but realistically unavailable for the target start and the roll-off is unconfirmed. Strong candidate only if the start can slip or the extension falls through.* This is exactly the trade-off a human should weigh — the system ranks him on merit but makes the availability risk impossible to miss.
+**Interpretation the tool would surface:** *Perfect skills and payments-domain fit, strong client pull — but realistically unavailable for the target start and the roll-off is unconfirmed. Strong candidate only if the start can slip or the extension falls through.* This is exactly the trade-off a human should weigh — the system surfaces the strong signals and the one hard gap, and makes the availability risk impossible to miss, rather than burying it inside a single precise-looking number.
 
 ---
 
 # 8. Notes for PRD/TDD sync
 
-Applying this spec requires three edits to the PRD:
-1. **FR-13** — co-location is strictly local; relocation-open non-locals move to gap analysis.
-2. **FR-23** — remove the feedback trajectory modifier; trajectory is owned by the performance-trend dimension.
-3. **FR-18–26 "Missing Information" note** — resolved; replace with a pointer to this spec.
+Status of cross-document edits:
+1. **FR-13** (co-location strictly local; relocation-open non-locals → gap analysis) — **applied in PRD v4.0.**
+2. **FR-23** (trajectory owned solely by the performance-trend dimension; no separate feedback modifier) — **applied in PRD v4.0**, including removal of the stale ±10/−15% appendix parameters.
+3. **FR-18–26 "Missing Information" note** — **resolved**; PRD now points to this spec.
+4. **New in v1.1 — discrete-signal output model.** The shift from a precise match percentage to bands + signals-met (§4.2) requires matching PRD edits: FR-30 (bands/signals as the primary breakdown), FR-32 (advisory rank order), AC-2 and AC-9 (assert bands/signals, not exact ranks). Applied in **PRD v4.1**.

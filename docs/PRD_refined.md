@@ -3,14 +3,16 @@
 
 | Field | Value |
 |---|---|
-| Version | 4.0 (product PRD) |
-| Date | 2026-06-15 |
+| Version | 4.1 (product PRD) |
+| Date | 2026-06-17 |
 | Status | Draft for review |
 | Companion | Technical Design Document (architecture, NFRs, security implementation, AI/LLM design) |
 
 > **Scope of this document:** product context and **functional requirements** only. All technical design — architecture, technology stack, non-functional requirements, data storage/flow, security implementation, and AI/LLM engineering — lives in the companion **Technical Design Document (TDD)**.
 >
 > **Legend:** `> ⚠ Missing Information` flags gaps requiring stakeholder input.
+>
+> **Changes in v4.1** (team guidance 2026-06-17): output representation moves from a precise match percentage to **discrete signals + bands** (FR-30, new FR-55, AC-2, AC-9, and the band-threshold parameters). The weighted score is retained as an internal sort key only. See `SCORING_SPEC.md` §4.
 
 ---
 
@@ -74,8 +76,8 @@ Parity Partners assigns consultants to client engagements via a weekly forum, cu
 ## In Scope (v1)
 
 - Single-role matching via CLI, by Role ID or free-text role description.
-- Ranked shortlist with per-dimension score breakdown, gap analysis, and natural-language reasoning.
-- Configurable scoring weights and credit values (no code change required).
+- Ranked shortlist with per-dimension band breakdown, signals-met summary, gap analysis, and natural-language reasoning.
+- Configurable scoring weights, credit values, and band thresholds (no code change required).
 - Batch mode generating a shortlist for every open role in the demand sheet.
 - Ingestion of the demand-supply workbook (4 tabs), profile PDFs (template + free-form), and feedback Markdown files.
 
@@ -215,23 +217,24 @@ Markdown documents keyed by consultant email. Sections: project feedback (engage
 | FR-25 | The system shall assess consultant adaptability from: historical technology transitions, feedback mentioning learning speed, cross-domain experience, and upskilling evidence from beach activities. |
 | FR-26 | The system shall apply an availability score penalty based on roll-off confidence: 0% for high, 10% for medium, 30% for low. |
 | FR-27 | The system shall apply tiebreakers in order: availability (sooner wins) → feedback confidence (more data wins) → supply state (beach > rolling off > new joiner). If still tied, list both at the same rank. |
-| FR-28 | All scoring weights and credit values must be configurable without code changes. |
+| FR-28 | All scoring weights, credit values, and band thresholds must be configurable without code changes. |
 | FR-51 | The system shall validate at startup that scoring dimension weights sum to 100% (or normalise them) and reject/clamp out-of-range configuration values, reporting any correction. |
 
-> **Resolved.** The exact aggregation math for all six dimensions (skill aggregation, feedback hybrid scoring, availability decay, adaptability rubric, supply-state and performance-trend mappings), neutral baselines, the overall weighted formula, and a worked numeric example are specified in the companion **Scoring Specification** (`SCORING_SPEC.md`).
+> **Resolved.** The exact aggregation math for all six dimensions (skill aggregation, feedback hybrid scoring, availability decay, adaptability rubric, supply-state and performance-trend mappings), neutral baselines, banding, the internal weighted sort key, and a worked numeric example are specified in the companion **Scoring Specification** (`SCORING_SPEC.md`).
 
 ### Output & Explainability
 
 | ID | Requirement |
 |---|---|
 | FR-29 | The system shall return a ranked shortlist of up to N candidates per role (default 5, configurable up to 10). |
-| FR-30 | Each candidate in the shortlist shall include: overall score, per-dimension score breakdown, skills matched, skills missing or unverified, strengths, trade-offs, and a confidence level (High/Medium/Low). |
+| FR-30 | Each candidate in the shortlist shall include: per-dimension **band** (Strong / Partial / Gap) and a **signals-met summary** (e.g. "5 of 6 strong; 1 gap") as the primary breakdown, plus skills matched, skills missing or unverified, strengths, trade-offs, and a confidence level (High/Medium/Low). The numeric overall score is an internal sort key (see FR-55) and is not the headline figure. |
 | FR-31 | Confidence levels shall be assigned as: High = 2+ Parity Partners projects + internal feedback + verified skills; Medium = 1 Parity Partners project, or single feedback source, or some unverified skills; Low = new joiner, no Parity Partners feedback, or low-confidence profile extraction. |
 | FR-32 | The system shall generate a natural-language explanation for each recommendation, traceable to specific data points (skill evidence, feedback quotes, availability dates). |
 | FR-33 | The system shall explain why a candidate was not ranked higher when relevant (e.g., missing skill, unverified experience, availability delay). |
 | FR-34 | Every output shall include a snapshot timestamp indicating the data version used. |
 | FR-52 | The system shall support a machine-readable output format (e.g., JSON) in addition to human-readable text, to enable the v2 feedback loop and reproducibility checks. |
 | FR-54 | In batch mode, the system shall order role outputs by the role **Priority** column (High → Medium → Low) and shall flag, informationally, when a single consultant appears as a top-N candidate for more than one role (cross-role contention). Resolving contention (allocating the consultant to one role) is out of scope for v1. Priority does not otherwise affect per-role scoring or tiebreaks. |
+| FR-55 | The system shall present per-candidate fit primarily as **discrete signals and bands** (Strong / Partial / Gap per dimension, plus a signals-met count), not as a precise match percentage. The weighted overall score (Scoring Spec §4.1) is used only to order candidates and shall not be surfaced as a precise figure. Exact rank order is **advisory**: minor reshuffling (e.g. #1↔#3) between runs is acceptable, since the output is a recommendation list for human review. Stability is required at the level of bands and signals, not exact position. |
 
 ### Gap Analysis
 
@@ -290,14 +293,14 @@ Markdown documents keyed by consultant email. Sections: project feedback (engage
 Representative, testable criteria derived from the FRs and workflows. (Full eval suite is specified in the TDD.)
 
 - **AC-1 (FR-01/03):** Given a valid Role ID, the CLI returns a ranked shortlist; given the batch command, it returns one shortlist per open role.
-- **AC-2 (FR-29/30):** Each shortlist contains ≤ N candidates (default 5), each with overall score, six-dimension breakdown, skills matched/missing, strengths, trade-offs, and a High/Medium/Low confidence level.
+- **AC-2 (FR-29/30/55):** Each shortlist contains ≤ N candidates (default 5), each with a per-dimension band (Strong/Partial/Gap), a signals-met summary, skills matched/missing, strengths, trade-offs, and a High/Medium/Low confidence level. The numeric score is not presented as a precise match percentage.
 - **AC-3 (FR-32/33):** Every recommendation includes a NL explanation citing specific data points, and explains why lower-ranked candidates ranked below higher ones where relevant.
 - **AC-4 (FR-35):** For an unfillable role, output is never empty; it names the failing constraint, shows bench distribution, and lists nearest relaxed-constraint alternatives.
 - **AC-5 (FR-13/14/15):** Hard filters behave exactly per buffer rules; non-co-location roles apply no location filter.
 - **AC-6 (FR-10/43/48):** Low-confidence/scanned/failed extractions are flagged and never silently dropped; ingestion summary reports counts.
-- **AC-7 (FR-28/51):** Changing any weight/credit in config alters output with no code change; invalid weight sums are rejected or normalised with a reported correction.
+- **AC-7 (FR-28/51):** Changing any weight/credit/band threshold in config alters output with no code change; invalid weight sums are rejected or normalised with a reported correction.
 - **AC-8 (Success Metrics):** Single-role run < 5 s; batch run < 60 s on the reference dataset.
-- **AC-9 (FR-34/52):** Identical inputs + config produce equivalent ranked output (reproducibility approach defined in TDD); a machine-readable output is available.
+- **AC-9 (FR-34/52/55):** Identical inputs + config produce stable **signals and bands** for each candidate (reproducibility approach defined in TDD); exact rank order is advisory and minor reshuffling is acceptable; a machine-readable output is available.
 - **AC-10 (FR-44/45/53):** Ambiguous free-text prompts for confirmation; past start dates warn and proceed; malformed files produce a specific error, not a crash.
 
 ## Evaluation Expectations
@@ -324,7 +327,7 @@ Target eval pass rate: **70–85%** (100% indicates insufficient test coverage).
 | # | Risk | Impact | Mitigation |
 |---|---|---|---|
 | PR1 | Tool reinforces existing bias via biased feedback data | High | Treat feedback as one weighted signal; surface, don't auto-decide; keep human-in-the-loop; periodic fairness review |
-| PR2 | Users distrust or ignore recommendations | High | Strong explainability (FR-32/33); involve EMs in tuning weights; transparent gap analysis |
+| PR2 | Users distrust or ignore recommendations | High | Strong explainability (FR-32/33); discrete signals over opaque percentages (FR-55); involve EMs in tuning weights; transparent gap analysis |
 | PR3 | Stale / inconsistent source data drives bad recommendations | Medium | Snapshot timestamp (FR-34); stale-date warnings (FR-45); ingestion summary (FR-49) |
 | PR4 | Output not actionable for non-CLI leadership audience | Medium | Define shareable output artifact (see Personas gap) |
 
@@ -347,7 +350,7 @@ Target eval pass rate: **70–85%** (100% indicates insufficient test coverage).
 
 1. What is the quantified baseline for forum prep time and role/consultant volume?
 2. What output artifact do users need (terminal, Markdown/HTML report, JSON), and is the CLI usable for the primary persona?
-3. ~~Exact scoring formulas~~ — **Resolved** in `SCORING_SPEC.md` (skill aggregation, hybrid feedback/adaptability scoring, availability decay, level mappings, worked example).
+3. ~~Exact scoring formulas~~ — **Resolved** in `SCORING_SPEC.md` (skill aggregation, hybrid feedback/adaptability scoring, availability decay, level mappings, banding, worked example).
 4. How will the v1-unmeasurable "follow rate" metric be captured before v2?
 5. Which regulatory regime applies to processing this employee performance data, and what fairness governance is required? *(compliance decision; implementation in TDD)*
 
@@ -384,10 +387,12 @@ All parameters below must be configurable without code changes.
 | | Stable | 70 |
 | | Declining | 30 |
 | **Baselines** | Neutral baseline (missing soft signals) | 50 |
+| **Output bands** | `band_strong` (Strong band floor) | 75 |
+| | `band_partial` (Partial band floor) | 40 |
 | **Output** | Default shortlist size | 5 |
 | | Maximum shortlist size | 10 |
 
-> The feedback trajectory modifier was removed (see FR-23) to avoid double-counting; trajectory is scored by the Performance-trend dimension above. The full scoring-parameter set (skill credits, evidence/adjacent tiers, availability decay, adaptability points, keyword weights) is specified in `SCORING_SPEC.md` §6.
+> The feedback trajectory modifier was removed (see FR-23) to avoid double-counting; trajectory is scored by the Performance-trend dimension above. The full scoring-parameter set (skill credits, evidence/adjacent tiers, availability decay, adaptability points, keyword weights, band thresholds) is specified in `SCORING_SPEC.md` §6.
 
 ---
 

@@ -3,10 +3,12 @@
 
 | Field | Value |
 |---|---|
-| Version | 1.0 |
-| Date | 2026-06-15 |
+| Version | 1.1 |
+| Date | 2026-06-17 |
 | Status | Draft for review |
 | Companion | Product Requirements Document (PRD) — `PRD_refined.md` |
+
+> **Changes in v1.1** (per team review 2026-06-17): (1) tech stack reframed as a *toolbox* — use only what is genuinely needed, with a lean default path; (2) explicit embedding-model decision added (local `sentence-transformers`); (3) cost discipline made a first-class principle (ROI from day one; Slice-1 = zero LLM); (4) guardrails use small classifier/SLM models, not extra LLM calls, and grounding now covers extraction as well as explanation; (5) reproducibility target reframed around stable *signals/bands* rather than exact ranks.
 
 > **Scope of this document:** all technical design — architecture, technology stack, non-functional requirements, data model/flow/storage, security & privacy implementation, AI/LLM engineering, observability, and technical risks. Product context and functional requirements (FR-xx) live in the PRD; this document references FR IDs rather than restating them.
 >
@@ -76,8 +78,13 @@ The Demand-Supply Matcher is a **local Python CLI application** that calls hoste
 | LLM orchestration | **DSPy** | Prompt modules, structured outputs, prompt optimisation, response caching | FR-21, FR-32, FR-33, FR-37, FR-44 |
 | LLM access | **OpenRouter API** | Hosted model access (model-agnostic routing) | FR-21, FR-32, etc. |
 | PII / NLP | **Presidio + spaCy** | Detect and scrub PII before external LLM calls; NLP feature extraction | Security (§5) |
-| Vector store | **Milvus Lite** | Embedded vector storage & semantic retrieval for skill/role similarity | FR-21, FR-36 |
-| Evaluation | **Promptfoo + DeepEval** | LLM eval, regression testing, quality gates | Eval suite (§6) |
+| Embedding model | **sentence-transformers** (local, e.g. `all-MiniLM-L6-v2` / `bge-small`) | Generate skill/role/profile embeddings on-device — privacy-aligned (no text leaves the machine) | FR-21, FR-36 |
+| Vector store | **Milvus Lite** *(deferred)* | Embedded vector storage & semantic retrieval | FR-21, FR-36 |
+| Evaluation | **Promptfoo + DeepEval** *(one is sufficient to start)* | LLM eval, regression testing, quality gates | Eval suite (§6) |
+
+> **Toolbox principle (team guidance 2026-06-17).** The stack above is a *menu, not a mandate* — adopt each tool only when it earns its place. The lean default path is: static adjacency map (no vector store) → in-memory `numpy` cosine similarity at POC scale (~50 consultants) → a single eval tool → minimal LLM orchestration (Instructor or DSPy). Milvus Lite, the second eval tool, and DSPy's prompt-optimisation are **deferred** until the simpler path proves insufficient. This keeps cost and complexity proportional to the POC.
+
+> **Embedding generation (resolves prior gap).** The vector store was specified without naming what *produces* the vectors. Decision: generate embeddings locally with `sentence-transformers` so no profile/feedback text is sent off-device for the similarity step. Consultant vectors are precomputed at ingest; the role is embedded at query time; similarity is cosine. The resulting similarity feeds the deterministic skill scorer (FR-21 adjacent/semantic credit) — it does not set a score directly.
 
 > ⚠ Missing Information — **OpenRouter model selection.** Specify the model(s) per task (extraction vs. reasoning vs. explanation), default model, fallback routing, and per-task token limits. See §4.
 
@@ -92,14 +99,14 @@ The Demand-Supply Matcher is a **local Python CLI application** that calls hoste
 | NFR-01 | Single-role latency | < 5 s (see latency note below) |
 | NFR-02 | Batch latency (all open roles) | < 60 s |
 | NFR-03 | Data ingestion (50 profiles + feedback + XLSX), incl. extraction & embedding | < 10 minutes |
-| NFR-04 *(revised)* | **Reproducibility (practical).** Given a fixed input snapshot, pinned model, `temperature=0`, and fixed config, output shall be stable across runs. DSPy response caching is used to guarantee identical results on re-run; residual LLM variance is bounded and tolerated by the eval suite. | Stable rankings; explanations may vary in wording within eval tolerance |
+| NFR-04 *(revised)* | **Reproducibility (practical).** Given a fixed input snapshot, pinned model, `temperature=0`, and fixed config, the **signals and bands** that drive each recommendation shall be stable across runs. Exact rank order is advisory — minor reshuffling (e.g. #1↔#3) is acceptable, since the output is a recommendation list for human review, not a final decision. DSPy/response caching guarantees identical results on re-run; residual LLM variance is bounded and tolerated by the eval suite. | Stable signals/bands; exact ranks advisory; wording may vary within eval tolerance |
 | NFR-05 *(revised)* | **Deployment.** Runs as a local CLI on a developer laptop. Requires outbound network access to the OpenRouter API. No self-hosted server component in v1. | Laptop + network |
 | NFR-06 | Reliability / robustness — no unhandled crash on malformed input; degrade gracefully with reported errors (FR-53). Network/API failures retried with backoff, then surfaced. | — |
 | NFR-07 | Maintainability — pipeline stages independently unit-testable; config externalised from code. | — |
 | NFR-08 | Extensibility — new scoring dimensions, data sources, and LLM tasks addable without rewriting the core pipeline (supports v2–v5 roadmap). | — |
 | NFR-09 | Observability — each run emits a structured log: inputs used, data-quality flags, per-stage timings, token/cost usage, and config version. | — |
 | NFR-10 | Scalability headroom — targets defined for current volume; behaviour beyond the stated maximum must degrade predictably. | See volume note |
-| NFR-11 | Cost — LLM spend bounded per single run and per batch; embeddings cached/reused across runs. | See cost note (§4) |
+| NFR-11 | **Cost (ROI from day one).** LLM spend bounded per single run and per batch; embeddings cached/reused. Design so the deterministic path handles the bulk of candidates and the LLM is invoked only where unstructured input genuinely needs semantic reading. Slice-1 has **zero** LLM calls. | See cost note (§4) |
 
 > **Latency note (NFR-01).** Per-role LLM calls for explanation generation introduce network round-trips. To meet < 5 s: precompute embeddings at ingest, cache DSPy responses, and parallelise/batch per-candidate explanation calls. Validate against the reference dataset; revise target if unachievable.
 
@@ -129,15 +136,20 @@ The Demand-Supply Matcher is a **local Python CLI application** that calls hoste
 > ⚠ Missing Information — **Layer precedence & thresholds.** Define which layer wins on conflict, the similarity threshold for "adjacent", and whether LLM confirmation is mandatory or only for scores near the threshold.
 
 ## 4.4 Hallucination mitigation & guardrails
-- **Grounding:** explanations (FR-32) must cite specific source data points; the explanation module receives only retrieved/structured evidence, and is instructed to state "no data" rather than infer.
+- **Grounding (explanation):** explanations (FR-32) must cite specific source data points; the explanation module receives only retrieved/structured evidence, and is instructed to state "no data" rather than infer.
+- **Grounding (extraction) — extended in v1.1:** LLM-*extracted* signals (sentiment, trend direction, domain-depth, adaptability flags) feed the deterministic scores and therefore influence rank, so they are guardrailed too: each extracted claim must be traceable to spans in the source text; ungrounded extractions are flagged and not scored, rather than trusted. (This closes the gap where only explanations were grounded.)
 - **Separation of concerns:** the LLM never sets the numeric rank — it explains a ranking already computed deterministically, so a hallucinated explanation cannot change who is recommended.
+- **Cheap input/output filtering:** sanitisation layers before and after LLM calls use **small classifier / SLM models or rules**, not additional general-LLM calls — lower latency and cost. The Presidio PII scrub (§5.1) is the canonical pre-call filter.
 - **Validation:** LLM outputs are parsed into Pydantic models; parse failures trigger retry, then a flagged degradation (FR-43), never a silent guess.
-- **Eval guardrails:** DeepEval checks for faithfulness/groundedness of explanations against source evidence (§6).
+- **Eval guardrails:** DeepEval checks for faithfulness/groundedness of explanations *and extractions* against source evidence (§6).
 
 ## 4.5 Cost optimisation
-- Precompute and cache embeddings; reuse across runs (only re-embed changed inputs).
+- **ROI from day one.** Agentic/LLM spend is under active client scrutiny; the cheapest call is the one you don't make. Slice-1 uses no LLM at all; later slices add LLM only at the extraction/explanation edges.
+- Precompute and cache embeddings; reuse across runs (only re-embed changed inputs). Embeddings are generated locally (§2), so they incur no per-token API cost.
 - Cache DSPy responses keyed by input snapshot + prompt version.
 - Batch per-candidate explanation calls where the API permits.
+- Use small classifier/SLM models for guardrail filtering rather than general-LLM calls (§4.4).
+- **Token compression (later):** evaluate `Headroom` (token-compression library) *after* the eval suite exists, so any quality degradation from compression is measurable. Do not adopt before there's a baseline.
 - Emit per-run token and cost telemetry (NFR-09).
 
 > ⚠ Missing Information — **Cost ceiling.** Define max acceptable LLM spend per single run and per batch run, to drive model-tier and caching decisions.
@@ -185,12 +197,12 @@ The data handled is highly sensitive: consultant PII (names, emails, locations, 
 
 # 6. Evaluation & Quality Engineering
 
-Tooling: **Promptfoo** (prompt/scenario regression, CI gates) and **DeepEval** (LLM-output quality metrics — faithfulness, relevance, groundedness).
+Tooling: **DeepEval** (LLM-output quality metrics — faithfulness, relevance, groundedness) and, optionally, **Promptfoo** (prompt/scenario regression, CI gates). *One tool is sufficient to start* (toolbox principle, §2); DeepEval is the default given the groundedness focus.
 
 - The eval categories and 70–85% pass-rate target are defined in the PRD ("Evaluation Expectations").
-- DeepEval asserts explanation **groundedness** against supplied evidence (hallucination guardrail, §4.4).
-- Promptfoo runs deterministic scenario checks (exact/adjacent/negative matches, gap analysis, edge cases) as a regression gate in CI.
-- Reproducibility check: re-running the suite over a fixed snapshot yields stable rankings (NFR-04).
+- DeepEval asserts **groundedness** of both explanations and LLM-extracted signals against supplied evidence (hallucination guardrail, §4.4).
+- Scenario checks (exact/adjacent/negative matches, gap analysis, edge cases) run as a regression gate in CI.
+- Reproducibility check: re-running the suite over a fixed snapshot yields stable **signals and bands** (NFR-04); exact rank order is not asserted.
 
 > ⚠ Missing Information — **Golden dataset.** A labelled set of roles with expected shortlists/rankings is required; it does not yet exist. Without it the pass-rate target is unmeasurable. Define who curates it and its size.
 
