@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from matcher.config import ScoringConfig
+from matcher.config import ScoringConfig, ScoringWeights
 from matcher.models.consultant import Consultant
 from matcher.models.role import Role
 from matcher.models.score import ScoredCandidate
@@ -20,6 +20,7 @@ def match_role(
     role: Role,
     consultants: list[Consultant],
     adjacency_map: dict[str, list[str]],
+    weights: ScoringWeights,
     config: ScoringConfig,
     top_n: int = 5,
 ) -> tuple[list[ScoredCandidate], list[ScoredCandidate]]:
@@ -30,12 +31,12 @@ def match_role(
     scored: list[ScoredCandidate] = []
     for consultant in passing:
         dims = [
-            score_skill_match(consultant, role, adjacency_map, config),
-            score_feedback_quality(consultant, config),
-            score_availability(consultant, role, config),
-            score_adaptability(consultant, config),
-            score_supply_state(consultant, config),
-            score_performance_trend(consultant, config),
+            score_skill_match(consultant, role, adjacency_map, weights, config),
+            score_feedback_quality(consultant, weights, config),
+            score_availability(consultant, role, weights, config),
+            score_adaptability(consultant, weights, config),
+            score_supply_state(consultant, weights, config),
+            score_performance_trend(consultant, weights, config),
         ]
         total_weighted = sum(d.weight * d.raw_score for d in dims)
         total_weight = sum(d.weight for d in dims)

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from matcher.config import ScoringConfig
+from matcher.config import ScoringConfig, ScoringWeights
 from matcher.models.consultant import Consultant
 from matcher.scoring.dimensions import score_supply_state
 
 _CFG = ScoringConfig()
+_W = ScoringWeights()
 
 
 def _consultant(supply_state: str) -> Consultant:
@@ -12,7 +13,7 @@ def _consultant(supply_state: str) -> Consultant:
 
 
 def test_beach_scores_100() -> None:
-    result = score_supply_state(_consultant("beach"), _CFG)
+    result = score_supply_state(_consultant("beach"), _W, _CFG)
     assert result.raw_score == 100.0
 
 
@@ -27,10 +28,10 @@ def test_new_joiner_scores_40() -> None:
 
 
 def test_dimension_name() -> None:
-    result = score_supply_state(_consultant("beach"), _CFG)
+    result = score_supply_state(_consultant("beach"), _W, _CFG)
     assert result.name == "supply_state"
 
 
 def test_dimension_weight_is_0_05() -> None:
-    result = score_supply_state(_consultant("beach"), _CFG)
+    result = score_supply_state(_consultant("beach"), _W, _CFG)
     assert result.weight == 0.05

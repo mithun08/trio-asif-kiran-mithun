@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from matcher.config import ScoringConfig
+from matcher.config import ScoringConfig, ScoringWeights
 from matcher.models.consultant import Consultant, Skill
 from matcher.models.role import RequiredSkill, Role
 from matcher.scoring.dimensions import score_skill_match
 
 _CFG = ScoringConfig()
+_W = ScoringWeights()
 _ADJ: dict[str, list[str]] = {
     "kotlin": ["java", "scala"],
     "java": ["kotlin", "scala"],
@@ -29,42 +30,42 @@ def _consultant(*skills: Skill, supply_state: str = "beach") -> Consultant:
 def test_exact_match_no_proficiency_requirement() -> None:
     role = _role(RequiredSkill(name="Kotlin"))
     c = _consultant(Skill(name="Kotlin", proficiency=3))
-    result = score_skill_match(c, role, _ADJ, _CFG)
+    result = score_skill_match(c, role, _ADJ, _W, _CFG)
     assert result.raw_score == 100.0
 
 
 def test_exact_match_proficiency_met() -> None:
     role = _role(RequiredSkill(name="Kotlin", required_proficiency=3))
     c = _consultant(Skill(name="Kotlin", proficiency=5))
-    result = score_skill_match(c, role, _ADJ, _CFG)
+    result = score_skill_match(c, role, _ADJ, _W, _CFG)
     assert result.raw_score == 100.0
 
 
 def test_exact_match_proficiency_not_met() -> None:
     role = _role(RequiredSkill(name="Kotlin", required_proficiency=5))
     c = _consultant(Skill(name="Kotlin", proficiency=3))
-    result = score_skill_match(c, role, _ADJ, _CFG)
+    result = score_skill_match(c, role, _ADJ, _W, _CFG)
     assert result.raw_score == 70.0
 
 
 def test_adjacent_skill_scores_60() -> None:
     role = _role(RequiredSkill(name="Kotlin"))
     c = _consultant(Skill(name="Java", proficiency=4))
-    result = score_skill_match(c, role, _ADJ, _CFG)
+    result = score_skill_match(c, role, _ADJ, _W, _CFG)
     assert result.raw_score == 60.0
 
 
 def test_no_match_scores_0() -> None:
     role = _role(RequiredSkill(name="Rust"))
     c = _consultant(Skill(name="Python", proficiency=4))
-    result = score_skill_match(c, role, _ADJ, _CFG)
+    result = score_skill_match(c, role, _ADJ, _W, _CFG)
     assert result.raw_score == 0.0
 
 
 def test_case_insensitive_exact_match() -> None:
     role = _role(RequiredSkill(name="kotlin"))
     c = _consultant(Skill(name="Kotlin", proficiency=3))
-    result = score_skill_match(c, role, _ADJ, _CFG)
+    result = score_skill_match(c, role, _ADJ, _W, _CFG)
     assert result.raw_score == 100.0
 
 
@@ -74,7 +75,7 @@ def test_nice_to_have_adds_bonus() -> None:
         RequiredSkill(name="Python", mandatory=False),
     )
     c = _consultant(Skill(name="Python", proficiency=3))
-    result = score_skill_match(c, role, _ADJ, _CFG)
+    result = score_skill_match(c, role, _ADJ, _W, _CFG)
     assert result.raw_score == 0.0 + _CFG.nth_bonus_per
 
 
@@ -85,7 +86,7 @@ def test_nice_to_have_bonus_capped() -> None:
         Skill(name=f"skill{i}", proficiency=3) for i in range(10)
     ]
     c = _consultant(*skills)
-    result = score_skill_match(c, role, _ADJ, _CFG)
+    result = score_skill_match(c, role, _ADJ, _W, _CFG)
     assert result.raw_score == min(100.0 + _CFG.nth_bonus_cap, 100.0)
 
 
@@ -95,19 +96,19 @@ def test_nice_to_have_absence_no_penalty() -> None:
         RequiredSkill(name="Python", mandatory=False),
     )
     c = _consultant(Skill(name="Kotlin", proficiency=3))
-    result = score_skill_match(c, role, _ADJ, _CFG)
+    result = score_skill_match(c, role, _ADJ, _W, _CFG)
     assert result.raw_score == 100.0
 
 
 def test_new_joiner_fallback_credit() -> None:
     role = _role(RequiredSkill(name="Rust"))
     c = _consultant(Skill(name="Python", proficiency=3), supply_state="new_joiner")
-    result = score_skill_match(c, role, _ADJ, _CFG)
+    result = score_skill_match(c, role, _ADJ, _W, _CFG)
     assert result.raw_score == _CFG.c_newjoiner
 
 
 def test_mean_over_multiple_required_skills() -> None:
     role = _role(RequiredSkill(name="Kotlin"), RequiredSkill(name="Rust"))
     c = _consultant(Skill(name="Kotlin", proficiency=3))
-    result = score_skill_match(c, role, _ADJ, _CFG)
+    result = score_skill_match(c, role, _ADJ, _W, _CFG)
     assert result.raw_score == (100.0 + 0.0) / 2

@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from datetime import date
 
-from matcher.config import ScoringConfig
+from matcher.config import ScoringConfig, ScoringWeights
 from matcher.models.consultant import Consultant
 from matcher.models.role import Role
 from matcher.scoring.dimensions import score_availability
 
 _CFG = ScoringConfig()
+_W = ScoringWeights()
 
 
 def _role(start: date | None = date(2026, 7, 1)) -> Role:
@@ -30,7 +31,7 @@ def _consultant(
 
 def test_beach_available_from_none_scores_100() -> None:
     c = _consultant(supply_state="beach")
-    result = score_availability(c, _role(), _CFG)
+    result = score_availability(c, _role(), _W, _CFG)
     assert result.raw_score == 100.0
 
 
@@ -91,5 +92,5 @@ def test_medium_confidence_applies_10_pct_penalty() -> None:
 
 def test_dimension_weight_is_0_15() -> None:
     c = _consultant(supply_state="beach")
-    result = score_availability(c, _role(), _CFG)
+    result = score_availability(c, _role(), _W, _CFG)
     assert result.weight == 0.15

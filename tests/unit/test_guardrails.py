@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from datetime import date
 
-from matcher.config import ScoringConfig
+from matcher.config import ScoringConfig, ScoringWeights
 from matcher.models.consultant import Consultant, Skill
 from matcher.models.role import RequiredSkill, Role
 from matcher.pipeline.match import match_role
 
 _CFG = ScoringConfig()
+_W = ScoringWeights()
 _ADJ: dict[str, list[str]] = {}
 
 
@@ -35,7 +36,7 @@ def _consultant(email: str, location: str = "Bengaluru", supply_state: str = "be
 def test_filtered_consultant_absent_from_ranked() -> None:
     local = _consultant("local@x.com", location="Bengaluru")
     non_local = _consultant("nonlocal@x.com", location="Mumbai")
-    ranked, _ = match_role(_role(co_located=True), [local, non_local], _ADJ, _CFG)
+    ranked, _ = match_role(_role(co_located=True), [local, non_local], _ADJ, _W, _CFG)
     ranked_emails = {c.consultant_email for c in ranked}
     assert "nonlocal@x.com" not in ranked_emails
 
@@ -43,14 +44,14 @@ def test_filtered_consultant_absent_from_ranked() -> None:
 def test_filtered_consultant_present_in_gap_list() -> None:
     local = _consultant("local@x.com", location="Bengaluru")
     non_local = _consultant("nonlocal@x.com", location="Mumbai")
-    _, gaps = match_role(_role(co_located=True), [local, non_local], _ADJ, _CFG)
+    _, gaps = match_role(_role(co_located=True), [local, non_local], _ADJ, _W, _CFG)
     gap_emails = {c.consultant_email for c in gaps}
     assert "nonlocal@x.com" in gap_emails
 
 
 def test_all_dimension_scores_in_range() -> None:
     consultants = [_consultant("a@x.com"), _consultant("b@x.com")]
-    ranked, _ = match_role(_role(co_located=False), consultants, _ADJ, _CFG)
+    ranked, _ = match_role(_role(co_located=False), consultants, _ADJ, _W, _CFG)
     for candidate in ranked:
         for dim in candidate.dimensions:
             assert 0.0 <= dim.raw_score <= 100.0, f"{dim.name} score {dim.raw_score} out of range"
@@ -59,14 +60,14 @@ def test_all_dimension_scores_in_range() -> None:
 def test_gap_candidates_have_rank_minus_one() -> None:
     local = _consultant("local@x.com", location="Bengaluru")
     non_local = _consultant("nonlocal@x.com", location="Mumbai")
-    _, gaps = match_role(_role(co_located=True), [local, non_local], _ADJ, _CFG)
+    _, gaps = match_role(_role(co_located=True), [local, non_local], _ADJ, _W, _CFG)
     assert all(c.rank == -1 for c in gaps)
 
 
 def test_gap_candidates_total_score_is_zero() -> None:
     local = _consultant("local@x.com", location="Bengaluru")
     non_local = _consultant("nonlocal@x.com", location="Mumbai")
-    _, gaps = match_role(_role(co_located=True), [local, non_local], _ADJ, _CFG)
+    _, gaps = match_role(_role(co_located=True), [local, non_local], _ADJ, _W, _CFG)
     assert all(c.total_score == 0.0 for c in gaps)
 
 

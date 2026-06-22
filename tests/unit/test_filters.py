@@ -71,6 +71,15 @@ def test_rolling_off_medium_within_buffer_passes() -> None:
     assert len(result) == 1
 
 
+def test_rolling_off_medium_adds_date_uncertain_warning() -> None:
+    role = _role(start=date(2026, 7, 1))
+    c = _consultant(
+        supply_state="rolling_off", available_from=date(2026, 7, 3), rolloff_confidence="medium"
+    )
+    result = apply_hard_filters([c], role)
+    assert "date uncertain" in result[0].data_gaps
+
+
 def test_rolling_off_low_always_passes() -> None:
     role = _role(start=date(2026, 7, 1))
     c = _consultant(

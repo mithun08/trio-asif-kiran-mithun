@@ -1,16 +1,9 @@
 from __future__ import annotations
 
-from matcher.config import ScoringConfig
+from matcher.config import ScoringConfig, ScoringWeights
 from matcher.models.consultant import Consultant
 from matcher.models.role import RequiredSkill, Role
 from matcher.models.score import DimensionScore
-
-_W_SKILL = 0.35
-_W_FEEDBACK = 0.25
-_W_AVAIL = 0.15
-_W_ADAPT = 0.15
-_W_SUPPLY = 0.05
-_W_TREND = 0.05
 
 
 def _best_credit(
@@ -38,6 +31,7 @@ def score_skill_match(
     consultant: Consultant,
     role: Role,
     adjacency_map: dict[str, list[str]],
+    weights: ScoringWeights,
     config: ScoringConfig,
 ) -> DimensionScore:
     mandatory = [rs for rs in role.required_skills if rs.mandatory]
@@ -56,11 +50,12 @@ def score_skill_match(
     raw = min(100.0, required_mean + skill_bonus)
 
     evidence = [f"mandatory mean={required_mean:.1f}", f"bonus={skill_bonus:.1f}"]
+    weight = weights.skill_match
     return DimensionScore(
         name="skill_match",
         raw_score=round(raw, 2),
-        weight=_W_SKILL,
-        weighted_score=round(raw * _W_SKILL, 4),
+        weight=weight,
+        weighted_score=round(raw * weight, 4),
         evidence=evidence,
     )
 
@@ -68,14 +63,16 @@ def score_skill_match(
 def score_availability(
     consultant: Consultant,
     role: Role,
+    weights: ScoringWeights,
     config: ScoringConfig,
 ) -> DimensionScore:
     if role.start_date is None:
+        weight = weights.availability
         return DimensionScore(
             name="availability",
             raw_score=config.neutral_baseline,
-            weight=_W_AVAIL,
-            weighted_score=round(config.neutral_baseline * _W_AVAIL, 4),
+            weight=weight,
+            weighted_score=round(config.neutral_baseline * weight, 4),
             evidence=["no start date"],
         )
 
@@ -87,59 +84,64 @@ def score_availability(
     raw = round(base_avail * (1.0 - penalty), 2)
 
     evidence = [f"days_late={days_late}", f"base={base_avail:.1f}", f"penalty={penalty}"]
+    weight = weights.availability
     return DimensionScore(
         name="availability",
         raw_score=raw,
-        weight=_W_AVAIL,
-        weighted_score=round(raw * _W_AVAIL, 4),
+        weight=weight,
+        weighted_score=round(raw * weight, 4),
         evidence=evidence,
     )
 
 
-def score_supply_state(consultant: Consultant, config: ScoringConfig) -> DimensionScore:
+def score_supply_state(consultant: Consultant, weights: ScoringWeights, config: ScoringConfig) -> DimensionScore:
     score_map = {
         "beach": config.supply_beach,
         "rolling_off": config.supply_rolloff,
         "new_joiner": config.supply_newjoiner,
     }
     raw = score_map[consultant.supply_state]
+    weight = weights.supply_state
     return DimensionScore(
         name="supply_state",
         raw_score=raw,
-        weight=_W_SUPPLY,
-        weighted_score=round(raw * _W_SUPPLY, 4),
+        weight=weight,
+        weighted_score=round(raw * weight, 4),
         evidence=[consultant.supply_state],
     )
 
 
-def score_feedback_quality(consultant: Consultant, config: ScoringConfig) -> DimensionScore:
+def score_feedback_quality(consultant: Consultant, weights: ScoringWeights, config: ScoringConfig) -> DimensionScore:
     raw = config.neutral_baseline
+    weight = weights.feedback_quality
     return DimensionScore(
         name="feedback_quality",
         raw_score=raw,
-        weight=_W_FEEDBACK,
-        weighted_score=round(raw * _W_FEEDBACK, 4),
+        weight=weight,
+        weighted_score=round(raw * weight, 4),
         evidence=["no data"],
     )
 
 
-def score_adaptability(consultant: Consultant, config: ScoringConfig) -> DimensionScore:
+def score_adaptability(consultant: Consultant, weights: ScoringWeights, config: ScoringConfig) -> DimensionScore:
     raw = config.neutral_baseline
+    weight = weights.adaptability
     return DimensionScore(
         name="adaptability",
         raw_score=raw,
-        weight=_W_ADAPT,
-        weighted_score=round(raw * _W_ADAPT, 4),
+        weight=weight,
+        weighted_score=round(raw * weight, 4),
         evidence=["no data"],
     )
 
 
-def score_performance_trend(consultant: Consultant, config: ScoringConfig) -> DimensionScore:
+def score_performance_trend(consultant: Consultant, weights: ScoringWeights, config: ScoringConfig) -> DimensionScore:
     raw = config.neutral_baseline
+    weight = weights.performance_trend
     return DimensionScore(
         name="performance_trend",
         raw_score=raw,
-        weight=_W_TREND,
-        weighted_score=round(raw * _W_TREND, 4),
+        weight=weight,
+        weighted_score=round(raw * weight, 4),
         evidence=["no data"],
     )

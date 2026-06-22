@@ -24,6 +24,8 @@ def _check_availability(consultant: Consultant, role: Role) -> tuple[bool, str |
     days_late = max(0, (consultant.available_from - role.start_date).days)
 
     if consultant.supply_state == "rolling_off":
+        if consultant.rolloff_confidence == "medium" and days_late <= _ROLLOFF_BUFFER:
+            return True, "date uncertain"
         return days_late <= _ROLLOFF_BUFFER, None
 
     if consultant.supply_state == "new_joiner":
