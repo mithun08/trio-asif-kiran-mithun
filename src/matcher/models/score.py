@@ -19,3 +19,4 @@ class ScoredCandidate(BaseModel):
     dimensions: list[DimensionScore] = Field(default_factory=list)
     explanation: str = ""
     supply_gap_flags: list[str] = Field(default_factory=list)
+    data_confidence: float = Field(default=1.0, ge=0.0, le=1.0)

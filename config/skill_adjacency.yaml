@@ -4,15 +4,15 @@
 #   canonical_skill:
 #     - adjacent_skill_1
 #     - adjacent_skill_2
-#
-# Example:
-#   python:
-#     - python3
-#   javascript:
-#     - js
-#     - ecmascript
-#   aws:
-#     - amazon web services
-#     - amazon-web-services
 
-adjacency: {}
+adjacency:
+  python: [python3, django, flask, fastapi]
+  kotlin: [java, scala]
+  java: [kotlin, scala, spring boot]
+  aws: [gcp, azure, cloud]
+  kubernetes: [k8s, docker, openshift]
+  terraform: [pulumi, ansible]
+  react: [vue, angular, javascript, typescript]
+  postgresql: [mysql, sqlite, sql]
+  kafka: [rabbitmq, activemq, sqs]
+  spring boot: [spring, java ee, quarkus]

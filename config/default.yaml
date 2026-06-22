@@ -13,6 +13,26 @@ scoring:
     skill_vector_similarity: 0.65
     hard_filter_availability_days: 30
 
+  config:
+    band_strong: 75
+    band_partial: 40
+    c_exact: 100
+    c_prof: 70
+    c_adjacent: 60
+    c_newjoiner: 40
+    nth_bonus_per: 5
+    nth_bonus_cap: 10
+    avail_horizon_days: 30
+    rolloff_buffer: 5
+    new_joiner_buffer: 7
+    rolloff_penalty_high: 0.0
+    rolloff_penalty_medium: 0.10
+    rolloff_penalty_low: 0.30
+    supply_beach: 100
+    supply_rolloff: 70
+    supply_newjoiner: 40
+    neutral_baseline: 50
+
 models:
   extraction: "openai/gpt-4o-mini"
   semantic_assist: "openai/gpt-4o-mini"

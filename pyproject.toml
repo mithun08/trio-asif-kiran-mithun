@@ -59,5 +59,9 @@ module = ["dspy.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
+module = ["openpyxl.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 module = ["matcher.llm.modules"]
 disable_error_code = ["misc"]

@@ -33,7 +33,7 @@ Read directly from `data/demand-supply.xlsx`. Row 1 is a title; Row 2 is headers
 | `Key Skills` | `Consultant.skills` (comma-separated, no proficiency in workbook) |
 | `Location` | `Consultant.location` |
 | `Notes` | `Consultant.raw_profile_text` |
-| `Chennai-open`, `Days on Beach`, `#` | ignored in Slice 1 |
+| `Days on Beach`, `#` | ignored in Slice 1 |
 
 `available_from` = None (available immediately); scored as days_late ≤ 0 → base_avail = 100.
 
@@ -43,7 +43,7 @@ Read directly from `data/demand-supply.xlsx`. Row 1 is a title; Row 2 is headers
 | `Name`, `Email`, `Grade`, `Key Skills`, `Location`, `Notes` | same as Beach |
 | `Roll-off Date` | `Consultant.available_from` |
 | `Confidence` | `Consultant.rolloff_confidence` (`"low"` / `"high"`) |
-| `Current Client`, `Chennai-open`, `#` | ignored in Slice 1 |
+| `Current Client`, `#` | ignored in Slice 1 |
 
 **Sheet: New Joiners** — supply_state = `"new_joiner"` implicit from tab
 | Column | Maps to |
@@ -51,7 +51,7 @@ Read directly from `data/demand-supply.xlsx`. Row 1 is a title; Row 2 is headers
 | `Name`, `Email`, `Grade`, `Location`, `Notes` | same as Beach |
 | `Key Skills (from CV)` | `Consultant.skills` (comma-separated) |
 | `Join Date` | `Consultant.available_from` |
-| `Chennai-open`, `#` | ignored in Slice 1 |
+| `#` | ignored in Slice 1 |
 
 ---
 
@@ -284,7 +284,7 @@ Tests per PLAN.md (verified against SCORING_SPEC.md §2):
 - Rolling-off high/medium: pass if `days_late ≤ 5`, fail beyond
 - New joiner: pass if `days_late ≤ 7`
 - Low-confidence rolloff: **always passes** (FR-16); `data_gaps` gets an "availability uncertain" warning
-- Co-located role: strictly local only; a non-local consultant with `Chennai-open="Yes"` does NOT pass
+- Co-located role: strictly local only; non-local consultants do not pass
 - Non-co-located: all consultants pass location filter
 
 **Implement:** `apply_hard_filters(consultants, role) -> list[Consultant]` in `src/matcher/scoring/filters.py`.
