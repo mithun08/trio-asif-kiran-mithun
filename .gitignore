@@ -32,6 +32,9 @@ data/*
 *.swp
 *.swo
 
+# macOS
+.DS_Store
+
 # mise local overrides
 .mise.local.toml
 
