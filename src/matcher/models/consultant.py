@@ -5,6 +5,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from matcher.models.signals import AdaptabilitySignals, FeedbackSignal
+
 
 class Skill(BaseModel):
     name: str
@@ -24,3 +26,8 @@ class Consultant(BaseModel):
     data_gaps: list[str] = Field(default_factory=list)
     supply_state: Literal["beach", "rolling_off", "new_joiner"] = "beach"
     rolloff_confidence: Literal["high", "medium", "low"] = "high"
+    feedback_text: dict[str, str] = Field(default_factory=dict)
+    feedback_signals: dict[str, FeedbackSignal] = Field(default_factory=dict)
+    adaptability_signals: AdaptabilitySignals | None = None
+    performance_trend: Literal["improving", "stable", "declining", "unknown"] = "unknown"
+    pii_token_map: dict[str, str] = Field(default_factory=dict)
