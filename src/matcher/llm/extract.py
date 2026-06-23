@@ -77,9 +77,7 @@ def _apply_evidence_floor(
 
     new_confidence = consultant.data_confidence * 0.7
     new_gaps = [*consultant.data_gaps, flag_name]
-    return consultant.model_copy(
-        update={"data_confidence": new_confidence, "data_gaps": new_gaps}
-    )
+    return consultant.model_copy(update={"data_confidence": new_confidence, "data_gaps": new_gaps})
 
 
 def extract_profile(consultant: Consultant, config: ScoringConfig) -> Consultant:
@@ -159,9 +157,7 @@ def _merge_skills(existing: list[Skill], extracted: list[dict[str, Any]]) -> lis
     return list(existing_by_name.values())
 
 
-def extract_feedback(
-    consultant: Consultant, source: str, config: ScoringConfig
-) -> Consultant:
+def extract_feedback(consultant: Consultant, source: str, config: ScoringConfig) -> Consultant:
     feedback_text = consultant.feedback_text.get(source, "")
     if not feedback_text:
         return consultant
@@ -241,9 +237,7 @@ def extract_adaptability(
     return _apply_evidence_floor(updated, grounded_spans, config, "low_evidence_adaptability")
 
 
-def extract_trend(
-    consultant: Consultant, combined_text: str, config: ScoringConfig
-) -> Consultant:
+def extract_trend(consultant: Consultant, combined_text: str, config: ScoringConfig) -> Consultant:
     predictor = dspy.Predict(PerformanceTrendExtraction)
     result = predictor(combined_text=combined_text)
 
@@ -260,7 +254,5 @@ def extract_trend(
     if any_dropped:
         data_gaps.append("ungrounded_trend")
 
-    updated = consultant.model_copy(
-        update={"performance_trend": trend, "data_gaps": data_gaps}
-    )
+    updated = consultant.model_copy(update={"performance_trend": trend, "data_gaps": data_gaps})
     return _apply_evidence_floor(updated, grounded_spans, config, "low_evidence_trend")

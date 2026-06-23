@@ -93,6 +93,7 @@ def test_feedback_weights_bad_sum_rejected() -> None:
 
 def test_yaml_loads_new_feedback_fields() -> None:
     from pathlib import Path
+
     config = AppConfig.from_yaml(Path("config/default.yaml"))
     assert config.scoring_config.feedback_sent_pos == 80.0
     assert config.scoring_config.adapt_pts_transitions == 15.0

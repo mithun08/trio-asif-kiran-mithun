@@ -131,9 +131,7 @@ class ScoringConfig(BaseModel):
     @model_validator(mode="after")
     def _check_feedback_weights(self) -> ScoringConfig:
         total = (
-            self.feedback_weight_project
-            + self.feedback_weight_client
-            + self.feedback_weight_beach
+            self.feedback_weight_project + self.feedback_weight_client + self.feedback_weight_beach
         )
         if abs(total - 1.0) > 1e-6:
             raise ValueError(f"feedback_weight_* must sum to 1.0, got {total:.6f}")

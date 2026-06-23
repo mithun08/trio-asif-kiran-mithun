@@ -10,9 +10,7 @@ from matcher.llm.extract import (
 from matcher.models.consultant import Consultant
 
 
-def extract_signals(
-    consultants: list[Consultant], config: ScoringConfig
-) -> list[Consultant]:
+def extract_signals(consultants: list[Consultant], config: ScoringConfig) -> list[Consultant]:
     result: list[Consultant] = []
 
     for consultant in consultants:

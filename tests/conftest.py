@@ -56,8 +56,7 @@ def consultant_with_pii_in_text() -> Consultant:
         ),
         feedback_text={
             "client": (
-                "Meridian Pay: Alice Smith is exceptional."
-                " Keep alice.smith@paritypartners.example."
+                "Meridian Pay: Alice Smith is exceptional. Keep alice.smith@paritypartners.example."
             ),
         },
     )

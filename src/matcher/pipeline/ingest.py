@@ -196,9 +196,7 @@ def ingest_consultants(
         logging.getLogger(__name__).warning("profiles_dir not found: %s", profiles_dir)
         return workbook_consultants
 
-    consultant_by_name: dict[str, Consultant] = {
-        c.name.casefold(): c for c in workbook_consultants
-    }
+    consultant_by_name: dict[str, Consultant] = {c.name.casefold(): c for c in workbook_consultants}
     matched_emails: set[str] = set()
 
     updated: dict[str, Consultant] = {c.email.casefold(): c for c in workbook_consultants}
@@ -253,18 +251,14 @@ def _parse_feedback_sections(content: str) -> dict[str, str]:
     return sections
 
 
-def ingest_feedback(
-    feedback_dir: Path, consultants: list[Consultant]
-) -> list[Consultant]:
+def ingest_feedback(feedback_dir: Path, consultants: list[Consultant]) -> list[Consultant]:
     import logging
 
     if not feedback_dir.exists():
         logging.getLogger(__name__).warning("feedback_dir not found: %s", feedback_dir)
         return consultants
 
-    consultant_by_email: dict[str, Consultant] = {
-        c.email.casefold(): c for c in consultants
-    }
+    consultant_by_email: dict[str, Consultant] = {c.email.casefold(): c for c in consultants}
     updated: dict[str, Consultant] = dict(consultant_by_email)
 
     for md_path in sorted(feedback_dir.glob("*.md")):

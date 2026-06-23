@@ -33,6 +33,7 @@ def test_profile_enriches_raw_text(tmp_path: Path, monkeypatch: pytest.MonkeyPat
                 @staticmethod
                 def export_to_text() -> str:
                     return "Skills: Python (expert). Location: London."
+
         return _FakeDoc()
 
     monkeypatch.setattr("docling.document_converter.DocumentConverter.convert", _mock_convert)

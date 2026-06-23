@@ -7,9 +7,7 @@ from matcher.config import AppConfig
 
 def configure_lm(config: AppConfig) -> None:
     if not config.openrouter_api_key:
-        raise RuntimeError(
-            "DSM_OPENROUTER_API_KEY is not set. Use --no-llm for offline runs."
-        )
+        raise RuntimeError("DSM_OPENROUTER_API_KEY is not set. Use --no-llm for offline runs.")
 
     lm = dspy.LM(
         model=config.model_extraction,
