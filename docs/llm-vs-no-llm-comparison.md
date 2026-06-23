@@ -289,7 +289,70 @@ The PII gate test (`tests/unit/test_pii_gate.py`) is a release blocker — it as
 
 ---
 
-## 11. Summary
+## 11. Confidence Levels and How to Verify
+
+### What is verified vs estimated
+
+| Section | Confidence | Basis |
+|---|---|---|
+| Weight allocation (§2) | ✓ Verified | Read directly from `config.py` and `dimensions.py` |
+| Aarav Krishnan worked example (§3) | ✓ Verified | Computed from `data/project_feedback/Aarav - Backend.md` using actual formula |
+| `--no-llm` determinism (§4) | ✓ Verified | Back-to-back runs diffed — output byte-identical |
+| `--no-llm` wall times ~90–120s (§5) | ✓ Verified | Measured from actual runs of ROLE-01, ROLE-02, ROLE-04 |
+| ROLE-01/02/04 rankings (§8) | ✓ Verified | Actual CLI output |
+| PII gate behaviour (§9) | ✓ Verified | Code-traced through `scrubber.py` and `normalise.py` |
+| LLM cold run call count ~150 (§5) | ~ Estimated | Counted from `extract_signals` logic × workbook rows; not measured |
+| LLM cold run wall time ~315–570s (§5) | ~ Estimated | Call count × gpt-4o-mini P50 latency from public benchmarks |
+| Cost ~$0.02 per cold run (§6) | ~ Estimated | Token count estimates × 2026 OpenRouter pricing |
+| Warm run ≈ `--no-llm` speed (§5) | ~ Estimated | Logical claim based on DSPy cache design; not demonstrated |
+| LLM-on ranking predictions (§8) | ~ Estimated | Inferred from feedback text content; no real LLM run |
+
+### How to convert estimates to verified
+
+**Prerequisite:** add `DSM_OPENROUTER_API_KEY=sk-or-...` to `.env`.
+
+#### Verify call count, wall time, and cost (cold run)
+
+```bash
+# Clear cache first to force a cold run
+rm -rf .cache/dspy/
+
+# Timed cold run — captures wall time
+time uv run dsm match ROLE-01 --top 5
+
+# Count cache entries written (= number of LLM calls made)
+find .cache/dspy/ -type f | wc -l
+
+# Check actual token spend on OpenRouter dashboard after the run
+```
+
+#### Verify warm run speed
+
+```bash
+# Second run against the same data — cache already warm from step above
+time uv run dsm match ROLE-01 --top 5
+
+# Expected: wall time ≈ --no-llm (~90–120s); LLM calls = 0 new cache files
+```
+
+#### Verify LLM-on rankings vs `--no-llm`
+
+```bash
+# Save --no-llm baseline
+uv run dsm match ROLE-01 --top 5 --no-llm > /tmp/no_llm_role01.txt
+
+# Save LLM-on output (requires warm cache from above)
+uv run dsm match ROLE-01 --top 5 > /tmp/llm_role01.txt
+
+# Diff rank order and strong-dimension counts
+diff /tmp/no_llm_role01.txt /tmp/llm_role01.txt
+```
+
+Once those runs complete, update §5, §6, and §8 with real numbers.
+
+---
+
+## 12. Summary
 
 | Factor | `--no-llm` | LLM-on (cold) | LLM-on (warm) |
 |---|---|---|---|
