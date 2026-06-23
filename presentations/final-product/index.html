@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demand-Supply Matcher — Product Overview</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>body{--accent:#6ea8fe}</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="home"><a href="../index.html">▸ all decks</a></div>
+<div class="deck">
+
+<!-- 1 -->
+<section class="slide active center">
+  <span class="tag">Parity Partners</span>
+  <h1>Demand-Supply Matcher</h1>
+  <p class="lead">The right consultant on the right engagement — in seconds, with the reasoning shown.
+  A staffing decision that used to take a manager an afternoon, made explainable and repeatable.</p>
+  <div class="footer"><span>Product Overview</span><span>The whole picture</span></div>
+</section>
+
+<!-- 2 problem -->
+<section class="slide">
+  <h2><span class="tag">The problem</span>A growing firm, staffed by hand in a spreadsheet</h2>
+  <div class="row">
+    <div>
+      <p>Consultants are always in motion — on the bench, rolling off, or joining. Open roles shift weekly. Today a manager reconciles the two <span class="em">by judgment</span>, in a free-text spreadsheet column.</p>
+      <p class="sub">The firm grows ~5% headcount a month. The manual approach doesn't scale — and leaves no record of <em>why</em> anyone was chosen.</p>
+    </div>
+    <div class="grid g2">
+      <div class="card"><div class="stat bad">Slow</div><small>hours per role</small></div>
+      <div class="card"><div class="stat bad">Inconsistent</div><small>depends who's asking</small></div>
+      <div class="card"><div class="stat warn">Opaque</div><small>no recorded reasoning</small></div>
+      <div class="card"><div class="stat warn">Unscalable</div><small>breaks as the firm grows</small></div>
+    </div>
+  </div>
+  <div class="footer"><span>The problem</span><span>2 / 8</span></div>
+</section>
+
+<!-- 3 solution -->
+<section class="slide">
+  <h2><span class="tag">The solution</span>A ranked, explainable shortlist — trade-offs surfaced</h2>
+  <div class="flow" style="justify-content:center;margin:1.8rem 0">
+    <div class="node on">"Staff ROLE-01"<small>one command</small></div>
+    <span class="arrow">→</span>
+    <div class="node">Matcher</div>
+    <span class="arrow">→</span>
+    <div class="node good">Top candidates<small>each with bands, signals &amp; a written "why"</small></div>
+  </div>
+  <p>It doesn't replace the manager's judgment — it <span class="em">arms</span> it. The hard trade-offs (great skills but late availability) are made impossible to miss, not buried in a single number.</p>
+  <div class="footer"><span>The solution</span><span>3 / 8</span></div>
+</section>
+
+<!-- 4 how it works -->
+<section class="slide">
+  <h2><span class="tag">How it works</span>Read the data, filter, score, rank, explain</h2>
+  <div class="pipe">
+    <div class="stage"><div class="idx">1</div><div class="body"><b>Ingest</b> &nbsp;<span>roles, the bench, profile CVs and project feedback</span></div></div>
+    <div class="stage"><div class="idx">2</div><div class="body"><b>Filter</b> &nbsp;<span>rule out who can't fit — location, availability windows</span></div></div>
+    <div class="stage new"><div class="idx">3</div><div class="body"><b>Score on six dimensions</b> &nbsp;<span>skills, feedback, availability, adaptability, supply, trend</span></div><span class="kind det">rules + AI signals</span></div>
+    <div class="stage"><div class="idx">4</div><div class="body"><b>Rank</b> &nbsp;<span>deterministic, weighted, with sensible tie-breaks</span></div><span class="kind det">math</span></div>
+    <div class="stage"><div class="idx">5</div><div class="body"><b>Explain</b> &nbsp;<span>a grounded, plain-English reason for every recommendation</span></div><span class="kind llm">AI, grounded</span></div>
+  </div>
+  <div class="footer"><span>How it works</span><span>4 / 8</span></div>
+</section>
+
+<!-- 5 scorecard -->
+<section class="slide">
+  <h2><span class="tag">What it weighs</span>Six dimensions, each earning its weight</h2>
+  <div class="row">
+    <div>
+      <table>
+        <tr><th>Dimension</th><th class="num">Weight</th><th>Captures</th></tr>
+        <tr><td>Skill match</td><td class="num">35%</td><td>technical &amp; domain fit</td></tr>
+        <tr><td>Feedback quality</td><td class="num">25%</td><td>level of past performance</td></tr>
+        <tr><td>Availability</td><td class="num">15%</td><td>how soon, how certain</td></tr>
+        <tr><td>Adaptability</td><td class="num">15%</td><td>ability to learn &amp; stretch</td></tr>
+        <tr><td>Supply state</td><td class="num">5%</td><td>bench vs roll-off vs joiner</td></tr>
+        <tr><td>Performance trend</td><td class="num">5%</td><td>direction of travel</td></tr>
+      </table>
+    </div>
+    <div>
+      <p>Output is <span class="em">bands</span> — Strong / Partial / Gap — and a "<span class="em">N of 6 strong</span>" headline. Never a fake-precise "76% match".</p>
+      <p class="sub">Every weight and threshold is configurable, so staffing leadership can tune the engine to the firm's priorities without touching code.</p>
+    </div>
+  </div>
+  <div class="footer"><span>The scorecard</span><span>5 / 8</span></div>
+</section>
+
+<!-- 6 trust -->
+<section class="slide">
+  <h2><span class="tag">Why you can trust it</span>Designed to be auditable, not a black box</h2>
+  <div class="grid g2">
+    <div class="card"><h3>Math sets the ranks</h3><p>The AI never decides who wins. It only reads text and writes explanations — the order is deterministic, reviewable code.</p></div>
+    <div class="card"><h3>Grounded, not guessed</h3><p>Every claim in an explanation must cite the source text. Unsupported claims are dropped, not scored.</p></div>
+    <div class="card"><h3>Privacy by design</h3><p>Personal and client details are scrubbed before any text reaches an external model — and re-attached only locally.</p></div>
+    <div class="card"><h3>Nothing hidden</h3><p>No one is silently dropped. Filtered-out people appear with the reason, and unfillable roles get a constructive gap analysis.</p></div>
+  </div>
+  <div class="footer"><span>Trust &amp; safety</span><span>6 / 8</span></div>
+</section>
+
+<!-- 7 outcomes -->
+<section class="slide">
+  <h2><span class="tag">What it delivers</span>Faster, fairer, and it scales with the firm</h2>
+  <div class="grid g4">
+    <div class="card"><div class="stat">&lt;5s</div><small>a ranked shortlist for a role</small></div>
+    <div class="card"><div class="stat">6</div><small>dimensions weighed, consistently, every time</small></div>
+    <div class="card"><div class="stat good">100%</div><small>recommendations carry a recorded reason</small></div>
+    <div class="card"><div class="stat good">$0</div><small>core ranking cost — AI spent only where it changes the answer</small></div>
+  </div>
+  <p class="lead" style="margin-top:1.8rem">Consistent decisions, an audit trail for every choice, and a system that gets <span class="em">more</span> useful as supply and demand grow — exactly where the manual process broke.</p>
+  <div class="footer"><span>Outcomes</span><span>7 / 8</span></div>
+</section>
+
+<!-- 8 close -->
+<section class="slide center">
+  <p class="quote">"From a spreadsheet built on judgment, to a ranked, explainable, auditable engine that scales with the firm."</p>
+  <p class="lead" style="margin-top:2rem">Built deterministic-first for trust and cost — with intelligence added precisely where it earns its place.</p>
+  <div class="footer"><span>Demand-Supply Matcher</span><span>8 / 8</span></div>
+</section>
+
+</div>
+<div class="nav">← / → · <span id="counter">1 / 8</span></div>
+<script src="../assets/deck.js"></script>
+</body>
+</html>

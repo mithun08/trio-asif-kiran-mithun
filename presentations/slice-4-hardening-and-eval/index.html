@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slice 4 — Hardening + Evaluation</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>body{--accent:#fbbd23}</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="home"><a href="../index.html">▸ all decks</a></div>
+<div class="deck">
+
+<!-- 1 -->
+<section class="slide active center">
+  <span class="tag">Slice 4 of 4 · planned</span>
+  <h1>Tough &amp; Proven</h1>
+  <p class="lead">A demo that works on clean data isn't a product. This slice makes the engine
+  survive messy inputs without crashing — and proves its quality against a human-curated answer key.</p>
+  <div style="margin-top:1.6rem">
+    <span class="pill">handles broken files</span>
+    <span class="pill">OCR for scanned PDFs</span>
+    <span class="pill">eval harness · 70–85% target</span>
+    <span class="pill">cost &amp; latency telemetry</span>
+  </div>
+  <div class="footer"><span>Slice 4 · Hardening &amp; Eval</span><span>How it works</span></div>
+</section>
+
+<!-- 2 problem -->
+<section class="slide">
+  <h2><span class="tag">The problem it solves</span>Two things stand between "works" and "trustworthy"</h2>
+  <div class="row">
+    <div class="card"><h3>Real data is messy</h3><p>Corrupt PDFs, a missing spreadsheet column, a scanned-image CV, a start date in the past. Any of these could crash a naive pipeline mid-run.</p></div>
+    <div class="card"><h3>"Is it actually good?"</h3><p>Up to now, quality is anecdotal ("Aarav looks right"). A product needs a <span class="em">measured</span> pass rate against known-correct answers.</p></div>
+  </div>
+  <div class="footer"><span>Works → trustworthy</span><span>2 / 6</span></div>
+</section>
+
+<!-- 3 robustness -->
+<section class="slide">
+  <h2><span class="tag">How it works — robustness</span>Every bad input gets a clear message, never a crash</h2>
+  <div class="row">
+    <div class="col" style="max-width:30rem">
+      <div class="flow" style="margin:.2rem 0"><div class="node bad" style="flex:1">corrupt PDF</div><span class="arrow">→</span><div class="node good" style="flex:1">flag, keep the person</div></div>
+      <div class="flow" style="margin:.2rem 0"><div class="node bad" style="flex:1">missing column</div><span class="arrow">→</span><div class="node good" style="flex:1">"X missing in sheet Y"</div></div>
+      <div class="flow" style="margin:.2rem 0"><div class="node bad" style="flex:1">scanned image CV</div><span class="arrow">→</span><div class="node good" style="flex:1">OCR, else flag low-confidence</div></div>
+      <div class="flow" style="margin:.2rem 0"><div class="node bad" style="flex:1">past start date</div><span class="arrow">→</span><div class="node good" style="flex:1">warn &amp; proceed</div></div>
+    </div>
+    <div>
+      <p>The rule throughout: <span class="em">degrade, don't die.</span> A specific error names the file and the problem; a flawed record is flagged and kept, never silently dropped.</p>
+      <p class="sub">This is the same "no silent drops" principle from Slice 1, extended from filtering to ingestion.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Robustness</span><span>3 / 6</span></div>
+</section>
+
+<!-- 4 eval harness -->
+<section class="slide">
+  <h2><span class="tag">How it works — the proof</span>Graded against a human answer key</h2>
+  <div class="flow" style="justify-content:center;margin:1.2rem 0">
+    <div class="node">golden set<small>curated roles → expected shortlist</small></div>
+    <span class="arrow">→</span>
+    <div class="node on">run the engine</div>
+    <span class="arrow">→</span>
+    <div class="node llm">eval harness<small>compare vs expected</small></div>
+    <span class="arrow">→</span>
+    <div class="node good">pass rate</div>
+  </div>
+  <p>The golden set includes <span class="em">positive</span> cases (Java role → Java engineer ranks #1), <span class="em">negative</span> cases (Tester must NOT appear for the AI role), and at least one <span class="em">unfillable</span> role to test gap analysis.</p>
+  <div class="footer"><span>The eval harness</span><span>4 / 6</span></div>
+</section>
+
+<!-- 5 why 70-85 + telemetry -->
+<section class="slide">
+  <h2><span class="tag">What "good" means</span>Target 70–85% — and why 100% is a red flag</h2>
+  <div class="row">
+    <div>
+      <div class="card" style="text-align:center;padding:1.8rem">
+        <div class="stat" style="font-size:3.6rem">70–85%</div>
+        <small>target eval pass rate</small>
+      </div>
+      <p class="sub">A perfect score means the test set is too easy — it isn't probing the hard, judgment-call cases. A healthy band proves the evals have teeth.</p>
+    </div>
+    <div>
+      <h3 style="color:#fff;margin-bottom:.5rem">Plus: every run is observable</h3>
+      <ul>
+        <li>Tokens &amp; cost per run</li>
+        <li>Per-stage timings <small>(&lt; 5s single role, &lt; 60s batch)</small></li>
+        <li>Data-quality flags &amp; config version</li>
+        <li>Provider set to zero data-retention</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer"><span>Measured quality</span><span>5 / 6</span></div>
+</section>
+
+<!-- 6 close -->
+<section class="slide center">
+  <h2><span class="tag">After Slice 4</span>The product is complete</h2>
+  <p class="lead" style="text-align:center;max-width:62ch">Fast and free at its core, intelligent at its edges, explainable in its output,
+  robust on messy data, and <span class="hi">measurably</span> good.</p>
+  <p class="lead" style="margin-top:1.6rem;text-align:center">See the <a href="../final-product/index.html" style="color:var(--accent)">whole-product overview ▸</a></p>
+  <div class="footer"><span>Slice 4 → complete</span><span>6 / 6</span></div>
+</section>
+
+</div>
+<div class="nav">← / → · <span id="counter">1 / 6</span></div>
+<script src="../assets/deck.js"></script>
+</body>
+</html>

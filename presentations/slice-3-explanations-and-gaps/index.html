@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slice 3 — Explanations + Gap Analysis</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>body{--accent:#a78bfa}</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="home"><a href="../index.html">▸ all decks</a></div>
+<div class="deck">
+
+<!-- 1 -->
+<section class="slide active center">
+  <span class="tag">Slice 3 of 4 · planned</span>
+  <h1>From a List to a Recommendation</h1>
+  <p class="lead">A ranked list isn't a decision. This slice adds the plain-English "why",
+  explains the trade-offs, and handles the hardest case gracefully: when no one fits.</p>
+  <div style="margin-top:1.6rem">
+    <span class="pill">grounded explanations</span>
+    <span class="pill">why-not-higher</span>
+    <span class="pill">gap analysis</span>
+    <span class="pill">JSON output</span>
+  </div>
+  <div class="footer"><span>Slice 3 · Explanations &amp; Gaps</span><span>How it works</span></div>
+</section>
+
+<!-- 2 problem -->
+<section class="slide">
+  <h2><span class="tag">The problem it solves</span>Good scores, but two silences</h2>
+  <div class="row">
+    <div class="card"><h3>"Why this person?"</h3><p>Slice 2 gives strong bands, but a staffing manager still has to reverse-engineer the reasoning. Trust needs a stated <span class="em">why</span>, grounded in real evidence.</p></div>
+    <div class="card"><h3>"What if no one fits?"</h3><p>For an unfillable role, a ranked list of weak matches — or worse, an empty screen — is useless. The manager needs to know <span class="em">what's missing</span> and who's closest.</p></div>
+  </div>
+  <p class="sub">Slice 3 turns numbers into language a human can act on, and turns "no match" into a constructive answer.</p>
+  <div class="footer"><span>Two silences</span><span>2 / 7</span></div>
+</section>
+
+<!-- 3 grounded explanations -->
+<section class="slide">
+  <h2><span class="tag">How it works</span>The LLM writes the "why" — strictly from the evidence</h2>
+  <div class="flow" style="justify-content:center;margin:1.4rem 0">
+    <div class="node">scores + bands<small>from the engine</small></div>
+    <span class="arrow">+</span>
+    <div class="node">evidence spans<small>cited source text</small></div>
+    <span class="arrow">→</span>
+    <div class="node llm">LLM writes explanation<small>cites only what's there</small></div>
+  </div>
+  <div class="card" style="max-width:60rem">
+    <p style="color:var(--ink)"><span class="em">"Strong fit:</span> Kotlin expert with verified payments-domain depth (project feedback). <span class="em">Trade-off:</span> rolling off in ~8 weeks and the date is unconfirmed — available only if the start can slip."</p>
+  </div>
+  <p class="sub">Same guardrail as Slice 2: the explanation may reference <span class="em">only</span> data points present in the candidate's evidence. If something is unknown, it says "no data" — it never invents.</p>
+  <div class="footer"><span>Grounded explanations</span><span>3 / 7</span></div>
+</section>
+
+<!-- 4 why not higher -->
+<section class="slide">
+  <h2><span class="tag">Explaining the order</span>Why #3 isn't #1</h2>
+  <div class="row">
+    <div>
+      <p>For lower-ranked candidates, the system names the <span class="em">specific</span> reason they sit below — never a vague "lower score".</p>
+      <p class="sub">This makes the advisory ranking legible: the manager sees the one lever (a missing skill, a later start, unverified feedback) and can decide whether it matters for <em>their</em> situation.</p>
+    </div>
+    <div class="col" style="max-width:26rem">
+      <div class="node on">#1 — strong across skill &amp; feedback</div>
+      <div class="node">#3 — "below #1: <span style="color:var(--warn)">adjacent skill only, not exact</span>"</div>
+      <div class="node">#5 — "below #3: <span style="color:var(--warn)">no internal feedback yet</span>"</div>
+    </div>
+  </div>
+  <div class="footer"><span>Why-not-higher</span><span>4 / 7</span></div>
+</section>
+
+<!-- 5 gap analysis -->
+<section class="slide">
+  <h2><span class="tag">The hardest case</span>An unfillable role is never an empty answer</h2>
+  <div class="flow" style="justify-content:center;margin:1.2rem 0">
+    <div class="node bad">no one passes<small>all candidates fall short</small></div>
+    <span class="arrow">→</span>
+    <div class="col">
+      <div class="node">① name the failing constraint<small>"no local expert-level Kotlin"</small></div>
+      <div class="node">② show the bench picture<small>what skills you <em>do</em> have</small></div>
+      <div class="node">③ nearest alternatives<small>relax one constraint — e.g. relocation-willing</small></div>
+    </div>
+  </div>
+  <p>Partial matches are ranked by <span class="em">fewest gaps</span>, and each gap is assessed for whether it's bridgeable (could this person learn it?). The output is a path forward, not a dead end.</p>
+  <div class="footer"><span>Gap analysis</span><span>5 / 7</span></div>
+</section>
+
+<!-- 6 json -->
+<section class="slide">
+  <h2><span class="tag">Beyond the terminal</span>A machine-readable answer</h2>
+  <div class="row">
+    <div>
+      <p>The same result is emitted as structured JSON — per-dimension bands, signals, confidence, and a snapshot timestamp.</p>
+      <p class="sub">This is what lets the engine plug into a future UI, an ATS, or a Slack bot — and it's how the Slice 4 eval harness reads results to score them automatically.</p>
+    </div>
+    <div class="card" style="font-family:ui-monospace,monospace;font-size:.9rem;color:#cdd7f5;background:#0d1428">
+<pre style="margin:0;white-space:pre-wrap">{
+  "role": "ROLE-01",
+  "candidates": [{
+    "name": "...",
+    "signals_met": 5,
+    "bands": { "skill": "Strong",
+               "availability": "Gap" },
+    "confidence": "Medium",
+    "explanation": "Strong fit: ..."
+  }]
+}</pre>
+    </div>
+  </div>
+  <div class="footer"><span>JSON output</span><span>6 / 7</span></div>
+</section>
+
+<!-- 7 close -->
+<section class="slide center">
+  <h2><span class="tag">After Slice 3</span>It's genuinely useful — now make it <em>dependable</em></h2>
+  <p class="lead" style="text-align:center;max-width:60ch">The engine recommends, explains, and handles gaps.
+  What's left is the unglamorous, essential part: surviving <span class="hi">messy real-world data</span>
+  and <span class="hi">proving</span> the quality with numbers.</p>
+  <p class="lead" style="margin-top:1.6rem;text-align:center">That's <span class="hi">Slice 4</span>.</p>
+  <div class="footer"><span>Slice 3 → Slice 4</span><span>7 / 7</span></div>
+</section>
+
+</div>
+<div class="nav">← / → · <span id="counter">1 / 7</span></div>
+<script src="../assets/deck.js"></script>
+</body>
+</html>

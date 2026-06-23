@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slice 2 — LLM Extraction + PII Gate</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>body{--accent:#6ea8fe}</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="home"><a href="../index.html">▸ all decks</a></div>
+<div class="deck">
+
+<!-- 1 -->
+<section class="slide active center">
+  <span class="tag">Slice 2 of 4 · planned</span>
+  <h1>Reading the Words</h1>
+  <p class="lead">The first time the system reads free text — profile PDFs and feedback notes —
+  and turns it into signal. The LLM joins, but only at the edge, and only behind a privacy gate.</p>
+  <div style="margin-top:1.6rem">
+    <span class="pill">opens the PDFs + feedback</span>
+    <span class="pill">lights up 45% of the score</span>
+    <span class="pill">PII scrubbed before send</span>
+  </div>
+  <div class="footer"><span>Slice 2 · LLM Extraction</span><span>How it works</span></div>
+</section>
+
+<!-- 2 the gap -->
+<section class="slide">
+  <h2><span class="tag">The problem it solves</span>Slice 1 left three dimensions asleep</h2>
+  <div class="row">
+    <div>
+      <p>Feedback quality, adaptability and performance trend all returned a flat 50 — because the data that answers them is <span class="em">prose</span>, not spreadsheet cells.</p>
+      <ul>
+        <li><code>profiles/*.pdf</code> → skill <span class="em">proficiency</span> ("Kotlin <b>expert</b>")</li>
+        <li><code>project_feedback/*.md</code> → strengths, concerns, trajectory</li>
+      </ul>
+    </div>
+    <div class="col" style="max-width:24rem">
+      <div class="node dim">📄 PDFs &nbsp; 📝 feedback<small>ignored in Slice 1</small></div>
+      <span class="arrow down">↓</span>
+      <div class="node on">Slice 2 reads them</div>
+      <span class="arrow down">↓</span>
+      <div class="node good">3 sleeping dimensions wake up</div>
+    </div>
+  </div>
+  <div class="footer"><span>The gap from Slice 1</span><span>2 / 8</span></div>
+</section>
+
+<!-- 3 new data flow -->
+<section class="slide">
+  <h2><span class="tag">How it works</span>Text → scrub → extract → the same scoring engine</h2>
+  <div class="flow" style="justify-content:center;margin:1.6rem 0">
+    <div class="node">PDFs + feedback<small>raw text</small></div>
+    <span class="arrow">→</span>
+    <div class="node bad">🔒 PII scrub<small>names, emails, clients out</small></div>
+    <span class="arrow">→</span>
+    <div class="node llm">LLM extract<small>structured signals</small></div>
+    <span class="arrow">→</span>
+    <div class="node">Slice 1 scoring<small>now with real data</small></div>
+  </div>
+  <p>The LLM's job is narrow: read a passage and return a small, typed object — <em>sentiment, strengths, concerns, domain depth</em>. It never sees a name, and it never sets a rank.</p>
+  <p class="sub">Two new stages slot in <span class="em">before</span> matching; everything downstream is the deterministic core from Slice 1, unchanged.</p>
+  <div class="footer"><span>The new data flow</span><span>3 / 8</span></div>
+</section>
+
+<!-- 4 PII gate -->
+<section class="slide">
+  <h2><span class="tag">Guardrail #1 — the release blocker</span>Nothing leaves the machine un-scrubbed</h2>
+  <div class="row">
+    <div>
+      <p>This is the <span class="em">most important test in the whole project.</span> Before any text reaches the hosted LLM, a scrubber replaces personal data with tokens — and a test captures every outbound payload to prove it.</p>
+      <p class="sub">Scrubbed: names, emails, phone numbers, client names. Allowed through: skills, anonymised experience, feedback content. If the test ever sees raw PII leaving, the build is blocked.</p>
+    </div>
+    <div class="col" style="max-width:26rem">
+      <div class="node">"Keep <b>Aarav</b> on <b>Meridian Pay</b>…"</div>
+      <span class="arrow down">↓ &nbsp;scrub</span>
+      <div class="node good">"Keep ⟨PERSON_0⟩ on ⟨CLIENT_0⟩…"</div>
+      <span class="arrow down">↓ &nbsp;send to LLM</span>
+      <div class="node llm">LLM sees only tokens</div>
+      <span class="arrow down">↓ &nbsp;re-hydrate locally</span>
+      <div class="node on">names restored for display</div>
+    </div>
+  </div>
+  <div class="footer"><span>The PII gate</span><span>4 / 8</span></div>
+</section>
+
+<!-- 5 grounding -->
+<section class="slide">
+  <h2><span class="tag">Guardrail #2 — no invented praise</span>Every claim must cite the source text</h2>
+  <div class="row">
+    <div>
+      <p>The LLM must return the exact passage that supports each claim. If that passage isn't actually in the source, the claim is <span class="em">dropped</span> — not scored.</p>
+      <p class="sub">This stops a confident model from inventing a strength nobody wrote. A dropped claim flags the candidate, and the dimension falls back to the neutral 50 rather than trusting a hallucination.</p>
+    </div>
+    <div class="col" style="max-width:26rem">
+      <div class="node good">claim "deep payments domain"<br><small>evidence found in feedback ✓ → kept</small></div>
+      <div class="node bad">claim "led 200-person org"<br><small>no matching text ✗ → dropped + flagged</small></div>
+    </div>
+  </div>
+  <div class="footer"><span>Grounding</span><span>5 / 8</span></div>
+</section>
+
+<!-- 6 what lights up -->
+<section class="slide">
+  <h2><span class="tag">The payoff</span>Same candidate, finally seen clearly</h2>
+  <div class="row">
+    <div>
+      <p><span class="em">Aarav Krishnan</span> for the Kotlin/Payments role — the textbook hire whose value was locked in unread text.</p>
+      <p class="sub">His PDF reveals Kotlin <b>expert</b> (skill jumps 70→100); his feedback reveals payments depth, adaptability and an improving trajectory. Availability stays a real, clearly-flagged gap.</p>
+    </div>
+    <div>
+      <table>
+        <tr><th>Dimension</th><th>Slice 1</th><th>Slice 2</th></tr>
+        <tr><td>Skill</td><td><span class="band b-partial">Partial</span></td><td><span class="band b-strong">Strong</span></td></tr>
+        <tr><td>Feedback</td><td><span class="band b-partial">50*</span></td><td><span class="band b-strong">Strong</span></td></tr>
+        <tr><td>Adaptability</td><td><span class="band b-partial">50*</span></td><td><span class="band b-strong">Strong</span></td></tr>
+        <tr><td>Trend</td><td><span class="band b-partial">50*</span></td><td><span class="band b-strong">Strong</span></td></tr>
+        <tr><td>Supply</td><td><span class="band b-partial">Partial</span></td><td><span class="band b-partial">Partial</span></td></tr>
+        <tr><td>Availability</td><td><span class="band b-gap">Gap</span></td><td><span class="band b-gap">Gap</span></td></tr>
+        <tr><td><b>Signals</b></td><td><b style="color:var(--bad)">0 of 6</b></td><td><b style="color:var(--good)">5 of 6</b></td></tr>
+      </table>
+    </div>
+  </div>
+  <p class="sub">Rank #17 → top of the list, with the one real risk surfaced rather than buried. <span style="opacity:.6">*placeholder</span></p>
+  <div class="footer"><span>What lights up</span><span>6 / 8</span></div>
+</section>
+
+<!-- 7 cost + repro -->
+<section class="slide">
+  <h2><span class="tag">Keeping it cheap and stable</span>The LLM is metered, not let loose</h2>
+  <div class="grid g3">
+    <div class="card"><h3>Cached</h3><p>Each passage is extracted once and cached. Re-runs cost nothing — a test asserts zero new calls on a warm cache.</p></div>
+    <div class="card"><h3>Temperature 0</h3><p>Deterministic decoding. The same text yields the same signal, so bands stay stable run-to-run.</p></div>
+    <div class="card"><h3>Bounded</h3><p>A fixed, counted number of calls per consultant — a cost test fails if it drifts upward.</p></div>
+  </div>
+  <p class="sub">Reproducibility shifts from "byte-identical" (Slice 1) to "<span class="em">stable bands &amp; signals</span>" — exact rank may shuffle by one, and that's acceptable for a human-review list.</p>
+  <div class="footer"><span>Cost &amp; reproducibility</span><span>7 / 8</span></div>
+</section>
+
+<!-- 8 close -->
+<section class="slide center">
+  <h2><span class="tag">After Slice 2</span>The scores are now real — but can a human <em>trust</em> them?</h2>
+  <p class="lead" style="text-align:center;max-width:60ch">All six dimensions carry signal. The shortlist is good.
+  What it still lacks is a <span class="hi">reason</span> — a plain-English "why this person, why not higher" — and a graceful answer when <span class="hi">no one fits</span>.</p>
+  <p class="lead" style="margin-top:1.6rem;text-align:center">That's <span class="hi">Slice 3</span>.</p>
+  <div class="footer"><span>Slice 2 → Slice 3</span><span>8 / 8</span></div>
+</section>
+
+</div>
+<div class="nav">← / → · <span id="counter">1 / 8</span></div>
+<script src="../assets/deck.js"></script>
+</body>
+</html>

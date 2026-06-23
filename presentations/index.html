@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demand-Supply Matcher — Presentations</title>
+<link rel="stylesheet" href="assets/deck.css">
+<style>
+  body{overflow:auto;--accent:#6ea8fe}
+  .wrap{max-width:60rem;margin:0 auto;padding:7vh 6vw}
+  .decks{display:grid;gap:1rem;margin-top:2rem}
+  a.deck-link{display:flex;align-items:center;gap:1.2rem;text-decoration:none;
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.4rem;transition:.15s}
+  a.deck-link:hover{border-color:var(--accent);transform:translateX(4px)}
+  a.deck-link .num{font-size:1.6rem;font-weight:700;width:3.2rem;flex:none;text-align:center}
+  a.deck-link .meta h3{color:#fff;font-size:1.25rem;margin-bottom:.2rem}
+  a.deck-link .meta p{margin:0;font-size:1rem}
+  .st{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:.18rem .5rem;border-radius:5px;margin-left:.6rem}
+  .st.done{background:rgba(54,211,153,.15);color:var(--good)}
+  .st.plan{background:rgba(151,160,189,.15);color:var(--muted)}
+  .feature{border-color:var(--accent)!important;background:linear-gradient(180deg,rgba(110,168,254,.08),var(--panel))}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="tag">Parity Partners · Staffing Engine</span>
+  <h1 style="font-size:2.6rem">Demand-Supply Matcher</h1>
+  <p class="lead">Five short decks. Each slice deck explains <span class="em">how that stage works</span> and how the
+  solution evolves; the product overview is the whole picture, no internals.</p>
+
+  <div class="decks">
+    <a class="deck-link feature" href="final-product/index.html" style="--accent:#6ea8fe">
+      <div class="num" style="color:#6ea8fe">★</div>
+      <div class="meta"><h3>Product Overview</h3><p>The whole product — problem, solution, why it's trustworthy. Start here for a stakeholder audience.</p></div>
+    </a>
+    <a class="deck-link" href="slice-1-deterministic-core/index.html" style="--accent:#36d399">
+      <div class="num" style="color:#36d399">1</div>
+      <div class="meta"><h3>Deterministic Core <span class="st done">shipped</span></h3><p>Rules &amp; math only. One spreadsheet in, a reproducible ranked shortlist out. No AI, no database.</p></div>
+    </a>
+    <a class="deck-link" href="slice-2-llm-extraction/index.html" style="--accent:#6ea8fe">
+      <div class="num" style="color:#6ea8fe">2</div>
+      <div class="meta"><h3>Reading the Words <span class="st plan">planned</span></h3><p>First LLM contact. Reads CVs &amp; feedback to light up half the score — behind a PII gate.</p></div>
+    </a>
+    <a class="deck-link" href="slice-3-explanations-and-gaps/index.html" style="--accent:#a78bfa">
+      <div class="num" style="color:#a78bfa">3</div>
+      <div class="meta"><h3>From a List to a Recommendation <span class="st plan">planned</span></h3><p>Grounded explanations, why-not-higher, and graceful answers when no one fits.</p></div>
+    </a>
+    <a class="deck-link" href="slice-4-hardening-and-eval/index.html" style="--accent:#fbbd23">
+      <div class="num" style="color:#fbbd23">4</div>
+      <div class="meta"><h3>Tough &amp; Proven <span class="st plan">planned</span></h3><p>Survives messy data, and proves its quality against a human-curated answer key.</p></div>
+    </a>
+  </div>
+
+  <p class="sub">Navigate any deck with ← / → arrow keys, spacebar, or click. Each is a standalone file — present full-screen in your browser.</p>
+</div>
+</body>
+</html>

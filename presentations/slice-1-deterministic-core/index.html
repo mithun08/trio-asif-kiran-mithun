@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slice 1 — Deterministic Core</title>
+<link rel="stylesheet" href="../assets/deck.css">
+<style>body{--accent:#36d399}</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="home"><a href="../index.html">▸ all decks</a></div>
+<div class="deck">
+
+<!-- 1 -->
+<section class="slide active center">
+  <span class="tag">Slice 1 of 4 · shipped</span>
+  <h1>The Deterministic Core</h1>
+  <p class="lead">Type a role ID, get a ranked, explainable shortlist — using pure rules and math.
+  No AI. No database. The same answer every time.</p>
+  <div style="margin-top:1.6rem">
+    <span class="pill">8 roles · 35 consultants</span>
+    <span class="pill">0 LLM calls · $0</span>
+    <span class="pill">96 tests green</span>
+    <span class="pill">byte-for-byte reproducible</span>
+  </div>
+  <div class="footer"><span>Slice 1 · Deterministic Core</span><span>How it works</span></div>
+</section>
+
+<!-- 2  what it does -->
+<section class="slide">
+  <h2><span class="tag">In one picture</span>One spreadsheet in, a ranked shortlist out</h2>
+  <div class="flow" style="justify-content:center;margin:2rem 0">
+    <div class="node on">demand-supply.xlsx<small>roles + people</small></div>
+    <span class="arrow">→</span>
+    <div class="node">Matching engine<small>rules + scoring</small></div>
+    <span class="arrow">→</span>
+    <div class="node good">Ranked shortlist<small>bands + signals</small></div>
+  </div>
+  <div class="row" style="margin-top:1rem">
+    <div class="card"><h3>No database</h3><p>Nothing is stored. Each run reads the spreadsheet fresh into memory, scores, prints, and exits.</p></div>
+    <div class="card"><h3>No AI yet</h3><p>Every number comes from rules you can read. The LLM arrives in Slice 2.</p></div>
+    <div class="card"><h3>Reproducible</h3><p>Same input → identical output, every time. There is no randomness anywhere.</p></div>
+  </div>
+  <div class="footer"><span>What it does</span><span>2 / 8</span></div>
+</section>
+
+<!-- 3  pipeline -->
+<section class="slide">
+  <h2><span class="tag">How it works</span>A five-stage pipeline — every stage is deterministic</h2>
+  <div class="pipe">
+    <div class="stage"><div class="idx">1</div><div class="body"><b>Ingest</b> &nbsp;<span>read the role + all 35 consultants from the workbook tabs</span></div><span class="kind det">rules</span></div>
+    <div class="stage"><div class="idx">2</div><div class="body"><b>Normalise</b> &nbsp;<span>tidy locations ("Bangalore"→"Bengaluru"), collapse duplicate emails</span></div><span class="kind det">rules</span></div>
+    <div class="stage"><div class="idx">3</div><div class="body"><b>Filter</b> &nbsp;<span>drop anyone who can't possibly fit (wrong city, available too late)</span></div><span class="kind det">rules</span></div>
+    <div class="stage"><div class="idx">4</div><div class="body"><b>Score ×6</b> &nbsp;<span>rate each survivor 0–100 on six dimensions</span></div><span class="kind det">math</span></div>
+    <div class="stage"><div class="idx">5</div><div class="body"><b>Rank &amp; show</b> &nbsp;<span>order by weighted score, print bands + "N of 6 strong"</span></div><span class="kind det">math</span></div>
+  </div>
+  <p class="sub">Filtered-out people are never thrown away silently — they're listed separately with the reason, so the manager keeps control.</p>
+  <div class="footer"><span>The pipeline</span><span>3 / 8</span></div>
+</section>
+
+<!-- 4  where data comes from -->
+<section class="slide">
+  <h2><span class="tag">The data — a common question</span>Where do the candidates come from?</h2>
+  <div class="row">
+    <div>
+      <p>The workbook has four tabs. Three of them <span class="em">are</span> the candidate list — each row is a person with their skills, location and availability.</p>
+      <div class="col" style="margin-top:1.2rem;max-width:22rem">
+        <div class="node on">📄 demand-supply.xlsx</div>
+        <div style="display:flex;gap:.5rem">
+          <div class="node" style="flex:1">Beach<small>10</small></div>
+          <div class="node" style="flex:1">Rolling Off<small>10</small></div>
+          <div class="node" style="flex:1">New Joiners<small>15</small></div>
+        </div>
+        <span class="arrow down">↓</span>
+        <div class="node good">35 consultants in memory</div>
+      </div>
+    </div>
+    <div>
+      <h3 style="color:#fff;margin-bottom:.6rem">What Slice 1 does <span style="color:var(--bad)">not</span> read yet</h3>
+      <ul>
+        <li><code>profiles/*.pdf</code> — 50 CVs <small>(skill <em>proficiency</em> lives here)</small></li>
+        <li><code>project_feedback/*.md</code> — 35 reviews <small>(performance &amp; trend live here)</small></li>
+      </ul>
+      <p class="sub">Because proficiency is in the PDFs, every workbook skill defaults to a middle level (3 of 5). Slice 1 knows <span class="em">whether</span> someone lists Kotlin — not yet <span class="em">how good</span> they are. Slice 2 opens these files.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Where candidates come from</span><span>4 / 8</span></div>
+</section>
+
+<!-- 5  six dimensions -->
+<section class="slide">
+  <h2><span class="tag">The scorecard</span>Six dimensions — but only three can speak in Slice 1</h2>
+  <div class="row">
+    <div>
+      <table>
+        <tr><th>Dimension</th><th class="num">Weight</th><th>Slice 1</th></tr>
+        <tr><td>Skill match</td><td class="num">35%</td><td><span class="band b-strong">live</span></td></tr>
+        <tr><td>Availability</td><td class="num">15%</td><td><span class="band b-strong">live</span></td></tr>
+        <tr><td>Supply state</td><td class="num">5%</td><td><span class="band b-strong">live</span></td></tr>
+        <tr class="dark"><td>Feedback quality</td><td class="num">25%</td><td><span class="band b-partial">placeholder</span></td></tr>
+        <tr class="dark"><td>Adaptability</td><td class="num">15%</td><td><span class="band b-partial">placeholder</span></td></tr>
+        <tr class="dark"><td>Performance trend</td><td class="num">5%</td><td><span class="band b-partial">placeholder</span></td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="card" style="text-align:center;padding:1.6rem">
+        <div class="stat good" style="font-size:3.4rem">55%</div>
+        <small>of the decision is real signal today</small>
+        <hr style="border:none;border-top:1px solid var(--line);margin:1rem 0">
+        <div class="stat warn" style="font-size:3.4rem">45%</div>
+        <small>is pinned at a neutral 50 — a placeholder waiting for Slice 2</small>
+      </div>
+      <p class="sub">The three placeholder dimensions need the feedback &amp; profile text Slice 1 can't read yet — so they return a flat "no opinion" score of 50 for everyone.</p>
+    </div>
+  </div>
+  <div class="footer"><span>The six dimensions</span><span>5 / 9</span></div>
+</section>
+
+<!-- 6  configurable weights -->
+<section class="slide">
+  <h2><span class="tag">Tuned to the staffer, not hard-coded</span>The weights are configuration, not code</h2>
+  <div class="row">
+    <div>
+      <p>Every weight lives in a config file and must sum to 100%. A staffing manager can re-prioritise for the situation — <span class="em">no code change, no redeploy</span> — and the shortlist re-orders to match.</p>
+      <ul>
+        <li><span class="em">Hard-to-find skill?</span> Lean on skill match.</li>
+        <li><span class="em">Must fill this week?</span> Lean on availability + supply.</li>
+      </ul>
+      <p class="sub">An invalid mix (one that doesn't sum to 100%) is rejected with a clear message — the engine can't be silently mis-tuned.</p>
+    </div>
+    <div>
+      <p class="sub" style="margin-top:0">Same role, same people — three priorities, three different <span class="em">#1</span>:</p>
+      <table>
+        <tr><th>Priority preset</th><th>Top of the list</th></tr>
+        <tr><td>Default <small>(skill 35%)</small></td><td>Vikram Iyer</td></tr>
+        <tr><td>Skill-first <small>(skill 60%)</small></td><td>Vikram → <span class="hi">Deepak rises to #2</span></td></tr>
+        <tr><td>Fill-fast <small>(avail 40%, supply 20%)</small></td><td><span class="hi">Vivaan Hegde</span> — whole top 3 shifts</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="footer"><span>Configurable weights</span><span>6 / 9</span></div>
+</section>
+
+<!-- 7  scoring → bands → signals -->
+<section class="slide">
+  <h2><span class="tag">From score to plain English</span>Each 0–100 score becomes a band</h2>
+  <div class="flow" style="justify-content:center;margin:1.4rem 0">
+    <div class="node">raw score<small>0 – 100</small></div>
+    <span class="arrow">→</span>
+    <div class="col">
+      <div class="node good" style="padding:.4rem .9rem">≥ 75 &nbsp;<b>Strong</b></div>
+      <div class="node warn" style="padding:.4rem .9rem">40–74 &nbsp;<b>Partial</b></div>
+      <div class="node bad" style="padding:.4rem .9rem">&lt; 40 &nbsp;<b>Gap</b></div>
+    </div>
+    <span class="arrow">→</span>
+    <div class="node on">"N of 6 strong"<small>the headline a human reads</small></div>
+  </div>
+  <p>We deliberately show <span class="em">bands and a signal count</span>, never a fake-precise "76% match". When 45% of the score is still a placeholder, a "76 vs 74" gap is noise, not a real distinction.</p>
+  <div class="footer"><span>Bands &amp; signals</span><span>6 / 8</span></div>
+</section>
+
+<!-- 7  nitty gritty: rank vs signals -->
+<section class="slide">
+  <h2><span class="tag">The subtle part</span>"2 of 6 strong" can rank below "1 of 6 strong"</h2>
+  <div class="row">
+    <div>
+      <p>The signal <em>count</em> is a coarse summary. The actual <span class="em">rank</span> is the weighted score — which respects magnitude and weight.</p>
+      <p class="sub">Karan's two Strong signals are availability and <span class="em">supply state — the lowest weight at 5%</span>. Vikram's edge is on <span class="em">skill — the heaviest at 35%</span>. One heavily-weighted near-miss beats two lightly-weighted Strongs.</p>
+    </div>
+    <div>
+      <table>
+        <tr><th></th><th>Vikram <span class="band b-partial">#1</span></th><th>Karan <span class="band b-partial">#4</span></th></tr>
+        <tr><td>Skill <small>(35%)</small></td><td>57</td><td>40</td></tr>
+        <tr><td>Availability <small>(15%)</small></td><td>90 <span class="band b-strong">S</span></td><td>100 <span class="band b-strong">S</span></td></tr>
+        <tr><td>Supply <small>(5%)</small></td><td>40</td><td>100 <span class="band b-strong">S</span></td></tr>
+        <tr><td><b>Signals</b></td><td>1 of 6</td><td>2 of 6</td></tr>
+        <tr><td><b>Weighted total</b></td><td><b style="color:var(--good)">57.8</b></td><td>56.5</td></tr>
+      </table>
+    </div>
+  </div>
+  <p class="sub">This is by design: the spec treats exact rank as <span class="em">advisory</span>. The bands tell the story; the order is a tie-broken suggestion for a human to review.</p>
+  <div class="footer"><span>Rank vs signals</span><span>7 / 8</span></div>
+</section>
+
+<!-- 8  limits → next -->
+<section class="slide center">
+  <h2><span class="tag">Honest limits → why Slice 2 exists</span>A solid floor, deliberately partial</h2>
+  <div class="grid g3" style="width:100%">
+    <div class="card"><div class="stat warn">3 of 6</div><small>the most signals any candidate can earn — three dimensions are still asleep</small></div>
+    <div class="card"><div class="stat warn">5%</div><small>skill "Strong" rate — roles wanting "expert" cap at Partial without PDF proficiency</small></div>
+    <div class="card"><div class="stat good">100%</div><small>safe &amp; reproducible — the trustworthy base every later slice builds on</small></div>
+  </div>
+  <p class="lead" style="margin-top:2rem;text-align:center">Next: <span class="hi">Slice 2</span> opens the PDFs and feedback, turning the three sleeping dimensions into real signal — safely, behind a PII gate.</p>
+  <div class="footer"><span>Slice 1 → Slice 2</span><span>8 / 8</span></div>
+</section>
+
+</div>
+<div class="nav">← / → · <span id="counter">1 / 8</span></div>
+<script src="../assets/deck.js"></script>
+</body>
+</html>

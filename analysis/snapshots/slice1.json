@@ -1,0 +1,4298 @@
+{
+  "slice": "slice1",
+  "corpus": {
+    "n_roles": 8,
+    "n_consultants": 35,
+    "supply_breakdown": {
+      "beach": 10,
+      "rolling_off": 10,
+      "new_joiner": 15
+    }
+  },
+  "coverage": {
+    "live_dimensions": [
+      "availability",
+      "skill_match",
+      "supply_state"
+    ],
+    "placeholder_dimensions": [
+      "adaptability",
+      "feedback_quality",
+      "performance_trend"
+    ],
+    "live_weight": 0.55,
+    "placeholder_weight": 0.45
+  },
+  "aggregates": {
+    "total_scored_pairs": 135,
+    "total_filtered_pairs": 145,
+    "dim_band_counts": {
+      "skill_match": {
+        "Partial": 57,
+        "Gap": 71,
+        "Strong": 7
+      },
+      "feedback_quality": {
+        "Partial": 135
+      },
+      "availability": {
+        "Strong": 128,
+        "Gap": 7
+      },
+      "adaptability": {
+        "Partial": 135
+      },
+      "supply_state": {
+        "Partial": 63,
+        "Strong": 72
+      },
+      "performance_trend": {
+        "Partial": 135
+      }
+    },
+    "signals_met_histogram": {
+      "0": 7,
+      "1": 53,
+      "2": 71,
+      "3": 4
+    }
+  },
+  "per_role": {
+    "ROLE-01": {
+      "title": "Senior Backend Engineer (Kotlin) - Payments",
+      "co_located": false,
+      "start_date": "2026-06-22",
+      "required_skills": [
+        "Kotlin",
+        "Spring Boot",
+        "payments domain"
+      ],
+      "n_passing": 18,
+      "n_filtered_out": 17,
+      "candidates": [
+        {
+          "email": "vikram.iyer@paritypartners.example",
+          "name": "Vikram Iyer",
+          "rank": 1,
+          "total_score": 57.83,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 56.67,
+            "feedback_quality": 50.0,
+            "availability": 90.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "vivaan.hegde@paritypartners.example",
+          "name": "Vivaan Hegde",
+          "rank": 2,
+          "total_score": 57.67,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 43.33,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "deepak.shetty@paritypartners.example",
+          "name": "Deepak Shetty",
+          "rank": 3,
+          "total_score": 56.67,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 53.33,
+            "feedback_quality": 50.0,
+            "availability": 90.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "karan.mehta@paritypartners.example",
+          "name": "Karan Mehta",
+          "rank": 4,
+          "total_score": 56.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "rahul.nanda@paritypartners.example",
+          "name": "Rahul Nanda",
+          "rank": 4,
+          "total_score": 56.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "priya.menon@paritypartners.example",
+          "name": "Priya Menon",
+          "rank": 4,
+          "total_score": 56.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "sandeep.reddy@paritypartners.example",
+          "name": "Sandeep Reddy",
+          "rank": 4,
+          "total_score": 56.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "imran.khan@paritypartners.example",
+          "name": "Imran Khan",
+          "rank": 4,
+          "total_score": 56.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "manish.shah@paritypartners.example",
+          "name": "Manish Shah",
+          "rank": 9,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "kavya.nanda@paritypartners.example",
+          "name": "Kavya Nanda",
+          "rank": 9,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "vivaan.sharma@paritypartners.example",
+          "name": "Vivaan Sharma",
+          "rank": 11,
+          "total_score": 53.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 96.67,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "deepa.sharma@paritypartners.example",
+          "name": "Deepa Sharma",
+          "rank": 11,
+          "total_score": 53.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 96.67,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "aarav.menon@paritypartners.example",
+          "name": "Aarav Menon",
+          "rank": 13,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "karthik.subramanian@paritypartners.example",
+          "name": "Karthik Subramanian",
+          "rank": 13,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "deepa.pillai@paritypartners.example",
+          "name": "Deepa Pillai",
+          "rank": 13,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "meera.nair@paritypartners.example",
+          "name": "Meera Nair",
+          "rank": 13,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "aarav.krishnan@paritypartners.example",
+          "name": "Aarav Krishnan",
+          "rank": 17,
+          "total_score": 41.17,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 43.33,
+            "feedback_quality": 50.0,
+            "availability": 0.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Gap",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 0,
+          "gaps": [
+            "availability"
+          ]
+        },
+        {
+          "email": "ananya.rao@paritypartners.example",
+          "name": "Ananya Rao",
+          "rank": 18,
+          "total_score": 41.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": [
+            "skill_match"
+          ]
+        }
+      ],
+      "filtered_out": [
+        {
+          "name": "Vivaan Prasad",
+          "email": "vivaan.prasad@paritypartners.example"
+        },
+        {
+          "name": "Neha Gupta",
+          "email": "neha.gupta@paritypartners.example"
+        },
+        {
+          "name": "Varun Reddy",
+          "email": "varun.reddy@paritypartners.example"
+        },
+        {
+          "name": "Imran Mathew",
+          "email": "imran.mathew@paritypartners.example"
+        },
+        {
+          "name": "Aarav Nair",
+          "email": "aarav.nair@paritypartners.example"
+        },
+        {
+          "name": "Naveen Joshi",
+          "email": "naveen.joshi@paritypartners.example"
+        },
+        {
+          "name": "Priya Mathew",
+          "email": "priya.mathew@paritypartners.example"
+        },
+        {
+          "name": "Deepa Prasad",
+          "email": "deepa.prasad@paritypartners.example"
+        },
+        {
+          "name": "Aisha Sheikh",
+          "email": "aisha.sheikh@paritypartners.example"
+        },
+        {
+          "name": "Vikram Kulkarni",
+          "email": "vikram.kulkarni@paritypartners.example"
+        },
+        {
+          "name": "Rekha Naidu",
+          "email": "rekha.naidu@paritypartners.example"
+        },
+        {
+          "name": "Divya Nair",
+          "email": "divya.nair@paritypartners.example"
+        },
+        {
+          "name": "Arjun Subramanian",
+          "email": "arjun.subramanian@paritypartners.example"
+        },
+        {
+          "name": "Deepak Iyer",
+          "email": "deepak.iyer@paritypartners.example"
+        },
+        {
+          "name": "Ishita Prasad",
+          "email": "ishita.prasad@paritypartners.example"
+        },
+        {
+          "name": "Aditya Mehta",
+          "email": "aditya.mehta@paritypartners.example"
+        },
+        {
+          "name": "Rahul Varghese",
+          "email": "rahul.varghese@paritypartners.example"
+        }
+      ]
+    },
+    "ROLE-02": {
+      "title": "Platform / SRE Engineer",
+      "co_located": true,
+      "start_date": "2026-06-15",
+      "required_skills": [
+        "Kubernetes",
+        "Terraform",
+        "AWS",
+        "observability"
+      ],
+      "n_passing": 2,
+      "n_filtered_out": 33,
+      "candidates": [
+        {
+          "email": "karthik.subramanian@paritypartners.example",
+          "name": "Karthik Subramanian",
+          "rank": 1,
+          "total_score": 65.25,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 65.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "sandeep.reddy@paritypartners.example",
+          "name": "Sandeep Reddy",
+          "rank": 2,
+          "total_score": 51.25,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 25.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        }
+      ],
+      "filtered_out": [
+        {
+          "name": "Karan Mehta",
+          "email": "karan.mehta@paritypartners.example"
+        },
+        {
+          "name": "Vivaan Hegde",
+          "email": "vivaan.hegde@paritypartners.example"
+        },
+        {
+          "name": "Rahul Nanda",
+          "email": "rahul.nanda@paritypartners.example"
+        },
+        {
+          "name": "Aarav Menon",
+          "email": "aarav.menon@paritypartners.example"
+        },
+        {
+          "name": "Priya Menon",
+          "email": "priya.menon@paritypartners.example"
+        },
+        {
+          "name": "Imran Khan",
+          "email": "imran.khan@paritypartners.example"
+        },
+        {
+          "name": "Deepa Pillai",
+          "email": "deepa.pillai@paritypartners.example"
+        },
+        {
+          "name": "Meera Nair",
+          "email": "meera.nair@paritypartners.example"
+        },
+        {
+          "name": "Aarav Krishnan",
+          "email": "aarav.krishnan@paritypartners.example"
+        },
+        {
+          "name": "Ananya Rao",
+          "email": "ananya.rao@paritypartners.example"
+        },
+        {
+          "name": "Vivaan Prasad",
+          "email": "vivaan.prasad@paritypartners.example"
+        },
+        {
+          "name": "Neha Gupta",
+          "email": "neha.gupta@paritypartners.example"
+        },
+        {
+          "name": "Varun Reddy",
+          "email": "varun.reddy@paritypartners.example"
+        },
+        {
+          "name": "Imran Mathew",
+          "email": "imran.mathew@paritypartners.example"
+        },
+        {
+          "name": "Aarav Nair",
+          "email": "aarav.nair@paritypartners.example"
+        },
+        {
+          "name": "Naveen Joshi",
+          "email": "naveen.joshi@paritypartners.example"
+        },
+        {
+          "name": "Priya Mathew",
+          "email": "priya.mathew@paritypartners.example"
+        },
+        {
+          "name": "Deepa Prasad",
+          "email": "deepa.prasad@paritypartners.example"
+        },
+        {
+          "name": "Vikram Iyer",
+          "email": "vikram.iyer@paritypartners.example"
+        },
+        {
+          "name": "Aisha Sheikh",
+          "email": "aisha.sheikh@paritypartners.example"
+        },
+        {
+          "name": "Vikram Kulkarni",
+          "email": "vikram.kulkarni@paritypartners.example"
+        },
+        {
+          "name": "Rekha Naidu",
+          "email": "rekha.naidu@paritypartners.example"
+        },
+        {
+          "name": "Divya Nair",
+          "email": "divya.nair@paritypartners.example"
+        },
+        {
+          "name": "Vivaan Sharma",
+          "email": "vivaan.sharma@paritypartners.example"
+        },
+        {
+          "name": "Arjun Subramanian",
+          "email": "arjun.subramanian@paritypartners.example"
+        },
+        {
+          "name": "Deepa Sharma",
+          "email": "deepa.sharma@paritypartners.example"
+        },
+        {
+          "name": "Deepak Iyer",
+          "email": "deepak.iyer@paritypartners.example"
+        },
+        {
+          "name": "Manish Shah",
+          "email": "manish.shah@paritypartners.example"
+        },
+        {
+          "name": "Ishita Prasad",
+          "email": "ishita.prasad@paritypartners.example"
+        },
+        {
+          "name": "Aditya Mehta",
+          "email": "aditya.mehta@paritypartners.example"
+        },
+        {
+          "name": "Rahul Varghese",
+          "email": "rahul.varghese@paritypartners.example"
+        },
+        {
+          "name": "Kavya Nanda",
+          "email": "kavya.nanda@paritypartners.example"
+        },
+        {
+          "name": "Deepak Shetty",
+          "email": "deepak.shetty@paritypartners.example"
+        }
+      ]
+    },
+    "ROLE-03": {
+      "title": "GenAI / ML Engineer - AI product",
+      "co_located": false,
+      "start_date": "2026-07-01",
+      "required_skills": [
+        "Python",
+        "ML",
+        "LLMs/RAG (nice to have)"
+      ],
+      "n_passing": 20,
+      "n_filtered_out": 15,
+      "candidates": [
+        {
+          "email": "vivaan.sharma@paritypartners.example",
+          "name": "Vivaan Sharma",
+          "rank": 1,
+          "total_score": 60.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 60.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "manish.shah@paritypartners.example",
+          "name": "Manish Shah",
+          "rank": 1,
+          "total_score": 60.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 60.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "kavya.nanda@paritypartners.example",
+          "name": "Kavya Nanda",
+          "rank": 1,
+          "total_score": 60.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 60.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "aarav.menon@paritypartners.example",
+          "name": "Aarav Menon",
+          "rank": 4,
+          "total_score": 54.17,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 33.33,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "meera.nair@paritypartners.example",
+          "name": "Meera Nair",
+          "rank": 4,
+          "total_score": 54.17,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 33.33,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "vikram.iyer@paritypartners.example",
+          "name": "Vikram Iyer",
+          "rank": 6,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "deepa.sharma@paritypartners.example",
+          "name": "Deepa Sharma",
+          "rank": 6,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "deepak.shetty@paritypartners.example",
+          "name": "Deepak Shetty",
+          "rank": 6,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "rekha.naidu@paritypartners.example",
+          "name": "Rekha Naidu",
+          "rank": 9,
+          "total_score": 50.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 76.67,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "karan.mehta@paritypartners.example",
+          "name": "Karan Mehta",
+          "rank": 10,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "vivaan.hegde@paritypartners.example",
+          "name": "Vivaan Hegde",
+          "rank": 10,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "rahul.nanda@paritypartners.example",
+          "name": "Rahul Nanda",
+          "rank": 10,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "karthik.subramanian@paritypartners.example",
+          "name": "Karthik Subramanian",
+          "rank": 10,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "priya.menon@paritypartners.example",
+          "name": "Priya Menon",
+          "rank": 10,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "sandeep.reddy@paritypartners.example",
+          "name": "Sandeep Reddy",
+          "rank": 10,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "imran.khan@paritypartners.example",
+          "name": "Imran Khan",
+          "rank": 10,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "deepa.pillai@paritypartners.example",
+          "name": "Deepa Pillai",
+          "rank": 10,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "ananya.rao@paritypartners.example",
+          "name": "Ananya Rao",
+          "rank": 18,
+          "total_score": 41.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "aarav.nair@paritypartners.example",
+          "name": "Aarav Nair",
+          "rank": 19,
+          "total_score": 38.6,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 84.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "aarav.krishnan@paritypartners.example",
+          "name": "Aarav Krishnan",
+          "rank": 20,
+          "total_score": 26.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 0.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Gap",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 0,
+          "gaps": [
+            "skill_match",
+            "availability"
+          ]
+        }
+      ],
+      "filtered_out": [
+        {
+          "name": "Vivaan Prasad",
+          "email": "vivaan.prasad@paritypartners.example"
+        },
+        {
+          "name": "Neha Gupta",
+          "email": "neha.gupta@paritypartners.example"
+        },
+        {
+          "name": "Varun Reddy",
+          "email": "varun.reddy@paritypartners.example"
+        },
+        {
+          "name": "Imran Mathew",
+          "email": "imran.mathew@paritypartners.example"
+        },
+        {
+          "name": "Naveen Joshi",
+          "email": "naveen.joshi@paritypartners.example"
+        },
+        {
+          "name": "Priya Mathew",
+          "email": "priya.mathew@paritypartners.example"
+        },
+        {
+          "name": "Deepa Prasad",
+          "email": "deepa.prasad@paritypartners.example"
+        },
+        {
+          "name": "Aisha Sheikh",
+          "email": "aisha.sheikh@paritypartners.example"
+        },
+        {
+          "name": "Vikram Kulkarni",
+          "email": "vikram.kulkarni@paritypartners.example"
+        },
+        {
+          "name": "Divya Nair",
+          "email": "divya.nair@paritypartners.example"
+        },
+        {
+          "name": "Arjun Subramanian",
+          "email": "arjun.subramanian@paritypartners.example"
+        },
+        {
+          "name": "Deepak Iyer",
+          "email": "deepak.iyer@paritypartners.example"
+        },
+        {
+          "name": "Ishita Prasad",
+          "email": "ishita.prasad@paritypartners.example"
+        },
+        {
+          "name": "Aditya Mehta",
+          "email": "aditya.mehta@paritypartners.example"
+        },
+        {
+          "name": "Rahul Varghese",
+          "email": "rahul.varghese@paritypartners.example"
+        }
+      ]
+    },
+    "ROLE-04": {
+      "title": "Full-stack Engineer (React + Java)",
+      "co_located": false,
+      "start_date": "2026-06-19",
+      "required_skills": [
+        "React",
+        "Java",
+        "TypeScript"
+      ],
+      "n_passing": 18,
+      "n_filtered_out": 17,
+      "candidates": [
+        {
+          "email": "priya.menon@paritypartners.example",
+          "name": "Priya Menon",
+          "rank": 1,
+          "total_score": 69.33,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 76.67,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Strong",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 3,
+          "gaps": []
+        },
+        {
+          "email": "deepak.shetty@paritypartners.example",
+          "name": "Deepak Shetty",
+          "rank": 2,
+          "total_score": 63.33,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 76.67,
+            "feedback_quality": 50.0,
+            "availability": 80.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Strong",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "deepa.sharma@paritypartners.example",
+          "name": "Deepa Sharma",
+          "rank": 3,
+          "total_score": 57.34,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 56.67,
+            "feedback_quality": 50.0,
+            "availability": 86.67,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "karan.mehta@paritypartners.example",
+          "name": "Karan Mehta",
+          "rank": 4,
+          "total_score": 54.17,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 33.33,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "rahul.nanda@paritypartners.example",
+          "name": "Rahul Nanda",
+          "rank": 4,
+          "total_score": 54.17,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 33.33,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "sandeep.reddy@paritypartners.example",
+          "name": "Sandeep Reddy",
+          "rank": 4,
+          "total_score": 54.17,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 33.33,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "imran.khan@paritypartners.example",
+          "name": "Imran Khan",
+          "rank": 4,
+          "total_score": 54.17,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 33.33,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "manish.shah@paritypartners.example",
+          "name": "Manish Shah",
+          "rank": 8,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "kavya.nanda@paritypartners.example",
+          "name": "Kavya Nanda",
+          "rank": 8,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "vikram.iyer@paritypartners.example",
+          "name": "Vikram Iyer",
+          "rank": 10,
+          "total_score": 52.83,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 46.67,
+            "feedback_quality": 50.0,
+            "availability": 80.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "vivaan.sharma@paritypartners.example",
+          "name": "Vivaan Sharma",
+          "rank": 11,
+          "total_score": 51.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 86.67,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "vivaan.hegde@paritypartners.example",
+          "name": "Vivaan Hegde",
+          "rank": 12,
+          "total_score": 49.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 20.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "aarav.menon@paritypartners.example",
+          "name": "Aarav Menon",
+          "rank": 13,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "karthik.subramanian@paritypartners.example",
+          "name": "Karthik Subramanian",
+          "rank": 13,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "deepa.pillai@paritypartners.example",
+          "name": "Deepa Pillai",
+          "rank": 13,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "meera.nair@paritypartners.example",
+          "name": "Meera Nair",
+          "rank": 13,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "ananya.rao@paritypartners.example",
+          "name": "Ananya Rao",
+          "rank": 17,
+          "total_score": 40.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 93.33,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "aarav.krishnan@paritypartners.example",
+          "name": "Aarav Krishnan",
+          "rank": 18,
+          "total_score": 33.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 20.0,
+            "feedback_quality": 50.0,
+            "availability": 0.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Gap",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 0,
+          "gaps": [
+            "skill_match",
+            "availability"
+          ]
+        }
+      ],
+      "filtered_out": [
+        {
+          "name": "Vivaan Prasad",
+          "email": "vivaan.prasad@paritypartners.example"
+        },
+        {
+          "name": "Neha Gupta",
+          "email": "neha.gupta@paritypartners.example"
+        },
+        {
+          "name": "Varun Reddy",
+          "email": "varun.reddy@paritypartners.example"
+        },
+        {
+          "name": "Imran Mathew",
+          "email": "imran.mathew@paritypartners.example"
+        },
+        {
+          "name": "Aarav Nair",
+          "email": "aarav.nair@paritypartners.example"
+        },
+        {
+          "name": "Naveen Joshi",
+          "email": "naveen.joshi@paritypartners.example"
+        },
+        {
+          "name": "Priya Mathew",
+          "email": "priya.mathew@paritypartners.example"
+        },
+        {
+          "name": "Deepa Prasad",
+          "email": "deepa.prasad@paritypartners.example"
+        },
+        {
+          "name": "Aisha Sheikh",
+          "email": "aisha.sheikh@paritypartners.example"
+        },
+        {
+          "name": "Vikram Kulkarni",
+          "email": "vikram.kulkarni@paritypartners.example"
+        },
+        {
+          "name": "Rekha Naidu",
+          "email": "rekha.naidu@paritypartners.example"
+        },
+        {
+          "name": "Divya Nair",
+          "email": "divya.nair@paritypartners.example"
+        },
+        {
+          "name": "Arjun Subramanian",
+          "email": "arjun.subramanian@paritypartners.example"
+        },
+        {
+          "name": "Deepak Iyer",
+          "email": "deepak.iyer@paritypartners.example"
+        },
+        {
+          "name": "Ishita Prasad",
+          "email": "ishita.prasad@paritypartners.example"
+        },
+        {
+          "name": "Aditya Mehta",
+          "email": "aditya.mehta@paritypartners.example"
+        },
+        {
+          "name": "Rahul Varghese",
+          "email": "rahul.varghese@paritypartners.example"
+        }
+      ]
+    },
+    "ROLE-05": {
+      "title": "Senior Backend Engineer (Java/Spring)",
+      "co_located": false,
+      "start_date": "2026-06-26",
+      "required_skills": [
+        "Java",
+        "Spring Boot",
+        "PostgreSQL"
+      ],
+      "n_passing": 18,
+      "n_filtered_out": 17,
+      "candidates": [
+        {
+          "email": "sandeep.reddy@paritypartners.example",
+          "name": "Sandeep Reddy",
+          "rank": 1,
+          "total_score": 69.33,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 76.67,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Strong",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 3,
+          "gaps": []
+        },
+        {
+          "email": "imran.khan@paritypartners.example",
+          "name": "Imran Khan",
+          "rank": 2,
+          "total_score": 64.67,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 63.33,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "deepak.shetty@paritypartners.example",
+          "name": "Deepak Shetty",
+          "rank": 3,
+          "total_score": 59.33,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 56.67,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "vikram.iyer@paritypartners.example",
+          "name": "Vikram Iyer",
+          "rank": 4,
+          "total_score": 58.17,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 53.33,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "karan.mehta@paritypartners.example",
+          "name": "Karan Mehta",
+          "rank": 5,
+          "total_score": 57.67,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 43.33,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "rahul.nanda@paritypartners.example",
+          "name": "Rahul Nanda",
+          "rank": 5,
+          "total_score": 57.67,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 43.33,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "priya.menon@paritypartners.example",
+          "name": "Priya Menon",
+          "rank": 5,
+          "total_score": 57.67,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 43.33,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "vivaan.hegde@paritypartners.example",
+          "name": "Vivaan Hegde",
+          "rank": 8,
+          "total_score": 56.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "kavya.nanda@paritypartners.example",
+          "name": "Kavya Nanda",
+          "rank": 9,
+          "total_score": 55.83,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 46.67,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "vivaan.sharma@paritypartners.example",
+          "name": "Vivaan Sharma",
+          "rank": 10,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "deepa.sharma@paritypartners.example",
+          "name": "Deepa Sharma",
+          "rank": 10,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "manish.shah@paritypartners.example",
+          "name": "Manish Shah",
+          "rank": 10,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "aarav.menon@paritypartners.example",
+          "name": "Aarav Menon",
+          "rank": 13,
+          "total_score": 49.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 20.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "deepa.pillai@paritypartners.example",
+          "name": "Deepa Pillai",
+          "rank": 13,
+          "total_score": 49.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 20.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "meera.nair@paritypartners.example",
+          "name": "Meera Nair",
+          "rank": 13,
+          "total_score": 49.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 20.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "karthik.subramanian@paritypartners.example",
+          "name": "Karthik Subramanian",
+          "rank": 16,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "ananya.rao@paritypartners.example",
+          "name": "Ananya Rao",
+          "rank": 17,
+          "total_score": 41.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "aarav.krishnan@paritypartners.example",
+          "name": "Aarav Krishnan",
+          "rank": 18,
+          "total_score": 40.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 0.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Gap",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 0,
+          "gaps": [
+            "availability"
+          ]
+        }
+      ],
+      "filtered_out": [
+        {
+          "name": "Vivaan Prasad",
+          "email": "vivaan.prasad@paritypartners.example"
+        },
+        {
+          "name": "Neha Gupta",
+          "email": "neha.gupta@paritypartners.example"
+        },
+        {
+          "name": "Varun Reddy",
+          "email": "varun.reddy@paritypartners.example"
+        },
+        {
+          "name": "Imran Mathew",
+          "email": "imran.mathew@paritypartners.example"
+        },
+        {
+          "name": "Aarav Nair",
+          "email": "aarav.nair@paritypartners.example"
+        },
+        {
+          "name": "Naveen Joshi",
+          "email": "naveen.joshi@paritypartners.example"
+        },
+        {
+          "name": "Priya Mathew",
+          "email": "priya.mathew@paritypartners.example"
+        },
+        {
+          "name": "Deepa Prasad",
+          "email": "deepa.prasad@paritypartners.example"
+        },
+        {
+          "name": "Aisha Sheikh",
+          "email": "aisha.sheikh@paritypartners.example"
+        },
+        {
+          "name": "Vikram Kulkarni",
+          "email": "vikram.kulkarni@paritypartners.example"
+        },
+        {
+          "name": "Rekha Naidu",
+          "email": "rekha.naidu@paritypartners.example"
+        },
+        {
+          "name": "Divya Nair",
+          "email": "divya.nair@paritypartners.example"
+        },
+        {
+          "name": "Arjun Subramanian",
+          "email": "arjun.subramanian@paritypartners.example"
+        },
+        {
+          "name": "Deepak Iyer",
+          "email": "deepak.iyer@paritypartners.example"
+        },
+        {
+          "name": "Ishita Prasad",
+          "email": "ishita.prasad@paritypartners.example"
+        },
+        {
+          "name": "Aditya Mehta",
+          "email": "aditya.mehta@paritypartners.example"
+        },
+        {
+          "name": "Rahul Varghese",
+          "email": "rahul.varghese@paritypartners.example"
+        }
+      ]
+    },
+    "ROLE-06": {
+      "title": "Frontend Lead (React/TS)",
+      "co_located": false,
+      "start_date": "2026-06-29",
+      "required_skills": [
+        "React",
+        "TypeScript",
+        "leadership"
+      ],
+      "n_passing": 19,
+      "n_filtered_out": 16,
+      "candidates": [
+        {
+          "email": "deepa.sharma@paritypartners.example",
+          "name": "Deepa Sharma",
+          "rank": 1,
+          "total_score": 59.33,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 56.67,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "deepak.shetty@paritypartners.example",
+          "name": "Deepak Shetty",
+          "rank": 1,
+          "total_score": 59.33,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 56.67,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "priya.menon@paritypartners.example",
+          "name": "Priya Menon",
+          "rank": 3,
+          "total_score": 57.67,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 43.33,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "vikram.iyer@paritypartners.example",
+          "name": "Vikram Iyer",
+          "rank": 4,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "vivaan.sharma@paritypartners.example",
+          "name": "Vivaan Sharma",
+          "rank": 4,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "manish.shah@paritypartners.example",
+          "name": "Manish Shah",
+          "rank": 4,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "kavya.nanda@paritypartners.example",
+          "name": "Kavya Nanda",
+          "rank": 4,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "karan.mehta@paritypartners.example",
+          "name": "Karan Mehta",
+          "rank": 8,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "vivaan.hegde@paritypartners.example",
+          "name": "Vivaan Hegde",
+          "rank": 8,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "rahul.nanda@paritypartners.example",
+          "name": "Rahul Nanda",
+          "rank": 8,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "aarav.menon@paritypartners.example",
+          "name": "Aarav Menon",
+          "rank": 8,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "karthik.subramanian@paritypartners.example",
+          "name": "Karthik Subramanian",
+          "rank": 8,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "sandeep.reddy@paritypartners.example",
+          "name": "Sandeep Reddy",
+          "rank": 8,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "imran.khan@paritypartners.example",
+          "name": "Imran Khan",
+          "rank": 8,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "deepa.pillai@paritypartners.example",
+          "name": "Deepa Pillai",
+          "rank": 8,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "meera.nair@paritypartners.example",
+          "name": "Meera Nair",
+          "rank": 8,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "ananya.rao@paritypartners.example",
+          "name": "Ananya Rao",
+          "rank": 17,
+          "total_score": 41.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "aarav.nair@paritypartners.example",
+          "name": "Aarav Nair",
+          "rank": 18,
+          "total_score": 37.7,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 78.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "aarav.krishnan@paritypartners.example",
+          "name": "Aarav Krishnan",
+          "rank": 19,
+          "total_score": 26.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 0.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Gap",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 0,
+          "gaps": [
+            "skill_match",
+            "availability"
+          ]
+        }
+      ],
+      "filtered_out": [
+        {
+          "name": "Vivaan Prasad",
+          "email": "vivaan.prasad@paritypartners.example"
+        },
+        {
+          "name": "Neha Gupta",
+          "email": "neha.gupta@paritypartners.example"
+        },
+        {
+          "name": "Varun Reddy",
+          "email": "varun.reddy@paritypartners.example"
+        },
+        {
+          "name": "Imran Mathew",
+          "email": "imran.mathew@paritypartners.example"
+        },
+        {
+          "name": "Naveen Joshi",
+          "email": "naveen.joshi@paritypartners.example"
+        },
+        {
+          "name": "Priya Mathew",
+          "email": "priya.mathew@paritypartners.example"
+        },
+        {
+          "name": "Deepa Prasad",
+          "email": "deepa.prasad@paritypartners.example"
+        },
+        {
+          "name": "Aisha Sheikh",
+          "email": "aisha.sheikh@paritypartners.example"
+        },
+        {
+          "name": "Vikram Kulkarni",
+          "email": "vikram.kulkarni@paritypartners.example"
+        },
+        {
+          "name": "Rekha Naidu",
+          "email": "rekha.naidu@paritypartners.example"
+        },
+        {
+          "name": "Divya Nair",
+          "email": "divya.nair@paritypartners.example"
+        },
+        {
+          "name": "Arjun Subramanian",
+          "email": "arjun.subramanian@paritypartners.example"
+        },
+        {
+          "name": "Deepak Iyer",
+          "email": "deepak.iyer@paritypartners.example"
+        },
+        {
+          "name": "Ishita Prasad",
+          "email": "ishita.prasad@paritypartners.example"
+        },
+        {
+          "name": "Aditya Mehta",
+          "email": "aditya.mehta@paritypartners.example"
+        },
+        {
+          "name": "Rahul Varghese",
+          "email": "rahul.varghese@paritypartners.example"
+        }
+      ]
+    },
+    "ROLE-07": {
+      "title": "Data Engineer",
+      "co_located": false,
+      "start_date": "2026-07-04",
+      "required_skills": [
+        "Python",
+        "Spark",
+        "Airflow",
+        "SQL"
+      ],
+      "n_passing": 22,
+      "n_filtered_out": 13,
+      "candidates": [
+        {
+          "email": "aarav.menon@paritypartners.example",
+          "name": "Aarav Menon",
+          "rank": 1,
+          "total_score": 77.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 100.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Strong",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 3,
+          "gaps": []
+        },
+        {
+          "email": "kavya.nanda@paritypartners.example",
+          "name": "Kavya Nanda",
+          "rank": 2,
+          "total_score": 74.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 100.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Strong",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "meera.nair@paritypartners.example",
+          "name": "Meera Nair",
+          "rank": 3,
+          "total_score": 68.75,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 75.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Strong",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 3,
+          "gaps": []
+        },
+        {
+          "email": "rekha.naidu@paritypartners.example",
+          "name": "Rekha Naidu",
+          "rank": 4,
+          "total_score": 67.25,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 85.0,
+            "feedback_quality": 50.0,
+            "availability": 86.67,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Strong",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": []
+        },
+        {
+          "email": "vivaan.sharma@paritypartners.example",
+          "name": "Vivaan Sharma",
+          "rank": 5,
+          "total_score": 58.75,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 55.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "manish.shah@paritypartners.example",
+          "name": "Manish Shah",
+          "rank": 5,
+          "total_score": 58.75,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 55.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "aisha.sheikh@paritypartners.example",
+          "name": "Aisha Sheikh",
+          "rank": 7,
+          "total_score": 55.25,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 55.0,
+            "feedback_quality": 50.0,
+            "availability": 76.67,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "vikram.iyer@paritypartners.example",
+          "name": "Vikram Iyer",
+          "rank": 8,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "deepa.sharma@paritypartners.example",
+          "name": "Deepa Sharma",
+          "rank": 8,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "deepak.shetty@paritypartners.example",
+          "name": "Deepak Shetty",
+          "rank": 8,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "deepa.pillai@paritypartners.example",
+          "name": "Deepa Pillai",
+          "rank": 11,
+          "total_score": 51.25,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 25.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "aarav.nair@paritypartners.example",
+          "name": "Aarav Nair",
+          "rank": 12,
+          "total_score": 48.25,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 25.0,
+            "feedback_quality": 50.0,
+            "availability": 90.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "sandeep.reddy@paritypartners.example",
+          "name": "Sandeep Reddy",
+          "rank": 13,
+          "total_score": 47.75,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 15.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "karan.mehta@paritypartners.example",
+          "name": "Karan Mehta",
+          "rank": 14,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "vivaan.hegde@paritypartners.example",
+          "name": "Vivaan Hegde",
+          "rank": 14,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "rahul.nanda@paritypartners.example",
+          "name": "Rahul Nanda",
+          "rank": 14,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "karthik.subramanian@paritypartners.example",
+          "name": "Karthik Subramanian",
+          "rank": 14,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "priya.menon@paritypartners.example",
+          "name": "Priya Menon",
+          "rank": 14,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "imran.khan@paritypartners.example",
+          "name": "Imran Khan",
+          "rank": 14,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "ananya.rao@paritypartners.example",
+          "name": "Ananya Rao",
+          "rank": 20,
+          "total_score": 41.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "vivaan.prasad@paritypartners.example",
+          "name": "Vivaan Prasad",
+          "rank": 21,
+          "total_score": 39.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 86.67,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "aarav.krishnan@paritypartners.example",
+          "name": "Aarav Krishnan",
+          "rank": 22,
+          "total_score": 26.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 0.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Gap",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 0,
+          "gaps": [
+            "skill_match",
+            "availability"
+          ]
+        }
+      ],
+      "filtered_out": [
+        {
+          "name": "Neha Gupta",
+          "email": "neha.gupta@paritypartners.example"
+        },
+        {
+          "name": "Varun Reddy",
+          "email": "varun.reddy@paritypartners.example"
+        },
+        {
+          "name": "Imran Mathew",
+          "email": "imran.mathew@paritypartners.example"
+        },
+        {
+          "name": "Naveen Joshi",
+          "email": "naveen.joshi@paritypartners.example"
+        },
+        {
+          "name": "Priya Mathew",
+          "email": "priya.mathew@paritypartners.example"
+        },
+        {
+          "name": "Deepa Prasad",
+          "email": "deepa.prasad@paritypartners.example"
+        },
+        {
+          "name": "Vikram Kulkarni",
+          "email": "vikram.kulkarni@paritypartners.example"
+        },
+        {
+          "name": "Divya Nair",
+          "email": "divya.nair@paritypartners.example"
+        },
+        {
+          "name": "Arjun Subramanian",
+          "email": "arjun.subramanian@paritypartners.example"
+        },
+        {
+          "name": "Deepak Iyer",
+          "email": "deepak.iyer@paritypartners.example"
+        },
+        {
+          "name": "Ishita Prasad",
+          "email": "ishita.prasad@paritypartners.example"
+        },
+        {
+          "name": "Aditya Mehta",
+          "email": "aditya.mehta@paritypartners.example"
+        },
+        {
+          "name": "Rahul Varghese",
+          "email": "rahul.varghese@paritypartners.example"
+        }
+      ]
+    },
+    "ROLE-08": {
+      "title": "Senior QA / Test Automation",
+      "co_located": false,
+      "start_date": "2026-06-21",
+      "required_skills": [
+        "test automation",
+        "Selenium or Cypress",
+        "CI/CD"
+      ],
+      "n_passing": 18,
+      "n_filtered_out": 17,
+      "candidates": [
+        {
+          "email": "manish.shah@paritypartners.example",
+          "name": "Manish Shah",
+          "rank": 1,
+          "total_score": 60.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 60.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "kavya.nanda@paritypartners.example",
+          "name": "Kavya Nanda",
+          "rank": 2,
+          "total_score": 53.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "vivaan.sharma@paritypartners.example",
+          "name": "Vivaan Sharma",
+          "rank": 3,
+          "total_score": 52.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 93.33,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "deepa.sharma@paritypartners.example",
+          "name": "Deepa Sharma",
+          "rank": 3,
+          "total_score": 52.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 93.33,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "vikram.iyer@paritypartners.example",
+          "name": "Vikram Iyer",
+          "rank": 5,
+          "total_score": 51.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 86.67,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "deepak.shetty@paritypartners.example",
+          "name": "Deepak Shetty",
+          "rank": 5,
+          "total_score": 51.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 40.0,
+            "feedback_quality": 50.0,
+            "availability": 86.67,
+            "adaptability": 50.0,
+            "supply_state": 40.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Partial",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": []
+        },
+        {
+          "email": "karan.mehta@paritypartners.example",
+          "name": "Karan Mehta",
+          "rank": 7,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "vivaan.hegde@paritypartners.example",
+          "name": "Vivaan Hegde",
+          "rank": 7,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "rahul.nanda@paritypartners.example",
+          "name": "Rahul Nanda",
+          "rank": 7,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "aarav.menon@paritypartners.example",
+          "name": "Aarav Menon",
+          "rank": 7,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "karthik.subramanian@paritypartners.example",
+          "name": "Karthik Subramanian",
+          "rank": 7,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "priya.menon@paritypartners.example",
+          "name": "Priya Menon",
+          "rank": 7,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "sandeep.reddy@paritypartners.example",
+          "name": "Sandeep Reddy",
+          "rank": 7,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "imran.khan@paritypartners.example",
+          "name": "Imran Khan",
+          "rank": 7,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "deepa.pillai@paritypartners.example",
+          "name": "Deepa Pillai",
+          "rank": 7,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "meera.nair@paritypartners.example",
+          "name": "Meera Nair",
+          "rank": 7,
+          "total_score": 42.5,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 100.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Strong",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 2,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "ananya.rao@paritypartners.example",
+          "name": "Ananya Rao",
+          "rank": 17,
+          "total_score": 41.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 100.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Strong",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 1,
+          "gaps": [
+            "skill_match"
+          ]
+        },
+        {
+          "email": "aarav.krishnan@paritypartners.example",
+          "name": "Aarav Krishnan",
+          "rank": 18,
+          "total_score": 26.0,
+          "data_confidence": 1.0,
+          "dimensions": {
+            "skill_match": 0.0,
+            "feedback_quality": 50.0,
+            "availability": 0.0,
+            "adaptability": 50.0,
+            "supply_state": 70.0,
+            "performance_trend": 50.0
+          },
+          "bands": {
+            "skill_match": "Gap",
+            "feedback_quality": "Partial",
+            "availability": "Gap",
+            "adaptability": "Partial",
+            "supply_state": "Partial",
+            "performance_trend": "Partial"
+          },
+          "signals_met": 0,
+          "gaps": [
+            "skill_match",
+            "availability"
+          ]
+        }
+      ],
+      "filtered_out": [
+        {
+          "name": "Vivaan Prasad",
+          "email": "vivaan.prasad@paritypartners.example"
+        },
+        {
+          "name": "Neha Gupta",
+          "email": "neha.gupta@paritypartners.example"
+        },
+        {
+          "name": "Varun Reddy",
+          "email": "varun.reddy@paritypartners.example"
+        },
+        {
+          "name": "Imran Mathew",
+          "email": "imran.mathew@paritypartners.example"
+        },
+        {
+          "name": "Aarav Nair",
+          "email": "aarav.nair@paritypartners.example"
+        },
+        {
+          "name": "Naveen Joshi",
+          "email": "naveen.joshi@paritypartners.example"
+        },
+        {
+          "name": "Priya Mathew",
+          "email": "priya.mathew@paritypartners.example"
+        },
+        {
+          "name": "Deepa Prasad",
+          "email": "deepa.prasad@paritypartners.example"
+        },
+        {
+          "name": "Aisha Sheikh",
+          "email": "aisha.sheikh@paritypartners.example"
+        },
+        {
+          "name": "Vikram Kulkarni",
+          "email": "vikram.kulkarni@paritypartners.example"
+        },
+        {
+          "name": "Rekha Naidu",
+          "email": "rekha.naidu@paritypartners.example"
+        },
+        {
+          "name": "Divya Nair",
+          "email": "divya.nair@paritypartners.example"
+        },
+        {
+          "name": "Arjun Subramanian",
+          "email": "arjun.subramanian@paritypartners.example"
+        },
+        {
+          "name": "Deepak Iyer",
+          "email": "deepak.iyer@paritypartners.example"
+        },
+        {
+          "name": "Ishita Prasad",
+          "email": "ishita.prasad@paritypartners.example"
+        },
+        {
+          "name": "Aditya Mehta",
+          "email": "aditya.mehta@paritypartners.example"
+        },
+        {
+          "name": "Rahul Varghese",
+          "email": "rahul.varghese@paritypartners.example"
+        }
+      ]
+    }
+  }
+}
