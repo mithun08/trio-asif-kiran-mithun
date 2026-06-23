@@ -24,9 +24,7 @@ def match_role(
     config: ScoringConfig,
     top_n: int = 5,
 ) -> tuple[list[ScoredCandidate], list[ScoredCandidate]]:
-    passing = apply_hard_filters(consultants, role)
-    passing_emails = {c.email.casefold() for c in passing}
-    filtered_out = [c for c in consultants if c.email.casefold() not in passing_emails]
+    passing, rejected = apply_hard_filters(consultants, role)
 
     scored: list[ScoredCandidate] = []
     for consultant in passing:
@@ -61,9 +59,9 @@ def match_role(
             consultant_name=c.name,
             total_score=0.0,
             rank=-1,
-            supply_gap_flags=c.data_gaps,
+            supply_gap_flags=[reason],
         )
-        for c in filtered_out
+        for c, reason in rejected
     ]
 
     return ranked, gap_candidates
