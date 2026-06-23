@@ -116,40 +116,118 @@ def score_supply_state(
 def score_feedback_quality(
     consultant: Consultant, weights: ScoringWeights, config: ScoringConfig
 ) -> DimensionScore:
-    raw = config.neutral_baseline
     weight = weights.feedback_quality
+
+    if not consultant.feedback_signals:
+        return DimensionScore(
+            name="feedback_quality",
+            raw_score=config.neutral_baseline,
+            weight=weight,
+            weighted_score=round(config.neutral_baseline * weight, 4),
+            evidence=["no feedback"],
+        )
+
+    sentiment_base_map = {
+        "positive": config.feedback_sent_pos,
+        "neutral": config.feedback_sent_neutral,
+        "negative": config.feedback_sent_neg,
+    }
+    evidence: list[str] = []
+    source_scores: dict[str, float] = {}
+
+    for source in ["project", "client", "beach"]:
+        signal = consultant.feedback_signals.get(source)
+        if signal is None:
+            source_scores[source] = config.neutral_baseline
+            evidence.append(f"no {source} feedback")
+            continue
+
+        base_score = sentiment_base_map[signal.sentiment]
+        is_client_keep = source == "client" and signal.client_keep_signal
+        keep_bonus = config.feedback_kw_keep if is_client_keep else 0.0
+        domain_bonus = config.feedback_kw_domain if signal.domain_depth else 0.0
+        concern_penalty = config.feedback_kw_concern if signal.concerns else 0.0
+        sub_score = max(0.0, min(100.0, base_score + keep_bonus + domain_bonus - concern_penalty))
+
+        source_scores[source] = sub_score
+        evidence.append(f"{source}: {signal.sentiment}")
+
+    raw = (
+        config.feedback_weight_project * source_scores["project"]
+        + config.feedback_weight_client * source_scores["client"]
+        + config.feedback_weight_beach * source_scores["beach"]
+    )
+
     return DimensionScore(
         name="feedback_quality",
-        raw_score=raw,
+        raw_score=round(raw, 2),
         weight=weight,
         weighted_score=round(raw * weight, 4),
-        evidence=["no data"],
+        evidence=evidence,
     )
 
 
 def score_adaptability(
     consultant: Consultant, weights: ScoringWeights, config: ScoringConfig
 ) -> DimensionScore:
-    raw = config.neutral_baseline
     weight = weights.adaptability
+
+    if consultant.adaptability_signals is None:
+        return DimensionScore(
+            name="adaptability",
+            raw_score=config.neutral_baseline,
+            weight=weight,
+            weighted_score=round(config.neutral_baseline * weight, 4),
+            evidence=["no data"],
+        )
+
+    sig = consultant.adaptability_signals
+    evidence: list[str] = []
+    bonus = 0.0
+
+    if sig.tech_transitions >= config.adapt_min_transitions:
+        bonus += config.adapt_pts_transitions
+        evidence.append(f"tech_transitions={sig.tech_transitions}")
+
+    if sig.learning_speed_mentions:
+        bonus += config.adapt_pts_learning
+        evidence.append("learning_speed_mentioned")
+
+    if sig.cross_domain >= config.adapt_min_crossdomain:
+        bonus += config.adapt_pts_crossdomain
+        evidence.append(f"cross_domain={sig.cross_domain}")
+
+    if sig.upskilling:
+        bonus += config.adapt_pts_upskill
+        evidence.append("upskilling")
+
+    raw = max(0.0, min(100.0, config.neutral_baseline + bonus))
+
     return DimensionScore(
         name="adaptability",
-        raw_score=raw,
+        raw_score=round(raw, 2),
         weight=weight,
         weighted_score=round(raw * weight, 4),
-        evidence=["no data"],
+        evidence=evidence if evidence else ["no signals"],
     )
 
 
 def score_performance_trend(
     consultant: Consultant, weights: ScoringWeights, config: ScoringConfig
 ) -> DimensionScore:
-    raw = config.neutral_baseline
+    trend_score_map = {
+        "improving": config.trend_improving,
+        "stable": config.trend_stable,
+        "declining": config.trend_declining,
+        "unknown": config.neutral_baseline,
+    }
+    raw = trend_score_map[consultant.performance_trend]
     weight = weights.performance_trend
+
     return DimensionScore(
         name="performance_trend",
         raw_score=raw,
         weight=weight,
         weighted_score=round(raw * weight, 4),
-        evidence=["no data"],
+        evidence=[consultant.performance_trend],
     )

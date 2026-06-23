@@ -74,3 +74,26 @@ def test_load_adjacency_lowercases_keys() -> None:
     adj = load_adjacency(Path("config/skill_adjacency.yaml"))
     assert "kotlin" in adj
     assert "java" in adj["kotlin"]
+
+
+def test_feedback_weights_valid_sum_accepted() -> None:
+    sc = ScoringConfig(
+        feedback_weight_project=0.5, feedback_weight_client=0.3, feedback_weight_beach=0.2
+    )
+    total = sc.feedback_weight_project + sc.feedback_weight_client + sc.feedback_weight_beach
+    assert abs(total - 1.0) < 1e-6
+
+
+def test_feedback_weights_bad_sum_rejected() -> None:
+    with pytest.raises(ValidationError):
+        ScoringConfig(
+            feedback_weight_project=0.5, feedback_weight_client=0.3, feedback_weight_beach=0.3
+        )
+
+
+def test_yaml_loads_new_feedback_fields() -> None:
+    from pathlib import Path
+    config = AppConfig.from_yaml(Path("config/default.yaml"))
+    assert config.scoring_config.feedback_sent_pos == 80.0
+    assert config.scoring_config.adapt_pts_transitions == 15.0
+    assert config.scoring_config.trend_improving == 100.0
