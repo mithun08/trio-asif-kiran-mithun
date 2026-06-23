@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from typing import Any, Literal
 
 import dspy
@@ -50,6 +51,13 @@ def _parse_int_string(raw: str, default: int = 0) -> int:
         return int(raw.strip())
     except (ValueError, AttributeError):
         return default
+
+
+def _parse_years(raw: Any, default: float = 0.0) -> float:
+    if isinstance(raw, (int, float)):
+        return float(raw)
+    match = re.search(r"\d+(?:\.\d+)?", str(raw))
+    return float(match.group()) if match else default
 
 
 def _check_grounding(spans: list[str], source_text: str) -> tuple[list[str], bool]:
@@ -135,7 +143,7 @@ def _merge_skills(existing: list[Skill], extracted: list[dict[str, Any]]) -> lis
         else:
             proficiency = 3
 
-        years = float(item.get("years_experience", 0.0))
+        years = _parse_years(item.get("years_experience", 0.0))
         key = skill_name.casefold()
 
         if key in existing_by_name:
