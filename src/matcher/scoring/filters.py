@@ -48,7 +48,5 @@ def apply_hard_filters(consultants: list[Consultant], role: Role) -> list[Consul
             continue
         if not _check_location(c, role):
             continue
-        result.append(
-            c.model_copy(update={"data_gaps": c.data_gaps + [warning]}) if warning else c
-        )
+        result.append(c.model_copy(update={"data_gaps": c.data_gaps + [warning]}) if warning else c)
     return result

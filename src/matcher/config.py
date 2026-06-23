@@ -59,7 +59,12 @@ class ScoringConfig(BaseModel):
         return _clamp(v, 0.0, 100.0, info.field_name)
 
     @field_validator(
-        "c_exact", "c_prof", "c_adjacent", "c_newjoiner", "nth_bonus_per", "nth_bonus_cap",
+        "c_exact",
+        "c_prof",
+        "c_adjacent",
+        "c_newjoiner",
+        "nth_bonus_per",
+        "nth_bonus_cap",
         mode="before",
     )
     @classmethod
@@ -67,7 +72,9 @@ class ScoringConfig(BaseModel):
         return _clamp(v, 0.0, 100.0, info.field_name)
 
     @field_validator(
-        "rolloff_penalty_high", "rolloff_penalty_medium", "rolloff_penalty_low",
+        "rolloff_penalty_high",
+        "rolloff_penalty_medium",
+        "rolloff_penalty_low",
         mode="before",
     )
     @classmethod
