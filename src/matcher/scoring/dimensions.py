@@ -94,7 +94,9 @@ def score_availability(
     )
 
 
-def score_supply_state(consultant: Consultant, weights: ScoringWeights, config: ScoringConfig) -> DimensionScore:
+def score_supply_state(
+    consultant: Consultant, weights: ScoringWeights, config: ScoringConfig
+) -> DimensionScore:
     score_map = {
         "beach": config.supply_beach,
         "rolling_off": config.supply_rolloff,
@@ -111,7 +113,9 @@ def score_supply_state(consultant: Consultant, weights: ScoringWeights, config: 
     )
 
 
-def score_feedback_quality(consultant: Consultant, weights: ScoringWeights, config: ScoringConfig) -> DimensionScore:
+def score_feedback_quality(
+    consultant: Consultant, weights: ScoringWeights, config: ScoringConfig
+) -> DimensionScore:
     raw = config.neutral_baseline
     weight = weights.feedback_quality
     return DimensionScore(
@@ -123,7 +127,9 @@ def score_feedback_quality(consultant: Consultant, weights: ScoringWeights, conf
     )
 
 
-def score_adaptability(consultant: Consultant, weights: ScoringWeights, config: ScoringConfig) -> DimensionScore:
+def score_adaptability(
+    consultant: Consultant, weights: ScoringWeights, config: ScoringConfig
+) -> DimensionScore:
     raw = config.neutral_baseline
     weight = weights.adaptability
     return DimensionScore(
@@ -135,7 +141,9 @@ def score_adaptability(consultant: Consultant, weights: ScoringWeights, config: 
     )
 
 
-def score_performance_trend(consultant: Consultant, weights: ScoringWeights, config: ScoringConfig) -> DimensionScore:
+def score_performance_trend(
+    consultant: Consultant, weights: ScoringWeights, config: ScoringConfig
+) -> DimensionScore:
     raw = config.neutral_baseline
     weight = weights.performance_trend
     return DimensionScore(

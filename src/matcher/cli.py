@@ -32,7 +32,9 @@ def match(
 
     consultants = ingest_consultants_from_workbook(workbook)
     consultants = dedup_by_email(canonicalise_locations(consultants))
-    ranked, gaps = match_role(role, consultants, adjacency_map, config.weights, config.scoring_config, top_n=top_n)
+    ranked, gaps = match_role(
+        role, consultants, adjacency_map, config.weights, config.scoring_config, top_n=top_n
+    )
     print_results(ranked, gaps, config.scoring_config)
 
 

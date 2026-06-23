@@ -22,12 +22,16 @@ def _candidate(
         data_confidence=data_confidence,
         dimensions=[
             DimensionScore(
-                name="availability", raw_score=avail_raw,
-                weight=0.15, weighted_score=avail_raw * 0.15,
+                name="availability",
+                raw_score=avail_raw,
+                weight=0.15,
+                weighted_score=avail_raw * 0.15,
             ),
             DimensionScore(
-                name="supply_state", raw_score=supply_raw,
-                weight=0.05, weighted_score=supply_raw * 0.05,
+                name="supply_state",
+                raw_score=supply_raw,
+                weight=0.05,
+                weighted_score=supply_raw * 0.05,
             ),
         ],
     )

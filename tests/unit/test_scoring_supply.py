@@ -18,12 +18,12 @@ def test_beach_scores_100() -> None:
 
 
 def test_rolling_off_scores_70() -> None:
-    result = score_supply_state(_consultant("rolling_off"), _CFG)
+    result = score_supply_state(_consultant("rolling_off"), _W, _CFG)
     assert result.raw_score == 70.0
 
 
 def test_new_joiner_scores_40() -> None:
-    result = score_supply_state(_consultant("new_joiner"), _CFG)
+    result = score_supply_state(_consultant("new_joiner"), _W, _CFG)
     assert result.raw_score == 40.0
 
 
