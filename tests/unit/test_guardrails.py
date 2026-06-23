@@ -73,5 +73,5 @@ def test_gap_candidates_total_score_is_zero() -> None:
 
 def test_top_n_limits_ranked_output() -> None:
     consultants = [_consultant(f"c{i}@x.com") for i in range(10)]
-    ranked, _ = match_role(_role(co_located=False), consultants, _ADJ, _CFG, top_n=3)
+    ranked, _ = match_role(_role(co_located=False), consultants, _ADJ, _W, _CFG, top_n=3)
     assert len(ranked) <= 3
