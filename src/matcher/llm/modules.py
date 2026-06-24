@@ -10,6 +10,9 @@ class ProfileExtraction(dspy.Signature):
     skills_json: str = dspy.OutputField(desc="JSON list of {name, years_experience, proficiency}")
     location: str = dspy.OutputField()
     grade: str = dspy.OutputField()
+    evidence_spans: str = dspy.OutputField(
+        desc="JSON list of verbatim substrings from raw_text supporting the extractions"
+    )
 
 
 class CandidateExplanation(dspy.Signature):
@@ -21,11 +24,42 @@ class CandidateExplanation(dspy.Signature):
     explanation: str = dspy.OutputField(desc="2-3 sentences citing evidence; no inference.")
 
 
-class SkillAmbiguityResolution(dspy.Signature):
-    """Confirm whether a candidate skill is a valid match for a required skill."""
+class FeedbackSignalExtraction(dspy.Signature):
+    """Extract structured feedback signals from a consultant feedback text."""
 
-    required_skill: str = dspy.InputField()
-    candidate_skill: str = dspy.InputField()
-    context: str = dspy.InputField(desc="Any additional context about the role or candidate")
-    is_match: bool = dspy.OutputField()
-    confidence: float = dspy.OutputField(desc="Confidence score between 0.0 and 1.0")
+    feedback_text: str = dspy.InputField()
+    sentiment: str = dspy.OutputField(desc="One of: positive, neutral, negative")
+    strengths: str = dspy.OutputField(desc="JSON list of strength observations")
+    concerns: str = dspy.OutputField(desc="JSON list of concerns or gaps")
+    client_keep_signal: str = dspy.OutputField(desc="true or false")
+    domain_depth: str = dspy.OutputField(desc="true or false")
+    evidence_spans: str = dspy.OutputField(
+        desc="JSON list of verbatim substrings from feedback_text supporting the signals"
+    )
+
+
+class AdaptabilitySignalExtraction(dspy.Signature):
+    """Extract adaptability signals from combined profile and feedback text."""
+
+    combined_text: str = dspy.InputField()
+    tech_transitions: str = dspy.OutputField(
+        desc="Integer count of distinct technology-era transitions"
+    )
+    learning_speed_mentions: str = dspy.OutputField(desc="true or false")
+    cross_domain: str = dspy.OutputField(
+        desc="Integer count of distinct industry domains worked in"
+    )
+    upskilling: str = dspy.OutputField(desc="true or false")
+    evidence_spans: str = dspy.OutputField(
+        desc="JSON list of verbatim substrings from combined_text supporting the signals"
+    )
+
+
+class PerformanceTrendExtraction(dspy.Signature):
+    """Infer the consultant's performance trend from combined feedback and profile text."""
+
+    combined_text: str = dspy.InputField()
+    trend: str = dspy.OutputField(desc="One of: improving, stable, declining, unknown")
+    evidence_spans: str = dspy.OutputField(
+        desc="JSON list of verbatim substrings from combined_text indicating the trend"
+    )

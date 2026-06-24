@@ -32,6 +32,25 @@ scoring:
     supply_rolloff: 70
     supply_newjoiner: 40
     neutral_baseline: 50
+    feedback_weight_project: 0.5
+    feedback_weight_client: 0.3
+    feedback_weight_beach: 0.2
+    feedback_sent_pos: 80.0
+    feedback_sent_neutral: 50.0
+    feedback_sent_neg: 20.0
+    feedback_kw_keep: 10.0
+    feedback_kw_domain: 5.0
+    feedback_kw_concern: 10.0
+    adapt_pts_transitions: 15.0
+    adapt_pts_learning: 10.0
+    adapt_pts_crossdomain: 10.0
+    adapt_pts_upskill: 10.0
+    adapt_min_transitions: 2
+    adapt_min_crossdomain: 2
+    trend_improving: 100.0
+    trend_stable: 70.0
+    trend_declining: 30.0
+    extract_min_spans: 1
 
 models:
   extraction: "openai/gpt-4o-mini"
@@ -45,5 +64,5 @@ llm:
   max_retries: 3
 
 embedding:
-  model: "text-embedding-3-small"
+  model: "all-MiniLM-L6-v2"
   index_dir: ".cache/milvus"

@@ -52,6 +52,25 @@ class ScoringConfig(BaseModel):
     supply_rolloff: float = 70.0
     supply_newjoiner: float = 40.0
     neutral_baseline: float = 50.0
+    feedback_weight_project: float = 0.5
+    feedback_weight_client: float = 0.3
+    feedback_weight_beach: float = 0.2
+    feedback_sent_pos: float = 80.0
+    feedback_sent_neutral: float = 50.0
+    feedback_sent_neg: float = 20.0
+    feedback_kw_keep: float = 10.0
+    feedback_kw_domain: float = 5.0
+    feedback_kw_concern: float = 10.0
+    adapt_pts_transitions: float = 15.0
+    adapt_pts_learning: float = 10.0
+    adapt_pts_crossdomain: float = 10.0
+    adapt_pts_upskill: float = 10.0
+    adapt_min_transitions: int = 2
+    adapt_min_crossdomain: int = 2
+    trend_improving: float = 100.0
+    trend_stable: float = 70.0
+    trend_declining: float = 30.0
+    extract_min_spans: int = 1
 
     @field_validator("band_strong", "band_partial", mode="before")
     @classmethod
@@ -75,6 +94,9 @@ class ScoringConfig(BaseModel):
         "rolloff_penalty_high",
         "rolloff_penalty_medium",
         "rolloff_penalty_low",
+        "feedback_weight_project",
+        "feedback_weight_client",
+        "feedback_weight_beach",
         mode="before",
     )
     @classmethod
@@ -85,6 +107,35 @@ class ScoringConfig(BaseModel):
     @classmethod
     def _clamp_neutral(cls, v: object, info: Any) -> float:
         return _clamp(v, 0.0, 100.0, info.field_name)
+
+    @field_validator(
+        "feedback_sent_pos",
+        "feedback_sent_neutral",
+        "feedback_sent_neg",
+        "feedback_kw_keep",
+        "feedback_kw_domain",
+        "feedback_kw_concern",
+        "adapt_pts_transitions",
+        "adapt_pts_learning",
+        "adapt_pts_crossdomain",
+        "adapt_pts_upskill",
+        "trend_improving",
+        "trend_stable",
+        "trend_declining",
+        mode="before",
+    )
+    @classmethod
+    def _clamp_credit_ext(cls, v: object, info: Any) -> float:
+        return _clamp(v, 0.0, 100.0, info.field_name)
+
+    @model_validator(mode="after")
+    def _check_feedback_weights(self) -> ScoringConfig:
+        total = (
+            self.feedback_weight_project + self.feedback_weight_client + self.feedback_weight_beach
+        )
+        if abs(total - 1.0) > 1e-6:
+            raise ValueError(f"feedback_weight_* must sum to 1.0, got {total:.6f}")
+        return self
 
 
 def load_adjacency(path: Path = Path("config/skill_adjacency.yaml")) -> dict[str, list[str]]:

@@ -61,6 +61,7 @@ Five-stage pipeline: **Ingest → Normalise → Index → Match → Explain**
 | LLM orchestration | DSPy |
 | LLM access | OpenRouter API |
 | PII scrubbing | Presidio + spaCy |
+| Embedding model | sentence-transformers (`all-MiniLM-L6-v2`, local — no text leaves the machine) |
 | Vector store | Milvus Lite |
 | Evaluation | Promptfoo + DeepEval |
 
