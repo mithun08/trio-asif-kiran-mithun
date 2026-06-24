@@ -51,6 +51,11 @@ scoring:
     trend_stable: 70.0
     trend_declining: 30.0
     extract_min_spans: 1
+    confidence_high_min_projects: 2
+    confidence_medium_min_sources: 1
+    beach_long_days: 60
+    skill_infer_min: 0.5
+    gap_top_n: 3
 
 models:
   extraction: "openai/gpt-4o-mini"

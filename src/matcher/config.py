@@ -71,6 +71,11 @@ class ScoringConfig(BaseModel):
     trend_stable: float = 70.0
     trend_declining: float = 30.0
     extract_min_spans: int = 1
+    confidence_high_min_projects: int = 2
+    confidence_medium_min_sources: int = 1
+    beach_long_days: int = 60
+    skill_infer_min: float = 0.5
+    gap_top_n: int = 3
 
     @field_validator("band_strong", "band_partial", mode="before")
     @classmethod
@@ -136,6 +141,29 @@ class ScoringConfig(BaseModel):
         if abs(total - 1.0) > 1e-6:
             raise ValueError(f"feedback_weight_* must sum to 1.0, got {total:.6f}")
         return self
+
+    @field_validator("confidence_high_min_projects", "confidence_medium_min_sources", "gap_top_n", mode="before")
+    @classmethod
+    def _clamp_int_positive(cls, v: object, info: Any) -> int:
+        vi = int(v)  # type: ignore[arg-type]
+        if vi < 1:
+            warnings.warn(f"ScoringConfig.{info.field_name}={vi} must be ≥ 1; clamped to 1", stacklevel=4)
+            return 1
+        return vi
+
+    @field_validator("beach_long_days", mode="before")
+    @classmethod
+    def _clamp_beach_days(cls, v: object, info: Any) -> int:
+        vi = int(v)  # type: ignore[arg-type]
+        if vi < 30 or vi > 365:
+            warnings.warn(f"ScoringConfig.{info.field_name}={vi} out of range [30, 365]; clamped", stacklevel=4)
+            return max(30, min(365, vi))
+        return vi
+
+    @field_validator("skill_infer_min", mode="before")
+    @classmethod
+    def _clamp_skill_infer(cls, v: object, info: Any) -> float:
+        return _clamp(v, 0.0, 1.0, info.field_name)
 
 
 def load_adjacency(path: Path = Path("config/skill_adjacency.yaml")) -> dict[str, list[str]]:
