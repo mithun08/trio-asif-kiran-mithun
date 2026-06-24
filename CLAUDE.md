@@ -10,7 +10,7 @@ Local CLI staffing recommendation engine. Five-stage pipeline: Ingest → Normal
 
 Entry point: `dsm` CLI (`src/matcher/cli.py`). Main package: `src/matcher/`.
 
-**Current state:** The skeleton is complete. All pipeline stage functions and scoring dimensions are `raise NotImplementedError` stubs awaiting implementation.
+**Current state (llm-implementation branch):** Ingest, normalise, extract, match pipeline stages and all 6 scoring dimensions are implemented. Remaining stubs: `pipeline/index.py` (embed + Milvus store) and `pipeline/explain.py` (DSPy explanation generation).
 
 ## Commands
 
@@ -37,7 +37,7 @@ uv run dsm ingest --data-dir data/ --force
 - **Pydantic v2** for all data models — no plain dicts crossing module boundaries
 - **DSPy** for all LLM interactions — typed signatures in `src/matcher/llm/modules.py`; LLM responses are cached in `.cache/dspy/`
 - **Presidio + spaCy** — scrub PII before any external call (`src/matcher/privacy/scrubber.py`)
-- **Milvus Lite** — vector index at `.cache/milvus/`, built at ingest, loaded at match time; embedding model is `text-embedding-3-small`
+- **Milvus Lite** — vector index at `.cache/milvus/`, built at ingest, loaded at match time; embedding model is `all-MiniLM-L6-v2` (local, via `sentence-transformers` — no text leaves the machine)
 - **structlog** — all observability via `src/matcher/observability/run_log.py`
 - **deepeval + promptfoo** — LLM output eval suite in `tests/evals/`
 

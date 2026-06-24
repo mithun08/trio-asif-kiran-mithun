@@ -64,5 +64,5 @@ llm:
   max_retries: 3
 
 embedding:
-  model: "text-embedding-3-small"
+  model: "all-MiniLM-L6-v2"
   index_dir: ".cache/milvus"
