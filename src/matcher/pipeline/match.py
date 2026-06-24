@@ -23,13 +23,24 @@ def match_role(
     weights: ScoringWeights,
     config: ScoringConfig,
     top_n: int = 5,
+    *,
+    skip_skill_dim: bool = False,
+    disable_availability_filter: bool = False,
+    disable_location_filter: bool = False,
 ) -> tuple[list[ScoredCandidate], list[ScoredCandidate]]:
-    passing, rejected = apply_hard_filters(consultants, role)
+    passing, rejected = apply_hard_filters(
+        consultants,
+        role,
+        disable_availability_filter=disable_availability_filter,
+        disable_location_filter=disable_location_filter,
+    )
 
     scored: list[ScoredCandidate] = []
     for consultant in passing:
-        dims = [
-            score_skill_match(consultant, role, adjacency_map, weights, config),
+        dims = []
+        if not skip_skill_dim:
+            dims.append(score_skill_match(consultant, role, adjacency_map, weights, config))
+        dims += [
             score_feedback_quality(consultant, weights, config),
             score_availability(consultant, role, weights, config),
             score_adaptability(consultant, weights, config),

@@ -61,6 +61,7 @@ models:
   extraction: "openai/gpt-4o-mini"
   semantic_assist: "openai/gpt-4o-mini"
   explanation: "openai/gpt-4o"
+  skill_inference: "openai/gpt-4o-mini"
   fallback: "anthropic/claude-3-haiku"
 
 llm:

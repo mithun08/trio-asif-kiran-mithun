@@ -21,3 +21,4 @@ class Role(BaseModel):
     required_availability_days: int = 0
     co_located: bool = False
     start_date: date | None = None
+    sector: str = ""

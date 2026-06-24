@@ -4,6 +4,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from matcher.models.gap import GapReport
+from matcher.models.role import Role
 from matcher.models.score import ScoredCandidate
 
 
@@ -23,3 +25,5 @@ class RunOutput(BaseModel):
     llm_tokens_used: int = 0
     llm_cost_usd: float = 0.0
     stage_timings_ms: dict[str, float] = Field(default_factory=dict)
+    gap_report: GapReport = Field(default_factory=GapReport)
+    role_snapshot: Role | None = None

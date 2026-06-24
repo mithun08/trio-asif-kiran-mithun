@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -20,3 +22,6 @@ class ScoredCandidate(BaseModel):
     explanation: str = ""
     supply_gap_flags: list[str] = Field(default_factory=list)
     data_confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+    confidence_level: Literal["High", "Medium", "Low"] = "Medium"
+    info_flags: list[str] = Field(default_factory=list)
+    why_not_higher: str = ""

@@ -93,6 +93,8 @@ def ingest_roles(xlsx_path: Path) -> list[Role]:
         co_located = str(row[headers.get("Co-location", -1)] or "").strip().casefold() == "yes"
         start_date = _parse_date(row[headers.get("Start", -1)])
         description = str(row[headers.get("Notes / Constraints", -1)] or "")
+        sector_idx = headers.get("Sector")
+        sector = str(row[sector_idx] or "") if sector_idx is not None else ""
 
         roles.append(
             Role(
@@ -103,6 +105,7 @@ def ingest_roles(xlsx_path: Path) -> list[Role]:
                 locations=locations,
                 co_located=co_located,
                 start_date=start_date,
+                sector=sector,
             )
         )
     return roles
@@ -145,12 +148,19 @@ def ingest_consultants_from_workbook(xlsx_path: Path) -> list[Consultant]:
 
             available_from: date | None = None
             rolloff_confidence = "high"
+            days_on_beach = 0
 
             if supply_state == "rolling_off":
                 available_from = _parse_date(row[headers.get("Roll-off Date", -1)])
                 rolloff_confidence = str(row[headers.get("Confidence", -1)] or "high").casefold()
             elif supply_state == "new_joiner":
                 available_from = _parse_date(row[headers.get("Join Date", -1)])
+            elif supply_state == "beach":
+                dob_idx = headers.get("Days on Beach")
+                dob_raw = row[dob_idx] if dob_idx is not None else None
+                days_on_beach = (
+                    int(dob_raw) if isinstance(dob_raw, (int, float)) and dob_raw >= 0 else 0
+                )
 
             result.append(
                 Consultant(
@@ -163,6 +173,7 @@ def ingest_consultants_from_workbook(xlsx_path: Path) -> list[Consultant]:
                     available_from=available_from,
                     supply_state=supply_state,  # type: ignore[arg-type]
                     rolloff_confidence=rolloff_confidence,  # type: ignore[arg-type]
+                    days_on_beach=days_on_beach,
                 )
             )
 

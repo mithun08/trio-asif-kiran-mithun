@@ -41,18 +41,25 @@ def _check_location(consultant: Consultant, role: Role) -> bool:
 
 
 def apply_hard_filters(
-    consultants: list[Consultant], role: Role
+    consultants: list[Consultant],
+    role: Role,
+    *,
+    disable_availability_filter: bool = False,
+    disable_location_filter: bool = False,
 ) -> tuple[list[Consultant], list[tuple[Consultant, str]]]:
     passing: list[Consultant] = []
     rejected: list[tuple[Consultant, str]] = []
     for c in consultants:
-        passes_avail, warning = _check_availability(c, role)
-        if not passes_avail:
-            rejected.append((c, "availability: too late"))
-            continue
-        if not _check_location(c, role):
-            rejected.append((c, "location_mismatch"))
-            continue
+        warning: str | None = None
+        if not disable_availability_filter:
+            passes_avail, warning = _check_availability(c, role)
+            if not passes_avail:
+                rejected.append((c, "availability: too late"))
+                continue
+        if not disable_location_filter:
+            if not _check_location(c, role):
+                rejected.append((c, "location_mismatch"))
+                continue
         updated = c.model_copy(update={"data_gaps": c.data_gaps + [warning]}) if warning else c
         passing.append(updated)
     return passing, rejected

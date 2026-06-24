@@ -152,3 +152,48 @@ def test_co_located_normalises_location_before_compare() -> None:
     c = _consultant(location="Bangalore")
     passing, rejected = apply_hard_filters([c], role)
     assert len(passing) == 1
+
+
+def test_disable_availability_filter_lets_late_consultant_pass() -> None:
+    role = _role(start=date(2026, 7, 1))
+    c = _consultant(
+        supply_state="rolling_off", available_from=date(2026, 9, 1), rolloff_confidence="high"
+    )
+    passing, rejected = apply_hard_filters([c], role, disable_availability_filter=True)
+    assert len(passing) == 1
+    assert len(rejected) == 0
+
+
+def test_disable_location_filter_lets_wrong_location_pass() -> None:
+    role = _role(co_located=True, location="Bengaluru")
+    c = _consultant(location="Mumbai")
+    passing, rejected = apply_hard_filters([c], role, disable_location_filter=True)
+    assert len(passing) == 1
+    assert len(rejected) == 0
+
+
+def test_both_disabled_all_pass() -> None:
+    role = _role(start=date(2026, 7, 1), co_located=True, location="Bengaluru")
+    consultants = [
+        _consultant(
+            supply_state="rolling_off",
+            available_from=date(2026, 9, 1),
+            rolloff_confidence="high",
+            location="Mumbai",
+        ),
+        _consultant(location="Delhi"),
+    ]
+    passing, rejected = apply_hard_filters(
+        consultants, role, disable_availability_filter=True, disable_location_filter=True
+    )
+    assert len(passing) == 2
+    assert len(rejected) == 0
+
+
+def test_default_args_unchanged() -> None:
+    role = _role(co_located=True, location="Bengaluru", start=date(2026, 7, 1))
+    c_pass = _consultant(location="Bengaluru")
+    c_fail = _consultant(location="Mumbai")
+    passing, rejected = apply_hard_filters([c_pass, c_fail], role)
+    assert len(passing) == 1
+    assert len(rejected) == 1

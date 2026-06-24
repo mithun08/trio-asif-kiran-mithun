@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 import typer
@@ -7,7 +8,10 @@ import typer
 from matcher.config import AppConfig, load_adjacency
 from matcher.llm.cache import configure_dspy_cache
 from matcher.llm.client import configure_lm
+from matcher.models.output import DataQualityReport, RunOutput
+from matcher.pipeline.explain import generate_explanations
 from matcher.pipeline.extract import extract_signals
+from matcher.pipeline.gap import build_gap_report
 from matcher.pipeline.ingest import (
     ingest_consultants,
     ingest_consultants_from_workbook,
@@ -16,7 +20,10 @@ from matcher.pipeline.ingest import (
 )
 from matcher.pipeline.match import match_role
 from matcher.pipeline.normalise import canonicalise_locations, dedup_by_email, scrub_pii
+from matcher.render.json import render_json
 from matcher.render.text import print_results
+from matcher.scoring.confidence import attach_confidence_levels
+from matcher.scoring.info_flags import attach_info_flags
 
 app = typer.Typer(name="dsm", help="Demand-Supply Matcher CLI")
 
@@ -28,6 +35,9 @@ def match(
     output_json: bool = typer.Option(False, "--json", help="Emit JSON output"),
     no_llm: bool = typer.Option(
         False, "--no-llm", help="Skip LLM extraction; run deterministic scoring only"
+    ),
+    no_explanations: bool = typer.Option(
+        False, "--no-explanations", help="Skip LLM explanation generation"
     ),
 ) -> None:
     """Rank consultants for a given role ID."""
@@ -58,7 +68,40 @@ def match(
     ranked, gaps = match_role(
         role, consultants, adjacency_map, config.weights, config.scoring_config, top_n=top_n
     )
-    print_results(ranked, gaps, config.scoring_config)
+
+    ranked = attach_confidence_levels(ranked, consultants, config.scoring_config)
+    ranked = attach_info_flags(ranked, consultants, role, config.scoring_config)
+
+    if not no_llm and not no_explanations:
+        ranked = generate_explanations(ranked, role, consultants, config)
+
+    gap_report = build_gap_report(
+        role,
+        consultants,
+        ranked,
+        gaps,
+        adjacency_map,
+        config.weights,
+        config.scoring_config,
+        config,
+    )
+
+    stat = workbook.stat()
+    snapshot_id = hashlib.sha256(f"{stat.st_mtime}{stat.st_size}".encode()).hexdigest()[:16]
+
+    output = RunOutput(
+        snapshot_id=snapshot_id,
+        role_id=role_id,
+        candidates=ranked,
+        gap_report=gap_report,
+        role_snapshot=role,
+        data_quality=DataQualityReport(total_consultants_ingested=len(consultants)),
+    )
+
+    if output_json:
+        typer.echo(render_json(output))
+    else:
+        print_results(ranked, gaps, config.scoring_config, gap_report=gap_report)
 
 
 @app.command()

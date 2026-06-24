@@ -31,3 +31,4 @@ class Consultant(BaseModel):
     adaptability_signals: AdaptabilitySignals | None = None
     performance_trend: Literal["improving", "stable", "declining", "unknown"] = "unknown"
     pii_token_map: dict[str, str] = Field(default_factory=dict)
+    days_on_beach: int = 0

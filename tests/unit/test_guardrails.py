@@ -75,3 +75,32 @@ def test_top_n_limits_ranked_output() -> None:
     consultants = [_consultant(f"c{i}@x.com") for i in range(10)]
     ranked, _ = match_role(_role(co_located=False), consultants, _ADJ, _W, _CFG, top_n=3)
     assert len(ranked) <= 3
+
+
+def test_skip_skill_dim_omits_skill_from_dimensions() -> None:
+    consultants = [_consultant("a@x.com")]
+    ranked, _ = match_role(
+        _role(co_located=False), consultants, _ADJ, _W, _CFG, skip_skill_dim=True
+    )
+    assert len(ranked) == 1
+    dim_names = {d.name for d in ranked[0].dimensions}
+    assert "skill_match" not in dim_names
+
+
+def test_skip_skill_dim_scores_still_in_range() -> None:
+    consultants = [_consultant("a@x.com"), _consultant("b@x.com")]
+    ranked, _ = match_role(
+        _role(co_located=False), consultants, _ADJ, _W, _CFG, skip_skill_dim=True
+    )
+    for candidate in ranked:
+        assert 0.0 <= candidate.total_score <= 100.0
+        for dim in candidate.dimensions:
+            assert 0.0 <= dim.raw_score <= 100.0
+
+
+def test_disable_location_filter_in_match_role() -> None:
+    non_local = _consultant("nonlocal@x.com", location="Mumbai")
+    ranked, gaps = match_role(
+        _role(co_located=True), [non_local], _ADJ, _W, _CFG, disable_location_filter=True
+    )
+    assert any(c.consultant_email == "nonlocal@x.com" for c in ranked)

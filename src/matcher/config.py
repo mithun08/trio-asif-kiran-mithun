@@ -142,21 +142,28 @@ class ScoringConfig(BaseModel):
             raise ValueError(f"feedback_weight_* must sum to 1.0, got {total:.6f}")
         return self
 
-    @field_validator("confidence_high_min_projects", "confidence_medium_min_sources", "gap_top_n", mode="before")
+    @field_validator(
+        "confidence_high_min_projects", "confidence_medium_min_sources", "gap_top_n", mode="before"
+    )
     @classmethod
     def _clamp_int_positive(cls, v: object, info: Any) -> int:
-        vi = int(v)  # type: ignore[arg-type]
+        vi: int = int(v)  # type: ignore[call-overload]
         if vi < 1:
-            warnings.warn(f"ScoringConfig.{info.field_name}={vi} must be ≥ 1; clamped to 1", stacklevel=4)
+            warnings.warn(
+                f"ScoringConfig.{info.field_name}={vi} must be ≥ 1; clamped to 1", stacklevel=4
+            )
             return 1
         return vi
 
     @field_validator("beach_long_days", mode="before")
     @classmethod
     def _clamp_beach_days(cls, v: object, info: Any) -> int:
-        vi = int(v)  # type: ignore[arg-type]
+        vi: int = int(v)  # type: ignore[call-overload]
         if vi < 30 or vi > 365:
-            warnings.warn(f"ScoringConfig.{info.field_name}={vi} out of range [30, 365]; clamped", stacklevel=4)
+            warnings.warn(
+                f"ScoringConfig.{info.field_name}={vi} out of range [30, 365]; clamped",
+                stacklevel=4,
+            )
             return max(30, min(365, vi))
         return vi
 
@@ -182,6 +189,7 @@ class AppConfig(BaseSettings):
     openrouter_api_key: str = Field(default="", description="OpenRouter API key")
     model_extraction: str = "openai/gpt-4o-mini"
     model_explain: str = "openai/gpt-4o"
+    model_skill_inference: str = "openai/gpt-4o-mini"
     model_fallback: str = "anthropic/claude-3-haiku"
 
     data_dir: Path = Path("data/")
@@ -202,6 +210,7 @@ class AppConfig(BaseSettings):
         return cls(
             model_extraction=models.get("extraction", "openai/gpt-4o-mini"),
             model_explain=models.get("explanation", "openai/gpt-4o"),
+            model_skill_inference=models.get("skill_inference", "openai/gpt-4o-mini"),
             model_fallback=models.get("fallback", "anthropic/claude-3-haiku"),
             weights=ScoringWeights(**weights_data) if weights_data else ScoringWeights(),
             scoring_config=ScoringConfig(**config_data) if config_data else ScoringConfig(),

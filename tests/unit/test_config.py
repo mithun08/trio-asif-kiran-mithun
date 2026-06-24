@@ -98,3 +98,15 @@ def test_yaml_loads_new_feedback_fields() -> None:
     assert config.scoring_config.feedback_sent_pos == 80.0
     assert config.scoring_config.adapt_pts_transitions == 15.0
     assert config.scoring_config.trend_improving == 100.0
+
+
+def test_app_config_from_yaml_loads_skill_inference_model() -> None:
+    from pathlib import Path
+
+    config = AppConfig.from_yaml(Path("config/default.yaml"))
+    assert config.model_skill_inference == "openai/gpt-4o-mini"
+
+
+def test_app_config_skill_inference_default() -> None:
+    config = AppConfig()
+    assert config.model_skill_inference == "openai/gpt-4o-mini"

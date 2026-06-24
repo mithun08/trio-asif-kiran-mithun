@@ -21,7 +21,13 @@ class CandidateExplanation(dspy.Signature):
     role_title: str = dspy.InputField()
     candidate_name: str = dspy.InputField()
     dimension_scores_json: str = dspy.InputField(desc="JSON list of dimension score objects")
+    why_not_higher_context: str = dspy.InputField(
+        desc="Dimension gaps vs the candidate ranked above; empty string for rank 1"
+    )
     explanation: str = dspy.OutputField(desc="2-3 sentences citing evidence; no inference.")
+    why_not_higher: str = dspy.OutputField(
+        desc="1-2 sentences on why this candidate did not rank higher; empty for rank 1"
+    )
 
 
 class FeedbackSignalExtraction(dspy.Signature):
@@ -62,4 +68,14 @@ class PerformanceTrendExtraction(dspy.Signature):
     trend: str = dspy.OutputField(desc="One of: improving, stable, declining, unknown")
     evidence_spans: str = dspy.OutputField(
         desc="JSON list of verbatim substrings from combined_text indicating the trend"
+    )
+
+
+class SkillInference(dspy.Signature):
+    """Infer likely required skills for a role from its title and description."""
+
+    role_title: str = dspy.InputField()
+    role_description: str = dspy.InputField()
+    inferred_skills_json: str = dspy.OutputField(
+        desc='JSON list of {"name": str, "confidence": float 0-1}'
     )
