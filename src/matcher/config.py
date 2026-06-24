@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -178,6 +178,21 @@ def load_adjacency(path: Path = Path("config/skill_adjacency.yaml")) -> dict[str
     return {k.lower(): [s.lower() for s in v] for k, v in raw.get("adjacency", {}).items()}
 
 
+class ObservabilityConfig(BaseModel):
+    log_path: Path = Path(".cache/run-log.jsonl")
+    enable_telemetry: bool = True
+
+
+class OCRConfig(BaseModel):
+    enabled: bool = True
+    text_floor_chars: int = 50
+    confidence_floor: float = 0.6
+
+
+class ProviderConfig(BaseModel):
+    data_collection: Literal["deny", "allow"] = "deny"
+
+
 class AppConfig(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="DSM_",
@@ -198,6 +213,21 @@ class AppConfig(BaseSettings):
     weights: ScoringWeights = Field(default_factory=ScoringWeights)
     scoring_config: ScoringConfig = Field(default_factory=ScoringConfig)
 
+    allowed_models: list[str] = Field(default_factory=list)
+    observability: ObservabilityConfig = Field(default_factory=ObservabilityConfig)
+    ocr: OCRConfig = Field(default_factory=OCRConfig)
+    provider: ProviderConfig = Field(default_factory=ProviderConfig)
+
+    @model_validator(mode="after")
+    def _check_allowed_models(self) -> AppConfig:
+        if not self.allowed_models:
+            return self
+        for field_name in ("model_extraction", "model_explain", "model_skill_inference"):
+            val = getattr(self, field_name)
+            if val not in self.allowed_models:
+                raise ValueError(f"{field_name}={val!r} not in allowed_models")
+        return self
+
     @classmethod
     def from_yaml(cls, path: Path = Path("config/default.yaml")) -> AppConfig:
         if not path.exists():
@@ -207,6 +237,9 @@ class AppConfig(BaseSettings):
         weights_data = scoring.get("weights", {})
         config_data = scoring.get("config", {})
         models = raw.get("models", {})
+        obs_data = raw.get("observability", {})
+        ocr_data = raw.get("ocr", {})
+        provider_data = raw.get("provider", {})
         return cls(
             model_extraction=models.get("extraction", "openai/gpt-4o-mini"),
             model_explain=models.get("explanation", "openai/gpt-4o"),
@@ -214,4 +247,8 @@ class AppConfig(BaseSettings):
             model_fallback=models.get("fallback", "anthropic/claude-3-haiku"),
             weights=ScoringWeights(**weights_data) if weights_data else ScoringWeights(),
             scoring_config=ScoringConfig(**config_data) if config_data else ScoringConfig(),
+            allowed_models=raw.get("allowed_models", []),
+            observability=ObservabilityConfig(**obs_data) if obs_data else ObservabilityConfig(),
+            ocr=OCRConfig(**ocr_data) if ocr_data else OCRConfig(),
+            provider=ProviderConfig(**provider_data) if provider_data else ProviderConfig(),
         )

@@ -1,4 +1,4 @@
-.PHONY: install lint fmt typecheck test test-unit test-int run
+.PHONY: install lint fmt typecheck test test-unit test-int eval eval-promptfoo bench run
 
 install:
 	uv sync --extra dev
@@ -20,6 +20,15 @@ test-unit:
 
 test-int:
 	uv run pytest tests/integration/ -v
+
+eval:
+	uv run pytest tests/evals/test_deepeval_golden.py -v
+
+eval-promptfoo:
+	promptfoo eval --config tests/evals/promptfoo.yaml
+
+bench:
+	uv run pytest tests/integration/test_latency_ac8.py -v
 
 run:
 	uv run dsm --help

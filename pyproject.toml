@@ -64,7 +64,7 @@ module = ["openpyxl.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["matcher.llm.modules", "matcher.llm.explain_module", "matcher.llm.skill_inference"]
+module = ["matcher.llm.modules", "matcher.llm.explain_module", "matcher.llm.skill_inference", "matcher.models.telemetry"]
 disable_error_code = ["misc"]
 
 [[tool.mypy.overrides]]

@@ -19,6 +19,27 @@ from matcher.models.signals import AdaptabilitySignals, FeedbackSignal
 
 _LOG = logging.getLogger(__name__)
 
+
+def _tap_lm_history(lm: object, task: str) -> None:
+    from matcher.observability import telemetry as _tel
+    from matcher.observability.cost_table import cost_for
+
+    history = getattr(lm, "history", None)
+    if not history:
+        return
+    last = history[-1]
+    usage = getattr(last, "usage", None) or {}
+    if isinstance(usage, dict):
+        pt = int(usage.get("prompt_tokens", 0))
+        ct = int(usage.get("completion_tokens", 0))
+    else:
+        pt = int(getattr(usage, "prompt_tokens", 0) or 0)
+        ct = int(getattr(usage, "completion_tokens", 0) or 0)
+    model = str(getattr(lm, "model", "") or "")
+    cache = bool(getattr(last, "cache_hit", False) or False)
+    _tel.record_llm_call(task, pt + ct, cost_for(model, pt, ct), cache)
+
+
 _PROFICIENCY_MAP: dict[str, int] = {
     "expert": 5,
     "working": 3,
@@ -83,12 +104,14 @@ def _apply_evidence_floor(
 def extract_profile(consultant: Consultant, config: ScoringConfig) -> Consultant:
     predictor = dspy.Predict(ProfileExtraction)
     result = predictor(raw_text=consultant.raw_profile_text)
+    _tap_lm_history(getattr(dspy.settings, "lm", None), "extract")
 
     skills_json_raw: str = getattr(result, "skills_json", "[]")
     skills_data = _parse_json_list(skills_json_raw)
 
     if not skills_data and skills_json_raw.strip() not in ("[]", ""):
         result_retry = predictor(raw_text=consultant.raw_profile_text)
+        _tap_lm_history(getattr(dspy.settings, "lm", None), "extract")
         skills_data = _parse_json_list(getattr(result_retry, "skills_json", "[]"))
 
         if not skills_data:
@@ -164,6 +187,7 @@ def extract_feedback(consultant: Consultant, source: str, config: ScoringConfig)
 
     predictor = dspy.Predict(FeedbackSignalExtraction)
     result = predictor(feedback_text=feedback_text)
+    _tap_lm_history(getattr(dspy.settings, "lm", None), "extract")
 
     sentiment_raw: str = getattr(result, "sentiment", "neutral").strip().lower()
     sentiment: Literal["positive", "neutral", "negative"] = (
@@ -209,6 +233,7 @@ def extract_adaptability(
 ) -> Consultant:
     predictor = dspy.Predict(AdaptabilitySignalExtraction)
     result = predictor(combined_text=combined_text)
+    _tap_lm_history(getattr(dspy.settings, "lm", None), "extract")
 
     tech_transitions = _parse_int_string(getattr(result, "tech_transitions", "0"))
     cross_domain = _parse_int_string(getattr(result, "cross_domain", "0"))
@@ -240,6 +265,7 @@ def extract_adaptability(
 def extract_trend(consultant: Consultant, combined_text: str, config: ScoringConfig) -> Consultant:
     predictor = dspy.Predict(PerformanceTrendExtraction)
     result = predictor(combined_text=combined_text)
+    _tap_lm_history(getattr(dspy.settings, "lm", None), "extract")
 
     trend_raw: str = getattr(result, "trend", "unknown").strip().lower()
     trend: Literal["improving", "stable", "declining", "unknown"] = (

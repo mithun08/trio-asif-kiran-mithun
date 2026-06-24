@@ -1,8 +1,33 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import structlog
 
 logger = structlog.get_logger()
+
+_sink_configured = False
+
+
+def configure_log_sink(path: Path) -> None:
+    global _sink_configured
+    if _sink_configured:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    structlog.configure(
+        processors=[
+            structlog.stdlib.add_log_level,
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.JSONRenderer(),
+        ],
+        logger_factory=structlog.WriteLoggerFactory(file=path.open("a", encoding="utf-8")),
+    )
+    _sink_configured = True
+
+
+def _reset_log_sink() -> None:
+    global _sink_configured
+    _sink_configured = False
 
 
 def log_run_start(snapshot_id: str, config_version: str) -> None:

@@ -1,0 +1,10 @@
+models:
+  openai/gpt-4o-mini:
+    prompt: 0.15
+    completion: 0.60
+  openai/gpt-4o:
+    prompt: 2.50
+    completion: 10.00
+  anthropic/claude-3-haiku:
+    prompt: 0.25
+    completion: 1.25

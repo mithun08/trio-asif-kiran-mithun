@@ -5,4 +5,16 @@ providers:
     config:
       temperature: 0
 
-tests: []
+tests:
+  - description: "ROLE-01 skill match produces ranked output"
+    vars:
+      role_id: ROLE-01
+    assert:
+      - type: contains
+        value: "skill_match"
+  - description: "ROLE-02 returns at least one candidate"
+    vars:
+      role_id: ROLE-02
+    assert:
+      - type: contains
+        value: "candidates"

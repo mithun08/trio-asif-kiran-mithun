@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from matcher.models.errors import IngestionError
 from matcher.pipeline.ingest import ingest_consultants_from_workbook, ingest_roles
 
 _WORKBOOK = Path("data/demand-supply.xlsx")
@@ -53,7 +54,7 @@ def test_ingest_roles_missing_column_raises_value_error(tmp_path: Path) -> None:
     ws.append(["ROLE-X", "Test"])
     path = tmp_path / "bad.xlsx"
     wb.save(path)
-    with pytest.raises(ValueError, match="missing columns"):
+    with pytest.raises(IngestionError, match="missing columns"):
         ingest_roles(path)
 
 

@@ -32,7 +32,7 @@ def test_profile_enriches_raw_text(tmp_path: Path, monkeypatch: pytest.MonkeyPat
             class document:
                 @staticmethod
                 def export_to_text() -> str:
-                    return "Skills: Python (expert). Location: London."
+                    return "Skills: Python (expert), Java (advanced). Location: London."
 
         return _FakeDoc()
 

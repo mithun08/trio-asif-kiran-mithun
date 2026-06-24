@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import sys
+
 from matcher.config import ScoringConfig
 from matcher.models.gap import GapReport
+from matcher.models.ingestion_report import IngestionReport
 from matcher.models.score import ScoredCandidate
+from matcher.models.telemetry import RunTelemetry
 from matcher.scoring.ranker import band
 
 
@@ -11,7 +15,21 @@ def print_results(
     gap_candidates: list[ScoredCandidate],
     config: ScoringConfig,
     gap_report: GapReport | None = None,
+    ingestion_report: IngestionReport | None = None,
+    run_telemetry: RunTelemetry | None = None,
 ) -> None:
+    if ingestion_report is not None:
+        print("=== Ingestion Report ===")
+        print(f"  profiles parsed: {ingestion_report.profiles_parsed}")
+        if ingestion_report.profiles_low_confidence:
+            print(f"  low confidence: {len(ingestion_report.profiles_low_confidence)}")
+        if ingestion_report.feedback_unmatched:
+            print(f"  unmatched feedback: {', '.join(ingestion_report.feedback_unmatched)}")
+        if ingestion_report.supply_without_profile:
+            print(f"  supply without profile: {len(ingestion_report.supply_without_profile)}")
+        for w in ingestion_report.warnings:
+            print(f"  warning: {w}", file=sys.stderr)
+
     if candidates:
         print("=== Ranked Candidates ===")
     for c in candidates:
@@ -47,3 +65,13 @@ def print_results(
         if gap_report.partial_matches:
             print("\n=== Gap Report: Partial Matches ===")
             print(f"  {', '.join(gap_report.partial_matches)}")
+
+    if run_telemetry is not None:
+        total_s = sum(run_telemetry.stage_timings_ms.values()) / 1000.0
+        rate_pct = int(run_telemetry.cache_hit_rate * 100)
+        print(
+            f"\n  telemetry: {total_s:.1f}s total, "
+            f"{run_telemetry.llm_calls} LLM calls, "
+            f"${run_telemetry.total_cost_usd:.4f}, "
+            f"cache {rate_pct}%"
+        )

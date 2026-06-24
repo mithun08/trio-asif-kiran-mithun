@@ -1,0 +1,33 @@
+entries:
+  - role_id: ROLE-01
+    kind: exact
+    expected_top_emails: []
+    notes: "Exact Kotlin backend match"
+  - role_id: ROLE-02
+    kind: exact
+    expected_top_emails: []
+    notes: "Exact Python/AWS match"
+  - role_id: ROLE-03
+    kind: exact
+    expected_top_emails: []
+    notes: "Exact Java match"
+  - role_id: ROLE-04
+    kind: exact
+    expected_top_emails: []
+    notes: "Exact data engineering match"
+  - role_id: ROLE-05
+    kind: adjacent
+    expected_top_emails: []
+    notes: "Adjacent skill match (Kotlin -> Java)"
+  - role_id: ROLE-06
+    kind: adjacent
+    expected_top_emails: []
+    notes: "Adjacent skill match (React -> Angular)"
+  - role_id: ROLE-07
+    kind: negative
+    expected_top_emails: []
+    notes: "No consultant should appear in top 3"
+  - role_id: ROLE-08
+    kind: unfillable
+    expected_top_emails: []
+    notes: "All consultants filtered (unavailable or no match)"

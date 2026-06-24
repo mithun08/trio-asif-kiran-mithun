@@ -72,3 +72,20 @@ llm:
 embedding:
   model: "all-MiniLM-L6-v2"
   index_dir: ".cache/milvus"
+
+allowed_models:
+  - openai/gpt-4o-mini
+  - openai/gpt-4o
+  - anthropic/claude-3-haiku
+
+observability:
+  log_path: ".cache/run-log.jsonl"
+  enable_telemetry: true
+
+ocr:
+  enabled: true
+  text_floor_chars: 50
+  confidence_floor: 0.6
+
+provider:
+  data_collection: deny

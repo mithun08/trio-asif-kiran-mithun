@@ -5,8 +5,10 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from matcher.models.gap import GapReport
+from matcher.models.ingestion_report import IngestionReport
 from matcher.models.role import Role
 from matcher.models.score import ScoredCandidate
+from matcher.models.telemetry import RunTelemetry
 
 
 class DataQualityReport(BaseModel):
@@ -27,3 +29,5 @@ class RunOutput(BaseModel):
     stage_timings_ms: dict[str, float] = Field(default_factory=dict)
     gap_report: GapReport = Field(default_factory=GapReport)
     role_snapshot: Role | None = None
+    ingestion_report: IngestionReport | None = None
+    run_telemetry: RunTelemetry | None = None

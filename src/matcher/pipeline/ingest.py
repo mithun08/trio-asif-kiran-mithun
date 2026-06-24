@@ -7,7 +7,9 @@ from typing import Any
 
 import openpyxl
 
+from matcher.config import OCRConfig
 from matcher.models.consultant import Consultant, Skill
+from matcher.models.errors import IngestionError
 from matcher.models.role import RequiredSkill, Role
 from matcher.pipeline.normalise import normalise_location
 
@@ -67,14 +69,20 @@ def _build_header_map(ws: Any, header_row: int = 2) -> dict[str, int]:
 
 
 def ingest_roles(xlsx_path: Path) -> list[Role]:
-    wb = openpyxl.load_workbook(xlsx_path, data_only=True)
-    ws = wb["Open Roles"]
+    try:
+        wb = openpyxl.load_workbook(xlsx_path, data_only=True)
+    except Exception as exc:
+        raise IngestionError(xlsx_path, "workbook unreadable") from exc
+    try:
+        ws = wb["Open Roles"]
+    except KeyError:
+        raise IngestionError(xlsx_path, "missing sheet 'Open Roles'")
     headers = _build_header_map(ws, header_row=2)
 
     required_columns = {"Role ID", "Title", "Required Skills", "Location"}
     missing = required_columns - headers.keys()
     if missing:
-        raise ValueError(f"Open Roles sheet missing columns: {missing}")
+        raise IngestionError(xlsx_path, f"Open Roles sheet missing columns: {missing}")
 
     roles: list[Role] = []
     for row in ws.iter_rows(min_row=3, values_only=True):
@@ -122,17 +130,23 @@ def _parse_skills(raw: object) -> list[Skill]:
 
 
 def ingest_consultants_from_workbook(xlsx_path: Path) -> list[Consultant]:
-    wb = openpyxl.load_workbook(xlsx_path, data_only=True)
+    try:
+        wb = openpyxl.load_workbook(xlsx_path, data_only=True)
+    except Exception as exc:
+        raise IngestionError(xlsx_path, "workbook unreadable") from exc
     result: list[Consultant] = []
 
     for sheet_name, supply_state in _SUPPLY_STATE_MAP.items():
-        ws = wb[sheet_name]
+        try:
+            ws = wb[sheet_name]
+        except KeyError:
+            raise IngestionError(xlsx_path, f"missing sheet '{sheet_name}'")
         headers = _build_header_map(ws, header_row=2)
 
         required_columns = {"Name", "Email", "Grade", "Location"}
         missing = required_columns - headers.keys()
         if missing:
-            raise ValueError(f"{sheet_name} sheet missing columns: {missing}")
+            raise IngestionError(xlsx_path, f"{sheet_name} sheet missing columns: {missing}")
 
         skills_col = next(
             (k for k in headers if k.startswith("Key Skills")),
@@ -186,20 +200,41 @@ def _derive_name_from_pdf_stem(stem: str) -> str:
     return " ".join(part.capitalize() for part in parts if part)
 
 
-def _extract_pdf_text(pdf_path: Path) -> tuple[str, list[str], float]:
+def _extract_pdf_text(
+    pdf_path: Path, ocr_config: OCRConfig | None = None
+) -> tuple[str, list[str], float]:
     from docling.document_converter import DocumentConverter
+
+    _ocr = ocr_config if ocr_config is not None else OCRConfig()
 
     try:
         converter = DocumentConverter()
         result = converter.convert(str(pdf_path))
         raw_text = result.document.export_to_text()
-        return raw_text, [], 1.0
     except Exception:
         return "", ["profile_pdf_unreadable"], 0.7
 
+    if len(raw_text) < _ocr.text_floor_chars:
+        if _ocr.enabled:
+            try:
+                from docling.document_converter import DocumentConverter as _DC
+
+                ocr_converter = _DC()
+                ocr_result = ocr_converter.convert(str(pdf_path))
+                ocr_text = ocr_result.document.export_to_text()
+                if ocr_text.strip():
+                    return ocr_text, ["profile_pdf_ocr_used"], _ocr.confidence_floor
+            except Exception:
+                pass
+        return "", ["profile_pdf_low_confidence"], 0.4
+
+    return raw_text, [], 1.0
+
 
 def ingest_consultants(
-    profiles_dir: Path, workbook_consultants: list[Consultant]
+    profiles_dir: Path,
+    workbook_consultants: list[Consultant],
+    ocr_config: OCRConfig | None = None,
 ) -> list[Consultant]:
     import logging
 
@@ -220,7 +255,7 @@ def ingest_consultants(
             logging.getLogger(__name__).warning("No workbook match for PDF: %s", pdf_path.name)
             continue
 
-        raw_text, data_gaps_update, confidence_factor = _extract_pdf_text(pdf_path)
+        raw_text, data_gaps_update, confidence_factor = _extract_pdf_text(pdf_path, ocr_config)
 
         current = updated[matched.email.casefold()]
         new_gaps = [*current.data_gaps, *data_gaps_update]
