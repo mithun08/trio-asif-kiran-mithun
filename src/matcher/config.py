@@ -199,6 +199,9 @@ class AppConfig(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         frozen=True,
+        # Explicitly disabled: NestedSecretsSettingsSource follows symlinks outside
+        # secrets_dir (pydantic-settings CVE). We load secrets via env vars only.
+        secrets_dir=None,
     )
 
     openrouter_api_key: str = Field(default="", description="OpenRouter API key")

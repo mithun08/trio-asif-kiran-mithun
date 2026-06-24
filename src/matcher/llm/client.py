@@ -9,6 +9,13 @@ def configure_lm(config: AppConfig) -> None:
     if not config.openrouter_api_key:
         raise RuntimeError("DSM_OPENROUTER_API_KEY is not set. Use --no-llm for offline runs.")
 
+    # Restrict pickle deserialization to known-safe types only — diskcache uses pickle by
+    # default which allows arbitrary code execution if the cache directory is tampered with.
+    dspy.configure_cache(
+        restrict_pickle=True,
+        disk_cache_dir=str(config.cache_dir / "dspy"),
+    )
+
     extra_headers = {"X-Title": "demand-supply-matcher"}
     extra_body = {"provider": {"data_collection": config.provider.data_collection}}
 
