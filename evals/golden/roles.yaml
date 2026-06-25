@@ -28,3 +28,8 @@ entries:
     description: "C++ role — Python-only consultant with no C++ skills must NOT rank above Java candidate"
     expected_top_emails:
       - "alice.test@example.com"
+
+  - role_id: "EVAL-04"
+    kind: unfillable
+    description: "COBOL mainframe role — no consultant has these skills; ranked list must be empty"
+    expected_top_emails: []

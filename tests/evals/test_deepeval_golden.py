@@ -1,3 +1,9 @@
+# Eval pass rate thresholds:
+#   Minimum 0.70 — below this means the pipeline is broken or the golden set is misconfigured.
+#   Maximum 0.85 — above this means the golden set is not discriminating enough; add negatives
+#                  or unfillable entries to keep the suite challenging.
+# These thresholds are calibrated against the synthetic fixture set in evals/fixtures/.
+# When adding new golden entries, keep the pass rate in the [0.70, 0.85] window.
 from __future__ import annotations
 
 from pathlib import Path

@@ -235,6 +235,7 @@ class AppConfig(BaseSettings):
     max_cost_usd_per_run: float = Field(default=0.0, description="0 = no limit")
     max_tokens_per_run: int = Field(default=0, description="0 = no limit")
     max_concurrent_extractions: int = Field(default=5, ge=1, le=20)
+    embedding_model: str = Field(default="all-MiniLM-L6-v2")
 
     @model_validator(mode="after")
     def _check_allowed_models(self) -> AppConfig:
@@ -281,4 +282,5 @@ class AppConfig(BaseSettings):
             max_cost_usd_per_run=raw.get("budget", {}).get("max_cost_usd_per_run", 0.0),
             max_tokens_per_run=raw.get("budget", {}).get("max_tokens_per_run", 0),
             max_concurrent_extractions=raw.get("llm", {}).get("max_concurrent_extractions", 5),
+            embedding_model=raw.get("embedding", {}).get("model", "all-MiniLM-L6-v2"),
         )

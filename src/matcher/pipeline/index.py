@@ -11,14 +11,19 @@ _COLLECTION = "skill_embeddings"
 _DIM = 384
 
 
-def build_index(consultants: list[Consultant], roles: list[Role], index_dir: Path) -> None:
+def build_index(
+    consultants: list[Consultant],
+    roles: list[Role],
+    index_dir: Path,
+    model_name: str = _MODEL_NAME,
+) -> None:
     from pymilvus import MilvusClient
     from sentence_transformers import SentenceTransformer
 
     index_dir.mkdir(parents=True, exist_ok=True)
     db_path = str(index_dir / "skills.db")
 
-    model: Any = SentenceTransformer(_MODEL_NAME)
+    model: Any = SentenceTransformer(model_name)
     client: Any = MilvusClient(db_path)
 
     if client.has_collection(_COLLECTION):

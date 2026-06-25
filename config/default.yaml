@@ -10,7 +10,6 @@ scoring:
   thresholds:
     skill_exact_match: 1.0
     skill_adjacent_match: 0.70
-    skill_vector_similarity: 0.65
     hard_filter_availability_days: 30
 
   config:

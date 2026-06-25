@@ -45,6 +45,7 @@ def _compute_snapshot_id(
     workbook: Path,
     profiles_dir: Path,
     feedback_dir: Path,
+    embedding_model: str = "",
 ) -> str:
     h = hashlib.sha256()
 
@@ -63,6 +64,9 @@ def _compute_snapshot_id(
                 if path.is_file():
                     s = path.stat()
                     h.update(f"{path.name}:{s.st_mtime}:{s.st_size}".encode())
+
+    if embedding_model:
+        h.update(embedding_model.encode())
 
     return h.hexdigest()[:16]
 
@@ -176,7 +180,7 @@ def match(
     embedding_model = None
     if index_client is not None:
         from sentence_transformers import SentenceTransformer
-        embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+        embedding_model = SentenceTransformer(config.embedding_model)
 
     with stage_timer("match", _telemetry.current_telemetry):
         ranked, gaps = match_role(
@@ -214,6 +218,7 @@ def match(
         workbook,
         config.data_dir / "profiles",
         config.data_dir / "project_feedback",
+        embedding_model=config.embedding_model,
     )
 
     run_tel = _telemetry.snapshot()
@@ -310,6 +315,7 @@ def ingest(
                 max_workers=config.max_concurrent_extractions,
                 primary_lm=ingest_primary_lm,
                 fallback_lm=ingest_fallback_lm,
+                app_config=config,
             )
         )
     else:
@@ -319,7 +325,7 @@ def ingest(
     save_store(all_consultants, store_path)
 
     report = build_ingestion_report(roles, all_consultants, data_path / "project_feedback", [])
-    build_index(all_consultants, roles, config.cache_dir / "milvus")
+    build_index(all_consultants, roles, config.cache_dir / "milvus", model_name=config.embedding_model)
     if output_json:
         typer.echo(report.model_dump_json(indent=2))
     else:

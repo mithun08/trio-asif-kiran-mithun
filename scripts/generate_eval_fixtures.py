@@ -12,9 +12,9 @@ _ROLES = [
     ("EVAL-03", "C++ Embedded Engineer", "C++ (working); Embedded Systems (working)", "London", ""),
     (
         "EVAL-04",
-        "Quantum Computing Specialist",
-        "Quantum Computing (expert); Q# (expert)",
-        "London",
+        "COBOL Mainframe Engineer",
+        "COBOL (expert); JCL (expert)",
+        "Singapore",
         "",
     ),
     ("EVAL-05", "Python Data Engineer", "Python (working); SQL (working)", "London", ""),

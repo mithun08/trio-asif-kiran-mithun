@@ -12,6 +12,9 @@ from matcher.llm.extract import (
 )
 from matcher.models.consultant import Consultant
 
+# When TASK7 embedding calls are batched, consider grouping encode() calls per
+# batch of consultants in _extract_one rather than one call per skill here.
+
 
 def extract_signals(
     consultants: list[Consultant],
@@ -63,6 +66,7 @@ async def _extract_one(
     semaphore: asyncio.Semaphore,
     primary_lm: Any | None,
     fallback_lm: Any | None,
+    app_config: AppConfig | None = None,
 ) -> Consultant:
     async with semaphore:
         loop = asyncio.get_running_loop()
@@ -100,6 +104,10 @@ async def _extract_one(
                 consultant, combined_text, config, primary_lm, fallback_lm,
             )
 
+        if app_config is not None:
+            from matcher.observability.telemetry import check_budget
+            check_budget(app_config.max_cost_usd_per_run, app_config.max_tokens_per_run)
+
         return consultant
 
 
@@ -109,7 +117,11 @@ async def extract_signals_async(
     max_workers: int = 5,
     primary_lm: Any | None = None,
     fallback_lm: Any | None = None,
+    app_config: AppConfig | None = None,
 ) -> list[Consultant]:
     semaphore = asyncio.Semaphore(max_workers)
-    tasks = [_extract_one(c, config, semaphore, primary_lm, fallback_lm) for c in consultants]
+    tasks = [
+        _extract_one(c, config, semaphore, primary_lm, fallback_lm, app_config)
+        for c in consultants
+    ]
     return list(await asyncio.gather(*tasks))
