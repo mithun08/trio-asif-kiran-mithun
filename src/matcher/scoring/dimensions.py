@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from matcher.config import ScoringConfig, ScoringWeights
 from matcher.models.consultant import Consultant
 from matcher.models.role import RequiredSkill, Role
@@ -11,17 +13,39 @@ def _best_credit(
     consultant: Consultant,
     adjacency_map: dict[str, list[str]],
     config: ScoringConfig,
+    index_client: Any | None = None,
+    embedding_model: Any | None = None,
 ) -> float:
     req_name = req.name.casefold()
+
     for skill in consultant.skills:
         s_name = skill.name.casefold()
         if s_name == req_name:
             if req.required_proficiency is None or skill.proficiency >= req.required_proficiency:
                 return config.c_exact
             return config.c_prof
+
+    for skill in consultant.skills:
+        s_name = skill.name.casefold()
         adjacents = adjacency_map.get(s_name, []) + adjacency_map.get(req_name, [])
         if req_name in adjacents or s_name in adjacents:
             return config.c_adjacent
+
+    if index_client is not None and embedding_model is not None:
+        req_vec = embedding_model.encode(req_name).tolist()
+        results = index_client.search(
+            collection_name="skill_embeddings",
+            data=[req_vec],
+            limit=1,
+            filter=f'consultant_email == "{consultant.email}"',
+            output_fields=["skill_name"],
+        )
+        if results and results[0]:
+            hit = results[0][0]
+            distance = hit.get("distance", 0.0)
+            if distance >= config.skill_vector_similarity:
+                return config.c_vector
+
     if consultant.supply_state == "new_joiner":
         return config.c_newjoiner
     return 0.0
@@ -33,18 +57,25 @@ def score_skill_match(
     adjacency_map: dict[str, list[str]],
     weights: ScoringWeights,
     config: ScoringConfig,
+    index_client: Any | None = None,
+    embedding_model: Any | None = None,
 ) -> DimensionScore:
     mandatory = [rs for rs in role.required_skills if rs.mandatory]
     optional = [rs for rs in role.required_skills if not rs.mandatory]
 
     if mandatory:
-        credits = [_best_credit(rs, consultant, adjacency_map, config) for rs in mandatory]
+        credits = [
+            _best_credit(rs, consultant, adjacency_map, config, index_client, embedding_model)
+            for rs in mandatory
+        ]
         required_mean = sum(credits) / len(credits)
     else:
         required_mean = 0.0
 
     bonus_count = sum(
-        1 for rs in optional if _best_credit(rs, consultant, adjacency_map, config) > 0
+        1
+        for rs in optional
+        if _best_credit(rs, consultant, adjacency_map, config, index_client, embedding_model) > 0
     )
     skill_bonus = min(config.nth_bonus_per * bonus_count, config.nth_bonus_cap)
     raw = min(100.0, required_mean + skill_bonus)

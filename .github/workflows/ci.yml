@@ -49,3 +49,20 @@ jobs:
           name: coverage
           path: coverage.xml
 
+  eval:
+    runs-on: ubuntu-latest
+    needs: [unit-test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync --extra dev
+      - name: Download spaCy model
+        run: uv run python -m spacy download en_core_web_sm
+      - name: Run eval suite
+        run: uv run pytest tests/evals/test_deepeval_golden.py -v
+

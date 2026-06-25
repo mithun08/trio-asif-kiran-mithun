@@ -34,7 +34,7 @@ def dedup_by_email(consultants: list[Consultant]) -> list[Consultant]:
 
 
 def scrub_pii(consultants: list[Consultant]) -> list[Consultant]:
-    from matcher.privacy.scrubber import scrub_text
+    from matcher.privacy.scrubber import assert_no_residual_pii, scrub_text
 
     scrubbed_list = []
     for consultant in consultants:
@@ -42,12 +42,14 @@ def scrub_pii(consultants: list[Consultant]) -> list[Consultant]:
         update: dict[str, Any] = {}
 
         scrubbed_profile, profile_map = scrub_text(consultant.raw_profile_text)
+        assert_no_residual_pii(scrubbed_profile)
         combined_token_map.update(profile_map)
         update["raw_profile_text"] = scrubbed_profile
 
         scrubbed_feedback: dict[str, str] = {}
         for source, feedback_content in consultant.feedback_text.items():
             scrubbed_content, feedback_map = scrub_text(feedback_content)
+            assert_no_residual_pii(scrubbed_content)
             combined_token_map.update(feedback_map)
             scrubbed_feedback[source] = scrubbed_content
         if scrubbed_feedback:

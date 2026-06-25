@@ -19,6 +19,27 @@ from matcher.models.signals import AdaptabilitySignals, FeedbackSignal
 
 _LOG = logging.getLogger(__name__)
 
+_LmType = Any
+
+
+def _run_predict(
+    predictor: Any,
+    lm: _LmType,
+    fallback_lm: _LmType,
+    **kwargs: Any,
+) -> Any:
+    try:
+        with dspy.context(lm=lm):
+            result = predictor(**kwargs)
+        _tap_lm_history(lm, "extract")
+        return result
+    except Exception:
+        effective = fallback_lm if fallback_lm is not None else lm
+        with dspy.context(lm=effective):
+            result = predictor(**kwargs)
+        _tap_lm_history(effective, "extract")
+        return result
+
 
 def _tap_lm_history(lm: object, task: str) -> None:
     from matcher.observability import telemetry as _tel
@@ -101,17 +122,30 @@ def _apply_evidence_floor(
     return consultant.model_copy(update={"data_confidence": new_confidence, "data_gaps": new_gaps})
 
 
-def extract_profile(consultant: Consultant, config: ScoringConfig) -> Consultant:
+def extract_profile(
+    consultant: Consultant,
+    config: ScoringConfig,
+    lm: _LmType = None,
+    fallback_lm: _LmType = None,
+) -> Consultant:
     predictor = dspy.Predict(ProfileExtraction)
-    result = predictor(raw_text=consultant.raw_profile_text)
-    _tap_lm_history(getattr(dspy.settings, "lm", None), "extract")
+    if lm is not None:
+        result = _run_predict(predictor, lm, fallback_lm, raw_text=consultant.raw_profile_text)
+    else:
+        result = predictor(raw_text=consultant.raw_profile_text)
+        _tap_lm_history(getattr(dspy.settings, "lm", None), "extract")
 
     skills_json_raw: str = getattr(result, "skills_json", "[]")
     skills_data = _parse_json_list(skills_json_raw)
 
     if not skills_data and skills_json_raw.strip() not in ("[]", ""):
-        result_retry = predictor(raw_text=consultant.raw_profile_text)
-        _tap_lm_history(getattr(dspy.settings, "lm", None), "extract")
+        if lm is not None:
+            result_retry = _run_predict(
+                predictor, lm, fallback_lm, raw_text=consultant.raw_profile_text
+            )
+        else:
+            result_retry = predictor(raw_text=consultant.raw_profile_text)
+            _tap_lm_history(getattr(dspy.settings, "lm", None), "extract")
         skills_data = _parse_json_list(getattr(result_retry, "skills_json", "[]"))
 
         if not skills_data:
@@ -180,14 +214,23 @@ def _merge_skills(existing: list[Skill], extracted: list[dict[str, Any]]) -> lis
     return list(existing_by_name.values())
 
 
-def extract_feedback(consultant: Consultant, source: str, config: ScoringConfig) -> Consultant:
+def extract_feedback(
+    consultant: Consultant,
+    source: str,
+    config: ScoringConfig,
+    lm: _LmType = None,
+    fallback_lm: _LmType = None,
+) -> Consultant:
     feedback_text = consultant.feedback_text.get(source, "")
     if not feedback_text:
         return consultant
 
     predictor = dspy.Predict(FeedbackSignalExtraction)
-    result = predictor(feedback_text=feedback_text)
-    _tap_lm_history(getattr(dspy.settings, "lm", None), "extract")
+    if lm is not None:
+        result = _run_predict(predictor, lm, fallback_lm, feedback_text=feedback_text)
+    else:
+        result = predictor(feedback_text=feedback_text)
+        _tap_lm_history(getattr(dspy.settings, "lm", None), "extract")
 
     sentiment_raw: str = getattr(result, "sentiment", "neutral").strip().lower()
     sentiment: Literal["positive", "neutral", "negative"] = (
@@ -229,11 +272,18 @@ def extract_feedback(consultant: Consultant, source: str, config: ScoringConfig)
 
 
 def extract_adaptability(
-    consultant: Consultant, combined_text: str, config: ScoringConfig
+    consultant: Consultant,
+    combined_text: str,
+    config: ScoringConfig,
+    lm: _LmType = None,
+    fallback_lm: _LmType = None,
 ) -> Consultant:
     predictor = dspy.Predict(AdaptabilitySignalExtraction)
-    result = predictor(combined_text=combined_text)
-    _tap_lm_history(getattr(dspy.settings, "lm", None), "extract")
+    if lm is not None:
+        result = _run_predict(predictor, lm, fallback_lm, combined_text=combined_text)
+    else:
+        result = predictor(combined_text=combined_text)
+        _tap_lm_history(getattr(dspy.settings, "lm", None), "extract")
 
     tech_transitions = _parse_int_string(getattr(result, "tech_transitions", "0"))
     cross_domain = _parse_int_string(getattr(result, "cross_domain", "0"))
@@ -262,10 +312,19 @@ def extract_adaptability(
     return _apply_evidence_floor(updated, grounded_spans, config, "low_evidence_adaptability")
 
 
-def extract_trend(consultant: Consultant, combined_text: str, config: ScoringConfig) -> Consultant:
+def extract_trend(
+    consultant: Consultant,
+    combined_text: str,
+    config: ScoringConfig,
+    lm: _LmType = None,
+    fallback_lm: _LmType = None,
+) -> Consultant:
     predictor = dspy.Predict(PerformanceTrendExtraction)
-    result = predictor(combined_text=combined_text)
-    _tap_lm_history(getattr(dspy.settings, "lm", None), "extract")
+    if lm is not None:
+        result = _run_predict(predictor, lm, fallback_lm, combined_text=combined_text)
+    else:
+        result = predictor(combined_text=combined_text)
+        _tap_lm_history(getattr(dspy.settings, "lm", None), "extract")
 
     trend_raw: str = getattr(result, "trend", "unknown").strip().lower()
     trend: Literal["improving", "stable", "declining", "unknown"] = (

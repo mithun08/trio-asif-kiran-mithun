@@ -8,3 +8,7 @@ class IngestionError(Exception):
         super().__init__(f"{file}: {problem}")
         self.file = file
         self.problem = problem
+
+
+class BudgetExceededError(RuntimeError):
+    pass

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import dspy
-
 from matcher.config import AppConfig
+from matcher.llm.client import make_lm
 from matcher.llm.explain_module import generate_explanation
 from matcher.models.consultant import Consultant
 from matcher.models.role import Role
@@ -18,13 +17,8 @@ def generate_explanations(
     if not config.openrouter_api_key:
         return candidates
 
-    explanation_lm = dspy.LM(
-        model=config.model_explain,
-        api_key=config.openrouter_api_key,
-        api_base="https://openrouter.ai/api/v1",
-        temperature=0,
-        max_retries=3,
-    )
+    explanation_lm = make_lm(config.model_explain, config)
+    fallback_lm = make_lm(config.model_fallback, config)
     by_email = {c.email.casefold(): c for c in consultants}
     result: list[ScoredCandidate] = []
 
@@ -34,8 +28,8 @@ def generate_explanations(
             result.append(sc)
             continue
         ranked_above = candidates[i - 1] if i > 0 else None
-        result.append(
-            generate_explanation(
+        try:
+            updated = generate_explanation(
                 sc,
                 ranked_above,
                 role,
@@ -43,6 +37,15 @@ def generate_explanations(
                 explanation_lm,
                 consultant.pii_token_map,
             )
-        )
+        except Exception:
+            updated = generate_explanation(
+                sc,
+                ranked_above,
+                role,
+                consultant,
+                fallback_lm,
+                consultant.pii_token_map,
+            )
+        result.append(updated)
 
     return result

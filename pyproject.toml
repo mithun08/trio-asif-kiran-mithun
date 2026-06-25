@@ -78,3 +78,7 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["sentence_transformers.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["pymilvus.*"]
+ignore_missing_imports = true

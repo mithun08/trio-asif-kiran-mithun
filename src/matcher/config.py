@@ -76,6 +76,8 @@ class ScoringConfig(BaseModel):
     beach_long_days: int = 60
     skill_infer_min: float = 0.5
     gap_top_n: int = 3
+    skill_vector_similarity: float = 0.65
+    c_vector: float = 65.0
 
     @field_validator("band_strong", "band_partial", mode="before")
     @classmethod
@@ -172,6 +174,16 @@ class ScoringConfig(BaseModel):
     def _clamp_skill_infer(cls, v: object, info: Any) -> float:
         return _clamp(v, 0.0, 1.0, info.field_name)
 
+    @field_validator("skill_vector_similarity", mode="before")
+    @classmethod
+    def _clamp_vector_sim(cls, v: object, info: Any) -> float:
+        return _clamp(v, 0.0, 1.0, info.field_name)
+
+    @field_validator("c_vector", mode="before")
+    @classmethod
+    def _clamp_c_vector(cls, v: object, info: Any) -> float:
+        return _clamp(v, 0.0, 100.0, info.field_name)
+
 
 def load_adjacency(path: Path = Path("config/skill_adjacency.yaml")) -> dict[str, list[str]]:
     raw: dict[str, Any] = yaml.safe_load(path.read_text()) or {}
@@ -220,6 +232,9 @@ class AppConfig(BaseSettings):
     observability: ObservabilityConfig = Field(default_factory=ObservabilityConfig)
     ocr: OCRConfig = Field(default_factory=OCRConfig)
     provider: ProviderConfig = Field(default_factory=ProviderConfig)
+    max_cost_usd_per_run: float = Field(default=0.0, description="0 = no limit")
+    max_tokens_per_run: int = Field(default=0, description="0 = no limit")
+    max_concurrent_extractions: int = Field(default=5, ge=1, le=20)
 
     @model_validator(mode="after")
     def _check_allowed_models(self) -> AppConfig:
@@ -239,6 +254,15 @@ class AppConfig(BaseSettings):
         scoring = raw.get("scoring", {})
         weights_data = scoring.get("weights", {})
         config_data = scoring.get("config", {})
+        thresholds_data = scoring.get("thresholds", {})
+        if (
+            "skill_vector_similarity" not in config_data
+            and "skill_vector_similarity" in thresholds_data
+        ):
+            config_data = {
+                **config_data,
+                "skill_vector_similarity": thresholds_data["skill_vector_similarity"],
+            }
         models = raw.get("models", {})
         obs_data = raw.get("observability", {})
         ocr_data = raw.get("ocr", {})
@@ -254,4 +278,7 @@ class AppConfig(BaseSettings):
             observability=ObservabilityConfig(**obs_data) if obs_data else ObservabilityConfig(),
             ocr=OCRConfig(**ocr_data) if ocr_data else OCRConfig(),
             provider=ProviderConfig(**provider_data) if provider_data else ProviderConfig(),
+            max_cost_usd_per_run=raw.get("budget", {}).get("max_cost_usd_per_run", 0.0),
+            max_tokens_per_run=raw.get("budget", {}).get("max_tokens_per_run", 0),
+            max_concurrent_extractions=raw.get("llm", {}).get("max_concurrent_extractions", 5),
         )

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from matcher.config import ScoringConfig, ScoringWeights
 from matcher.models.consultant import Consultant
 from matcher.models.role import Role
@@ -27,6 +29,8 @@ def match_role(
     skip_skill_dim: bool = False,
     disable_availability_filter: bool = False,
     disable_location_filter: bool = False,
+    index_client: Any | None = None,
+    embedding_model: Any | None = None,
 ) -> tuple[list[ScoredCandidate], list[ScoredCandidate]]:
     passing, rejected = apply_hard_filters(
         consultants,
@@ -39,7 +43,11 @@ def match_role(
     for consultant in passing:
         dims = []
         if not skip_skill_dim:
-            dims.append(score_skill_match(consultant, role, adjacency_map, weights, config))
+            dims.append(
+                score_skill_match(
+                    consultant, role, adjacency_map, weights, config, index_client, embedding_model
+                )
+            )
         dims += [
             score_feedback_quality(consultant, weights, config),
             score_availability(consultant, role, weights, config),

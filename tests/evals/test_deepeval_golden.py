@@ -6,7 +6,9 @@ import pytest
 import yaml
 
 GOLDEN_PATH = Path("evals/golden/roles.yaml")
-WORKBOOK_PATH = Path("data/demand-supply.xlsx")
+_FIXTURE_WORKBOOK = Path("evals/fixtures/eval_data.xlsx")
+_REAL_WORKBOOK = Path("data/demand-supply.xlsx")
+WORKBOOK_PATH = _REAL_WORKBOOK if _REAL_WORKBOOK.exists() else _FIXTURE_WORKBOOK
 
 
 def _entries() -> list[dict]:  # type: ignore[type-arg]
@@ -41,11 +43,14 @@ def test_eval_pass_rate(golden_entries: list[dict]) -> None:  # type: ignore[typ
     config = AppConfig.from_yaml(Path("config/default.yaml"))
     adjacency_map = load_adjacency(Path("config/skill_adjacency.yaml"))
 
-    workbook = config.data_dir / "demand-supply.xlsx"
+    workbook = WORKBOOK_PATH
     roles = ingest_roles(workbook)
     consultants = ingest_consultants_from_workbook(workbook)
-    consultants = ingest_consultants(config.data_dir / "profiles", consultants)
-    consultants = ingest_feedback(config.data_dir / "project_feedback", consultants)
+    if workbook != config.data_dir / "demand-supply.xlsx":
+        pass  # fixture workbook has no PDF profiles or feedback files
+    else:
+        consultants = ingest_consultants(config.data_dir / "profiles", consultants)
+        consultants = ingest_feedback(config.data_dir / "project_feedback", consultants)
     consultants = canonicalise_locations(consultants)
     consultants = dedup_by_email(consultants)
     consultants = scrub_pii(consultants)

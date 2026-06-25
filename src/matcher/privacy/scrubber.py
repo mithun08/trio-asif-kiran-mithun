@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import re
+
 from presidio_analyzer import AnalyzerEngine, Pattern, PatternRecognizer
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 
-_ENTITIES = ["EMAIL_ADDRESS", "PHONE_NUMBER", "PERSON"]
+_ENTITIES = ["EMAIL_ADDRESS", "PHONE_NUMBER", "PERSON", "ORGANIZATION"]
 _LANGUAGE = "en"
 _NLP_CONFIG = {
     "nlp_engine_name": "spacy",
@@ -72,3 +74,14 @@ def rehydrate_text(scrubbed_text: str, token_map: dict[str, str]) -> str:
     for token, original_value in token_map.items():
         result = result.replace(token, original_value)
     return result
+
+
+_RESIDUAL_EMAIL = re.compile(r"[\w.+\-]+@[\w\-]+\.[a-zA-Z]{2,}", re.ASCII)
+_RESIDUAL_PHONE = re.compile(r"(?<!\w)(\+?\d[\d\s\-().]{7,}\d)(?!\w)")
+
+
+def assert_no_residual_pii(text: str) -> None:
+    if _RESIDUAL_EMAIL.search(text):
+        raise ValueError("Post-scrub residual email pattern detected")
+    if _RESIDUAL_PHONE.search(text):
+        raise ValueError("Post-scrub residual phone pattern detected")

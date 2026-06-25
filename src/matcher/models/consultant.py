@@ -32,3 +32,4 @@ class Consultant(BaseModel):
     performance_trend: Literal["improving", "stable", "declining", "unknown"] = "unknown"
     pii_token_map: dict[str, str] = Field(default_factory=dict)
     days_on_beach: int = 0
+    source_hash: str = ""

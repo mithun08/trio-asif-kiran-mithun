@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import uuid
 from datetime import date
@@ -9,7 +10,8 @@ import typer
 
 from matcher.config import AppConfig, load_adjacency
 from matcher.llm.cache import configure_dspy_cache
-from matcher.llm.client import configure_lm
+from matcher.llm.client import configure_lm, make_lm
+from matcher.models.consultant import Consultant
 from matcher.models.errors import IngestionError
 from matcher.models.output import DataQualityReport, RunOutput
 from matcher.observability import telemetry as _telemetry
@@ -17,9 +19,10 @@ from matcher.observability.run_log import configure_log_sink, log_data_quality, 
 from matcher.observability.timing import stage_timer
 from matcher.pipeline import stale_date
 from matcher.pipeline.explain import generate_explanations
-from matcher.pipeline.extract import extract_signals
+from matcher.pipeline.extract import extract_signals, extract_signals_async
 from matcher.pipeline.free_text_role import parse as parse_free_text_role
 from matcher.pipeline.gap import build_gap_report
+from matcher.pipeline.index import build_index, load_index
 from matcher.pipeline.ingest import (
     ingest_consultants,
     ingest_consultants_from_workbook,
@@ -29,12 +32,39 @@ from matcher.pipeline.ingest import (
 from matcher.pipeline.ingestion_report import build as build_ingestion_report
 from matcher.pipeline.match import match_role
 from matcher.pipeline.normalise import canonicalise_locations, dedup_by_email, scrub_pii
+from matcher.pipeline.store import hash_consultant_sources, load_store, save_store
 from matcher.render.json import render_json
 from matcher.render.text import print_results
 from matcher.scoring.confidence import attach_confidence_levels
 from matcher.scoring.info_flags import attach_info_flags
 
 app = typer.Typer(name="dsm", help="Demand-Supply Matcher CLI")
+
+
+def _compute_snapshot_id(
+    workbook: Path,
+    profiles_dir: Path,
+    feedback_dir: Path,
+) -> str:
+    h = hashlib.sha256()
+
+    for path in sorted([
+        workbook,
+        Path("config/default.yaml"),
+        Path("config/skill_adjacency.yaml"),
+    ]):
+        if path.exists():
+            s = path.stat()
+            h.update(f"{path.name}:{s.st_mtime}:{s.st_size}".encode())
+
+    for directory in (profiles_dir, feedback_dir):
+        if directory.exists():
+            for path in sorted(directory.rglob("*")):
+                if path.is_file():
+                    s = path.stat()
+                    h.update(f"{path.name}:{s.st_mtime}:{s.st_size}".encode())
+
+    return h.hexdigest()[:16]
 
 
 @app.command()
@@ -63,9 +93,12 @@ def match(
     configure_log_sink(config.observability.log_path)
     log_run_start(uuid.uuid4().hex[:16], "0.1.0")
 
+    primary_lm = None
+    fallback_lm = None
     if not no_llm:
         configure_dspy_cache(config.cache_dir)
-        configure_lm(config)
+        primary_lm = configure_lm(config)
+        fallback_lm = make_lm(config.model_fallback, config)
 
     workbook = config.data_dir / "demand-supply.xlsx"
 
@@ -110,12 +143,51 @@ def match(
         consultants = scrub_pii(consultants)
 
     if not no_llm:
-        with stage_timer("extract", _telemetry.current_telemetry):
-            consultants = extract_signals(consultants, config.scoring_config)
+        store_path = config.cache_dir / "extracted_consultants.json"
+        if store_path.exists():
+            stored = load_store(store_path)
+            stored_by_email = {c.email.casefold(): c for c in stored}
+            consultants = [stored_by_email.get(c.email.casefold(), c) for c in consultants]
+            consultants_needing_extract = [
+                c for c in consultants if c.email.casefold() not in stored_by_email
+            ]
+            if consultants_needing_extract:
+                with stage_timer("extract", _telemetry.current_telemetry):
+                    extracted_new = extract_signals(
+                        consultants_needing_extract,
+                        config.scoring_config,
+                        app_config=config,
+                        primary_lm=primary_lm,
+                        fallback_lm=fallback_lm,
+                    )
+                extracted_map = {c.email.casefold(): c for c in extracted_new}
+                consultants = [extracted_map.get(c.email.casefold(), c) for c in consultants]
+        else:
+            with stage_timer("extract", _telemetry.current_telemetry):
+                consultants = extract_signals(
+                    consultants,
+                    config.scoring_config,
+                    app_config=config,
+                    primary_lm=primary_lm,
+                    fallback_lm=fallback_lm,
+                )
+
+    index_client = load_index(config.cache_dir / "milvus")
+    embedding_model = None
+    if index_client is not None:
+        from sentence_transformers import SentenceTransformer
+        embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
     with stage_timer("match", _telemetry.current_telemetry):
         ranked, gaps = match_role(
-            role, consultants, adjacency_map, config.weights, config.scoring_config, top_n=top_n
+            role,
+            consultants,
+            adjacency_map,
+            config.weights,
+            config.scoring_config,
+            top_n=top_n,
+            index_client=index_client,
+            embedding_model=embedding_model,
         )
 
     with stage_timer("confidence_and_flags", _telemetry.current_telemetry):
@@ -138,8 +210,11 @@ def match(
         with stage_timer("explain", _telemetry.current_telemetry):
             ranked = generate_explanations(ranked, role, consultants, config)
 
-    stat = workbook.stat()
-    snapshot_id = hashlib.sha256(f"{stat.st_mtime}{stat.st_size}".encode()).hexdigest()[:16]
+    snapshot_id = _compute_snapshot_id(
+        workbook,
+        config.data_dir / "profiles",
+        config.data_dir / "project_feedback",
+    )
 
     run_tel = _telemetry.snapshot()
     output = RunOutput(
@@ -176,8 +251,10 @@ def ingest(
     data_dir: str = typer.Option("data/", "--data-dir", help="Directory containing source files"),
     force: bool = typer.Option(False, "--force", help="Force re-ingest even if index is current"),
     output_json: bool = typer.Option(False, "--json", help="Emit JSON output"),
+    no_llm: bool = typer.Option(False, "--no-llm", help="Skip LLM extraction"),
 ) -> None:
     """Ingest source files and report ingestion quality."""
+    config = AppConfig.from_yaml(Path("config/default.yaml"))
     data_path = Path(data_dir)
     workbook = data_path / "demand-supply.xlsx"
     try:
@@ -189,7 +266,60 @@ def ingest(
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=1)
 
-    report = build_ingestion_report(roles, consultants, data_path / "project_feedback", [])
+    store_path = config.cache_dir / "extracted_consultants.json"
+    existing_store = load_store(store_path) if not force else []
+    existing_by_email = {c.email.casefold(): c for c in existing_store}
+
+    consultants_to_extract: list[Consultant] = []
+    consultants_unchanged: list[Consultant] = []
+    for consultant in consultants:
+        pdf_path = data_path / "profiles" / f"{consultant.email}.pdf"
+        feedback_paths = [
+            data_path / "project_feedback" / f
+            for f in (data_path / "project_feedback").glob(f"{consultant.email}_*.md")
+        ] if (data_path / "project_feedback").exists() else []
+        current_hash = hash_consultant_sources(
+            pdf_path if pdf_path.exists() else None,
+            feedback_paths,
+        )
+        existing = existing_by_email.get(consultant.email.casefold())
+        if existing is not None and existing.source_hash == current_hash and not force:
+            consultants_unchanged.append(
+                existing.model_copy(update={
+                    "available_from": consultant.available_from,
+                    "supply_state": consultant.supply_state,
+                    "rolloff_confidence": consultant.rolloff_confidence,
+                    "days_on_beach": consultant.days_on_beach,
+                })
+            )
+        else:
+            consultants_to_extract.append(
+                consultant.model_copy(update={"source_hash": current_hash})
+            )
+
+    ingest_primary_lm = None
+    ingest_fallback_lm = None
+    if not no_llm and consultants_to_extract:
+        configure_dspy_cache(config.cache_dir)
+        ingest_primary_lm = configure_lm(config)
+        ingest_fallback_lm = make_lm(config.model_fallback, config)
+        extracted = asyncio.run(
+            extract_signals_async(
+                consultants_to_extract,
+                config.scoring_config,
+                max_workers=config.max_concurrent_extractions,
+                primary_lm=ingest_primary_lm,
+                fallback_lm=ingest_fallback_lm,
+            )
+        )
+    else:
+        extracted = consultants_to_extract
+
+    all_consultants = consultants_unchanged + extracted
+    save_store(all_consultants, store_path)
+
+    report = build_ingestion_report(roles, all_consultants, data_path / "project_feedback", [])
+    build_index(all_consultants, roles, config.cache_dir / "milvus")
     if output_json:
         typer.echo(report.model_dump_json(indent=2))
     else:
