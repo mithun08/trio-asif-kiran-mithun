@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSM — Demand-Supply Matcher</title>
+<style>
+  :root {
+    --bg: #0d0d1a;
+    --surface: #161628;
+    --surface2: #1e1e36;
+    --border: #2a2a4a;
+    --text: #e8e8f0;
+    --muted: #8888aa;
+    --accent: #6366f1;
+    --accent2: #818cf8;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --purple: #a855f7;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ─── Deck ─────────────────────────────────── */
+  #deck {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 80px;
+    opacity: 0;
+    transform: translateX(60px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    pointer-events: none;
+  }
+
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+  }
+
+  .slide.exit-left {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+
+  /* ─── Nav ───────────────────────────────────── */
+  #nav {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 100;
+  }
+
+  .nav-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  #dots {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .dot.active { background: var(--accent2); transform: scale(1.4); }
+
+  #slide-counter {
+    position: fixed;
+    top: 22px;
+    right: 28px;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    z-index: 100;
+  }
+
+  /* ─── Typography ────────────────────────────── */
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 18px;
+  }
+
+  h1 { font-size: 64px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+  h2 { font-size: 42px; font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; }
+  h3 { font-size: 22px; font-weight: 600; }
+
+  .tagline {
+    font-size: 22px;
+    color: var(--muted);
+    margin-top: 16px;
+    font-weight: 400;
+  }
+
+  /* ─── Badges ─────────────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .badge-det { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .badge-llm { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .badge-local { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
+
+  /* ─── Slide 1: Hero ─────────────────────────── */
+  #s1 { text-align: center; }
+  #s1 h1 { background: linear-gradient(135deg, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  #s1 .sub {
+    margin-top: 32px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* ─── Slide 2: Problem ──────────────────────── */
+  #s2 { text-align: center; max-width: 860px; }
+  #s2 .problem-line {
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 28px;
+    color: var(--text);
+  }
+  #s2 .problem-line span { color: var(--accent2); font-weight: 700; }
+  #s2 .divider { width: 48px; height: 3px; background: var(--accent); border-radius: 2px; margin: 28px auto; }
+  #s2 .solution-line {
+    font-size: 22px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  #s2 .solution-line strong { color: var(--green); }
+
+  /* ─── Slide 3: Team ─────────────────────────── */
+  #s3 { text-align: center; }
+  #s3 h2 { margin-bottom: 48px; }
+  .team-grid {
+    display: flex;
+    gap: 48px;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .team-card { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .avatar {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--accent);
+    box-shadow: 0 0 0 6px rgba(99,102,241,0.15);
+  }
+  .team-name { font-size: 20px; font-weight: 700; color: var(--text); }
+  .team-role { font-size: 14px; color: var(--muted); }
+
+  /* ─── Slide 4: Philosophy ───────────────────── */
+  #s4 .phil-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+    max-width: 900px;
+    margin-top: 32px;
+  }
+  .phil-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 30px;
+  }
+  .phil-num {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--accent2);
+    margin-bottom: 10px;
+  }
+  .phil-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .phil-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+  /* ─── Slide 5: Pipeline ─────────────────────── */
+  #s5 { width: 100%; }
+  #s5 h2 { margin-bottom: 28px; }
+  .pipeline-callout {
+    margin-top: 18px;
+    padding: 10px 22px;
+    background: rgba(245,158,11,0.07);
+    border: 1px solid rgba(245,158,11,0.22);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    max-width: 1000px;
+    width: 100%;
+  }
+  .pipeline-callout strong { color: var(--amber); }
+  .pipeline-callout code { font-size: 12px; color: var(--accent2); background: var(--surface2); padding: 1px 5px; border-radius: 3px; }
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
+    max-width: 1000px;
+  }
+  .pipe-stage {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 14px 20px;
+    text-align: center;
+    position: relative;
+  }
+  .pipe-stage + .pipe-stage { margin-left: 2px; }
+  .pipe-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--muted);
+    font-size: 18px;
+    padding: 0 2px;
+    flex-shrink: 0;
+  }
+  .pipe-icon { font-size: 26px; margin-bottom: 8px; }
+  .pipe-name { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  .pipe-badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; }
+  .pipe-desc { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+  .pipe-stage.llm { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.05); }
+  .pipe-stage.local { border-color: rgba(59,130,246,0.4); background: rgba(59,130,246,0.05); }
+
+  /* ─── Slide: Output ─────────────────────────── */
+  #s-output { width: 100%; max-width: 900px; }
+  #s-output h2 { margin-bottom: 20px; }
+  .terminal {
+    background: #06060f;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 26px;
+    font-family: "SF Mono", "Fira Code", ui-monospace, monospace;
+    font-size: 12.5px;
+    line-height: 1.75;
+    width: 100%;
+  }
+  .t-prompt { color: var(--green); margin-bottom: 14px; }
+  .t-section { color: var(--accent2); font-weight: 700; margin-top: 6px; }
+  .t-rank { color: var(--green); font-weight: 700; }
+  .t-meta { color: var(--muted); }
+  .t-explain { color: #c8c8e0; }
+  .t-nothi { color: var(--amber); }
+  .t-filter { color: var(--red); }
+  .t-gap-dim { color: var(--amber); }
+  .t-tel { color: var(--muted); margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+  /* ─── Slide 7: Scoring ──────────────────────── */
+  #s7 { width: 100%; max-width: 1040px; }
+  #s7 h2 { margin-bottom: 28px; }
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    width: 100%;
+  }
+  .score-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+  .score-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+  .score-name { font-size: 14px; font-weight: 700; }
+  .score-weight { font-size: 22px; font-weight: 800; color: var(--accent2); }
+  .weight-bar-bg { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 12px; overflow: hidden; }
+  .weight-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.6s ease; }
+  .score-tiers { display: flex; flex-direction: column; gap: 4px; }
+  .tier { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .tier-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .tier-val { font-weight: 700; color: var(--text); min-width: 28px; }
+
+  /* ─── Slide 8: E2E ──────────────────────────── */
+  #s8 { width: 100%; max-width: 980px; }
+  #s8 .e2e-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+  #s8 .e2e-cmd {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 18px;
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 13px;
+    color: var(--green);
+  }
+  .steps { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .step.full-width { grid-column: 1 / -1; }
+  .step-num {
+    min-width: 24px; height: 24px;
+    background: var(--accent);
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-body { flex: 1; }
+  .step-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .step-detail { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .step-detail code {
+    background: var(--surface2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: "SF Mono", monospace;
+    font-size: 11px;
+    color: var(--accent2);
+  }
+  .score-result {
+    background: rgba(34,197,94,0.1);
+    border: 1px solid rgba(34,197,94,0.3);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+  }
+  .score-formula { font-family: "SF Mono", monospace; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .score-total { font-size: 22px; font-weight: 800; color: var(--green); }
+  .score-band { display: inline-block; margin-left: 10px; font-size: 13px; font-weight: 700; color: var(--green); background: rgba(34,197,94,0.15); padding: 3px 10px; border-radius: 10px; }
+
+  /* ─── Slide 9: Tech Stack ───────────────────── */
+  #s9 { text-align: center; max-width: 900px; }
+  #s9 h2 { margin-bottom: 40px; }
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    width: 100%;
+  }
+  .tech-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 16px;
+    text-align: center;
+  }
+  .tech-icon { font-size: 28px; margin-bottom: 8px; }
+  .tech-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .tech-purpose { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+  /* ─── Slide 10: Closing ─────────────────────── */
+  #s10 { text-align: center; }
+  #s10 h1 { font-size: 56px; background: linear-gradient(135deg, #22c55e, #4ade80); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  #s10 .close-meta { display: flex; gap: 32px; justify-content: center; margin-top: 32px; }
+  .close-stat { text-align: center; }
+  .close-val { font-size: 36px; font-weight: 800; color: var(--accent2); }
+  .close-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  #s10 .cta {
+    margin-top: 40px;
+    font-size: 18px;
+    color: var(--muted);
+  }
+  #s10 .cta strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div id="deck">
+
+  <!-- ── SLIDE 1: HERO ── -->
+  <section class="slide active" id="s1">
+    <div class="eyebrow">Parity Partners · Staffing Intelligence</div>
+    <h1>Demand-Supply<br>Matcher</h1>
+    <p class="tagline">Ranked, explainable consultant shortlists</p>
+    <div class="sub">
+      <span class="badge badge-det">● Deterministic Core</span>
+      <span class="badge badge-llm">◆ LLM at the Edges</span>
+      <span class="badge badge-local">▲ Fully Local Scoring</span>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 2: TEAM ── -->
+  <section class="slide" id="s3">
+    <div class="eyebrow">The Team</div>
+    <div class="team-grid">
+      <div class="team-card">
+        <img class="avatar" src="assets/mithun.jpeg" alt="Mithun">
+        <div class="team-name">Mithun</div>
+      </div>
+      <div class="team-card">
+        <img class="avatar" src="assets/kiran.jpeg" alt="Kiran">
+        <div class="team-name">Kiran</div>
+      </div>
+      <div class="team-card">
+        <img class="avatar" src="assets/asif.jpeg" alt="Asif">
+        <div class="team-name">Asif</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 3: PROBLEM ── -->
+  <section class="slide" id="s2">
+    <div class="eyebrow">The Problem</div>
+    <p class="problem-line">
+      A staffing manager matches consultants to open roles
+      <span>by hand in a spreadsheet</span> — slow and inconsistent.
+    </p>
+    <div class="divider"></div>
+    <p class="solution-line">
+      We build a <strong>ranked, explainable shortlist</strong><br>
+      so humans decide faster, with better information.
+    </p>
+  </section>
+
+  <!-- ── SLIDE 4: PHILOSOPHY ── -->
+  <section class="slide" id="s4">
+    <div class="eyebrow">Design Philosophy</div>
+    <h2>Four principles we never break</h2>
+    <div class="phil-grid">
+      <div class="phil-card">
+        <div class="phil-num">01</div>
+        <div class="phil-title">Deterministic core, LLM at the edges</div>
+        <div class="phil-desc">Filtering, weighting, and ranking are pure Python arithmetic. LLM is used only where unstructured text demands it.</div>
+      </div>
+      <div class="phil-card">
+        <div class="phil-num">02</div>
+        <div class="phil-title">The LLM never sets a rank</div>
+        <div class="phil-desc">LLM extracts signals from prose. The rank comes from a formula in <code style="font-size:12px;color:var(--accent2)">scoring/ranker.py</code> — always traceable to config.</div>
+      </div>
+      <div class="phil-card">
+        <div class="phil-num">03</div>
+        <div class="phil-title">PII scrubbed before any external call</div>
+        <div class="phil-desc">Presidio + spaCy run locally first. A post-scrub regex gate is fail-closed. No identifiable data leaves the machine unredacted.</div>
+      </div>
+      <div class="phil-card">
+        <div class="phil-num">04</div>
+        <div class="phil-title">Every stage is independently testable</div>
+        <div class="phil-desc">Each pipeline stage takes typed Pydantic inputs and returns typed outputs. No hidden state, no shared globals.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 5: PIPELINE ── -->
+  <section class="slide" id="s5">
+    <div class="eyebrow">Architecture</div>
+    <h2>Six-stage pipeline</h2>
+    <div class="pipeline">
+      <div class="pipe-stage">
+        <div class="pipe-icon">📥</div>
+        <div class="pipe-name">Ingest</div>
+        <span class="badge badge-det pipe-badge">Deterministic</span>
+        <div class="pipe-desc">Excel + PDFs + markdown feedback → typed models</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-stage">
+        <div class="pipe-icon">🔧</div>
+        <div class="pipe-name">Normalise</div>
+        <span class="badge badge-det pipe-badge">Deterministic</span>
+        <div class="pipe-desc">Location canon · dedup · PII scrub</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-stage llm">
+        <div class="pipe-icon">🤖</div>
+        <div class="pipe-name">Extract</div>
+        <span class="badge badge-llm pipe-badge">gpt-4o-mini</span>
+        <div class="pipe-desc">Skills · sentiment · adaptability · trend from prose</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-stage local">
+        <div class="pipe-icon">🗄️</div>
+        <div class="pipe-name">Index</div>
+        <span class="badge badge-local pipe-badge">Local embed</span>
+        <div class="pipe-desc">all-MiniLM-L6-v2 → Milvus Lite (no network)</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-stage">
+        <div class="pipe-icon">⚖️</div>
+        <div class="pipe-name">Match</div>
+        <span class="badge badge-det pipe-badge">Deterministic</span>
+        <div class="pipe-desc">Hard filters → 6 dimensions → rank</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-stage llm">
+        <div class="pipe-icon">💬</div>
+        <div class="pipe-name">Explain</div>
+        <span class="badge badge-llm pipe-badge">gpt-4o</span>
+        <div class="pipe-desc">Narrate pre-computed scores in natural language</div>
+      </div>
+    </div>
+    <div class="pipeline-callout">
+      Only <strong>Extract</strong> + <strong>Explain</strong> call the LLM &nbsp;·&nbsp;
+      results cached by file hash &nbsp;·&nbsp; budget-guarded &nbsp;·&nbsp;
+      skippable with <code>--no-llm</code> &nbsp;·&nbsp; ranking is always pure arithmetic
+    </div>
+  </section>
+
+  <!-- ── SLIDE 7: SCORING ── -->
+  <section class="slide" id="s7">
+    <div class="eyebrow">Scoring Model</div>
+    <h2>Six dimensions · Weights from <code style="font-size:28px">config/default.yaml</code></h2>
+    <div class="score-grid">
+
+      <div class="score-card">
+        <div class="score-header">
+          <div class="score-name">Skill Match</div>
+          <div class="score-weight">35%</div>
+        </div>
+        <div class="weight-bar-bg"><div class="weight-bar" style="width:35%"></div></div>
+        <div class="score-tiers">
+          <div class="tier"><div class="tier-dot" style="background:var(--green)"></div><span class="tier-val">100</span> Exact match, proficiency met</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--blue)"></div><span class="tier-val">65</span> Vector similarity ≥ 0.65</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--purple)"></div><span class="tier-val">60</span> Adjacent skill (skill_adjacency.yaml)</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--amber)"></div><span class="tier-val">40</span> New-joiner unverified</div>
+        </div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-header">
+          <div class="score-name">Feedback Quality</div>
+          <div class="score-weight">25%</div>
+        </div>
+        <div class="weight-bar-bg"><div class="weight-bar" style="width:25%"></div></div>
+        <div class="score-tiers">
+          <div class="tier"><div class="tier-dot" style="background:var(--green)"></div><span class="tier-val">80</span> Positive sentiment base</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--amber)"></div><span class="tier-val">+10</span> Client keep signal bonus</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--muted)"></div><span class="tier-val">50</span> Neutral sentiment base</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--red)"></div><span class="tier-val">−10</span> Concern flag penalty</div>
+        </div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-header">
+          <div class="score-name">Availability</div>
+          <div class="score-weight">15%</div>
+        </div>
+        <div class="weight-bar-bg"><div class="weight-bar" style="width:15%"></div></div>
+        <div class="score-tiers">
+          <div class="tier"><div class="tier-dot" style="background:var(--green)"></div><span class="tier-val">100</span> Available immediately</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--muted)"></div><span class="tier-val">↓</span> Linear decay over 30 days</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--amber)"></div><span class="tier-val">−10%</span> Medium rolloff confidence</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--red)"></div><span class="tier-val">−30%</span> Low rolloff confidence</div>
+        </div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-header">
+          <div class="score-name">Adaptability</div>
+          <div class="score-weight">15%</div>
+        </div>
+        <div class="weight-bar-bg"><div class="weight-bar" style="width:15%"></div></div>
+        <div class="score-tiers">
+          <div class="tier"><div class="tier-dot" style="background:var(--muted)"></div><span class="tier-val">50</span> Neutral baseline</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--green)"></div><span class="tier-val">+15</span> ≥ 2 tech-era transitions</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--green)"></div><span class="tier-val">+10</span> ≥ 2 cross-domain industries</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--green)"></div><span class="tier-val">+10</span> Upskilling evidence</div>
+        </div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-header">
+          <div class="score-name">Supply State</div>
+          <div class="score-weight">5%</div>
+        </div>
+        <div class="weight-bar-bg"><div class="weight-bar" style="width:5%"></div></div>
+        <div class="score-tiers">
+          <div class="tier"><div class="tier-dot" style="background:var(--green)"></div><span class="tier-val">100</span> Beach (available now)</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--amber)"></div><span class="tier-val">70</span> Rolling off</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--muted)"></div><span class="tier-val">40</span> New joiner</div>
+        </div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-header">
+          <div class="score-name">Performance Trend</div>
+          <div class="score-weight">5%</div>
+        </div>
+        <div class="weight-bar-bg"><div class="weight-bar" style="width:5%"></div></div>
+        <div class="score-tiers">
+          <div class="tier"><div class="tier-dot" style="background:var(--green)"></div><span class="tier-val">100</span> Improving</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--amber)"></div><span class="tier-val">70</span> Stable</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--muted)"></div><span class="tier-val">50</span> Unknown (no data)</div>
+          <div class="tier"><div class="tier-dot" style="background:var(--red)"></div><span class="tier-val">30</span> Declining</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── SLIDE 8: END-TO-END EXAMPLE ── -->
+  <section class="slide" id="s8">
+    <div class="e2e-header">
+      <div>
+        <div class="eyebrow">End-to-End Trace</div>
+        <h2 style="font-size:32px">Priya Sharma · Senior Kotlin Engineer</h2>
+      </div>
+      <div class="e2e-cmd">$ dsm match "Senior Kotlin Engineer, Bengaluru" --top 3</div>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">📥 Ingest</div>
+          <div class="step-detail">Priya found in "Beach" sheet · available immediately<br>PDF parsed by Docling · feedback markdown → 3 sections</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">🔧 Normalise</div>
+          <div class="step-detail">Location already canonical → <code>"Bengaluru"</code> ✓<br>Presidio scrubs: <code>&lt;PERSON_0&gt;</code>, <code>&lt;EMAIL_ADDRESS_0&gt;</code></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">🤖 Extract (5 LLM calls)</div>
+          <div class="step-detail">ProfileExtraction → Java(8yr,expert), Spring Boot(4yr,proficient)<br>FeedbackSignalExtraction × 2 → positive, domain_depth=true, client_keep_signal=true<br>AdaptabilitySignalExtraction → tech_transitions=2, cross_domain=2<br>PerformanceTrendExtraction → stable</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">🗄️ Index</div>
+          <div class="step-detail">"Java" + "Spring Boot" embedded locally<br>all-MiniLM-L6-v2 → 384-dim · stored in Milvus Lite</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-title">⚖️ Hard Filters</div>
+          <div class="step-detail">Beach · available immediately, days_late=0 → <strong style="color:var(--green)">PASS</strong><br>Role not co-located → location filter skipped</div>
+        </div>
+      </div>
+      <div class="step full-width">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <div class="step-title">⚖️ Score — adjacency matching in action</div>
+          <div class="score-result">
+            <div class="score-formula" style="margin-bottom:6px">
+              Kotlin (required) → Java (consultant) · <code style="color:var(--amber)">skill_adjacency.yaml: kotlin: [java, scala]</code> → c_adjacent = 60<br>
+              Spring Boot (required) → Spring Boot (consultant) · exact match → c_exact = 100 · mean = (60+100)/2 = <strong style="color:var(--text)">80</strong>
+            </div>
+            <div class="score-formula">
+              (0.35 × 80) + (0.25 × 81) + (0.15 × 100) + (0.15 × 75) + (0.05 × 100) + (0.05 × 70)
+              = 28.00 + 20.25 + 15.00 + 11.25 + 5.00 + 3.50
+            </div>
+            <div><span class="score-total">83.00</span><span class="score-band">Strong · Rank #1</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="step full-width">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <div class="step-title">💬 Explain</div>
+          <div class="step-detail">gpt-4o narrates: Java background gives adjacent Kotlin credit (60); Spring Boot exact; beach availability drives perfect availability score · <code>&lt;PERSON_0&gt;</code> rehydrated → <strong>Priya Sharma</strong></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SLIDE: OUTPUT ── -->
+  <section class="slide" id="s-output">
+    <div class="eyebrow">What it produces · example output</div>
+    <h2>Format of <code style="font-size:32px">dsm match</code></h2>
+    <div class="terminal">
+      <div class="t-prompt">$ dsm match "Senior Kotlin Engineer, Bengaluru" --top 3</div>
+
+      <div class="t-section">=== Ranked Candidates ===</div>
+
+      <div><span class="t-rank">#1  Priya Sharma</span>  <span style="color:var(--text)">[5 of 6 strong]</span></div>
+      <div class="t-meta">&nbsp;&nbsp;&nbsp;confidence: High &nbsp;·&nbsp; flags: none</div>
+      <div class="t-explain">&nbsp;&nbsp;&nbsp;"Strong match scoring 83. Expert Java earns adjacent Kotlin credit; Spring Boot exact match. Immediate beach availability and client retention signal drive the score."</div>
+
+      <div style="margin-top:8px"><span class="t-rank">#2  Rahul Mehta</span>  <span style="color:var(--text)">[3 of 6 strong]</span>  <span class="t-gap-dim">gaps: skill_match, adaptability</span></div>
+      <div class="t-meta">&nbsp;&nbsp;&nbsp;confidence: Medium &nbsp;·&nbsp; flags: long_bench</div>
+      <div class="t-nothi">&nbsp;&nbsp;&nbsp;why not higher: "No Spring Boot evidence; skill_match capped at adjacent credit only (60). Adaptability at neutral baseline — no transition signals found."</div>
+
+      <div style="margin-top:8px"><span class="t-rank">#3  Deepa Nair</span>  <span style="color:var(--text)">[3 of 6 strong]</span>  <span class="t-gap-dim">gaps: availability</span></div>
+      <div class="t-meta">&nbsp;&nbsp;&nbsp;confidence: Medium &nbsp;·&nbsp; flags: none</div>
+      <div class="t-nothi">&nbsp;&nbsp;&nbsp;why not higher: "Rolling off with low confidence adds a 30% availability penalty, pulling the score below Priya's."</div>
+
+      <div class="t-section" style="margin-top:8px">=== Filtered Out (hard filter) ===</div>
+      <div class="t-filter">&nbsp;&nbsp;Carlos Reyes &nbsp;(location mismatch: London ≠ Bengaluru)</div>
+
+    </div>
+  </section>
+
+  <!-- ── SLIDE 9: TECH STACK ── -->
+  <section class="slide" id="s9">
+    <div class="eyebrow">Tech Stack</div>
+    <h2>Right tool for each job</h2>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div class="tech-icon">🐍</div>
+        <div class="tech-name">Python 3.12 + uv</div>
+        <div class="tech-purpose">Core runtime · reproducible lockfile</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">📐</div>
+        <div class="tech-name">Pydantic v2</div>
+        <div class="tech-purpose">Typed models across every boundary</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">📄</div>
+        <div class="tech-name">Docling</div>
+        <div class="tech-purpose">Layout-aware PDF extraction + OCR</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🧠</div>
+        <div class="tech-name">DSPy</div>
+        <div class="tech-purpose">Typed LLM signatures · disk cache</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🛡️</div>
+        <div class="tech-name">Presidio + spaCy</div>
+        <div class="tech-purpose">Local PII detection · fail-closed</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🔢</div>
+        <div class="tech-name">sentence-transformers</div>
+        <div class="tech-purpose">Local embeddings · 22M params · fast</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🗄️</div>
+        <div class="tech-name">Milvus Lite</div>
+        <div class="tech-purpose">Local vector index · no server needed</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">📡</div>
+        <div class="tech-name">OpenRouter</div>
+        <div class="tech-purpose">Hosted LLM access · model-agnostic</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 10: CLOSING ── -->
+  <section class="slide" id="s10">
+    <div class="eyebrow">Parity Partners · Demand-Supply Matcher</div>
+    <h1>Ready to demo.</h1>
+    <div class="close-meta">
+      <div class="close-stat">
+        <div class="close-val">6</div>
+        <div class="close-label">Pipeline stages</div>
+      </div>
+      <div class="close-stat">
+        <div class="close-val">6</div>
+        <div class="close-label">Scoring dimensions</div>
+      </div>
+      <div class="close-stat">
+        <div class="close-val">2</div>
+        <div class="close-label">LLM calls</div>
+      </div>
+      <div class="close-stat">
+        <div class="close-val">0</div>
+        <div class="close-label">LLM ranks</div>
+      </div>
+    </div>
+    <p class="cta"><strong>dsm match "Senior Kotlin Engineer, Bengaluru" --top 5</strong></p>
+  </section>
+
+</div>
+
+<!-- Nav -->
+<div id="slide-counter">1 / 10</div>
+<div id="nav">
+  <button class="nav-btn" id="prev">← Prev</button>
+  <div id="dots"></div>
+  <button class="nav-btn" id="next">Next →</button>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsEl = document.getElementById('dots');
+  const counter = document.getElementById('slide-counter');
+  let cur = 0;
+
+  // Build dots
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => go(i));
+    dotsEl.appendChild(d);
+  });
+
+  function go(n) {
+    if (n < 0 || n >= slides.length || n === cur) return;
+    slides[cur].classList.remove('active');
+    slides[cur].classList.add('exit-left');
+    setTimeout(() => slides[cur].classList.remove('exit-left'), 400);
+    cur = n;
+    slides[cur].classList.add('active');
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+    counter.textContent = `${cur + 1} / ${slides.length}`;
+  }
+
+  document.getElementById('prev').addEventListener('click', () => go(cur - 1));
+  document.getElementById('next').addEventListener('click', () => go(cur + 1));
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(cur + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(cur - 1); }
+  });
+</script>
+</body>
+</html>

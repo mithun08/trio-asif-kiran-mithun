@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSM Pipeline — How it Works</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #263148;
+    --border: #334155;
+    --blue: #3b82f6;
+    --blue-dim: #1d4ed8;
+    --blue-glow: rgba(59,130,246,0.25);
+    --orange: #f97316;
+    --orange-dim: #c2410c;
+    --orange-glow: rgba(249,115,22,0.25);
+    --green: #22c55e;
+    --green-dim: #15803d;
+    --yellow: #eab308;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --accent: #e2e8f0;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 32px 48px 28px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(90deg, var(--blue), var(--orange));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  header p {
+    color: var(--muted);
+    margin-top: 6px;
+    font-size: 13px;
+  }
+  .header-badges {
+    display: flex;
+    gap: 12px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .badge-blue { background: var(--blue-glow); border: 1px solid var(--blue); color: var(--blue); }
+  .badge-orange { background: var(--orange-glow); border: 1px solid var(--orange); color: var(--orange); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dot-blue { background: var(--blue); }
+  .dot-orange { background: var(--orange); }
+
+  /* ── MAIN LAYOUT ── */
+  main { max-width: 1440px; margin: 0 auto; padding: 48px 48px 80px; }
+
+  section { margin-bottom: 64px; }
+  section > h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 28px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  section > h2 .sec-num {
+    width: 28px; height: 28px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--muted); font-weight: 700;
+  }
+
+  /* ── PIPELINE FLOW ── */
+  .pipeline-container {
+    position: relative;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .pipeline-flow {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    min-width: 980px;
+  }
+  .stage-wrapper {
+    display: flex;
+    align-items: flex-start;
+    flex: 1;
+  }
+  .stage-node {
+    flex: 1;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  .stage-node:hover { transform: translateY(-3px); }
+  .stage-node.active .node-card { box-shadow: 0 0 0 2px currentColor; }
+
+  .node-card {
+    border-radius: var(--radius);
+    border: 1px solid;
+    padding: 20px 16px;
+    text-align: center;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  .node-card.blue {
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(59,130,246,0.08) 100%);
+    border-color: rgba(59,130,246,0.4);
+    color: var(--blue);
+  }
+  .node-card.orange {
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(249,115,22,0.08) 100%);
+    border-color: rgba(249,115,22,0.4);
+    color: var(--orange);
+  }
+  .node-card.blue:hover { background: rgba(59,130,246,0.15); border-color: var(--blue); }
+  .node-card.orange:hover { background: rgba(249,115,22,0.15); border-color: var(--orange); }
+
+  .node-icon { font-size: 28px; margin-bottom: 10px; }
+  .node-title { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+  .node-subtitle { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .node-llm-badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+  }
+  .node-llm-badge.llm { background: var(--orange-glow); color: var(--orange); border: 1px solid var(--orange); }
+  .node-llm-badge.no-llm { background: var(--blue-glow); color: var(--blue); border: 1px solid var(--blue); }
+
+  /* CONNECTOR */
+  .connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 38px;
+    width: 48px;
+    flex-shrink: 0;
+  }
+  .connector-line {
+    height: 2px;
+    width: 100%;
+    background: linear-gradient(90deg, var(--border), var(--green-dim), var(--border));
+    position: relative;
+    overflow: visible;
+  }
+  .connector-arrow {
+    font-size: 14px;
+    color: var(--green);
+    line-height: 1;
+    margin-top: -4px;
+    margin-left: 18px;
+  }
+  .connector-label {
+    font-size: 9px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 4px;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+
+  /* DETAIL PANEL */
+  .detail-panel {
+    display: none;
+    margin-top: 24px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    overflow: hidden;
+    animation: slideDown 0.2s ease;
+  }
+  .detail-panel.show { display: block; }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .detail-header {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-header h3 { font-size: 15px; font-weight: 700; }
+  .detail-header .close-btn {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 18px; line-height: 1;
+    padding: 4px; border-radius: 4px;
+  }
+  .detail-header .close-btn:hover { color: var(--text); background: var(--surface2); }
+  .detail-body {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 900px) { .detail-body { grid-template-columns: 1fr; } }
+  .detail-col h4 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .fn-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .fn-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+  }
+  .fn-name { font-family: 'SF Mono', 'Cascadia Code', monospace; font-size: 12px; color: var(--green); font-weight: 600; }
+  .fn-desc { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .fn-io { font-size: 11px; color: var(--accent); margin-top: 4px; font-family: monospace; }
+
+  .why-box {
+    background: var(--surface2);
+    border-left: 3px solid;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 14px 16px;
+  }
+  .why-box.blue { border-color: var(--blue); }
+  .why-box.orange { border-color: var(--orange); }
+  .why-box p { font-size: 13px; color: var(--accent); line-height: 1.7; }
+  .why-box .why-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px; margin-bottom: 8px;
+  }
+  .why-box.blue .why-title { color: var(--blue); }
+  .why-box.orange .why-title { color: var(--orange); }
+
+  /* ── SCORING DIMENSIONS ── */
+  .scoring-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 900px) { .scoring-grid { grid-template-columns: 1fr 1fr; } }
+  .score-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .score-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .score-card-title { font-size: 13px; font-weight: 700; color: var(--accent); }
+  .score-weight {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--blue);
+  }
+  .score-bar-track {
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--blue-dim), var(--blue));
+    transition: width 1s ease;
+  }
+  .score-tiers { display: flex; flex-direction: column; gap: 4px; }
+  .score-tier {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+  }
+  .tier-val {
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 32px;
+    text-align: right;
+  }
+  .tier-label { color: var(--muted); }
+  .tier-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── LLM DECISION TABLE ── */
+  .decision-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .decision-table th {
+    background: var(--surface2);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .decision-table td {
+    padding: 14px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .decision-table tr:last-child td { border-bottom: none; }
+  .decision-table tr:hover td { background: var(--surface2); }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .pill-yes { background: var(--orange-glow); color: var(--orange); border: 1px solid var(--orange); }
+  .pill-no { background: var(--blue-glow); color: var(--blue); border: 1px solid var(--blue); }
+  .decision-table td.stage-col { font-weight: 700; color: var(--accent); font-size: 13px; }
+  .decision-table td.why-col { color: var(--muted); line-height: 1.6; font-size: 12px; }
+  .decision-table td.model-col { font-family: monospace; font-size: 11px; color: var(--yellow); }
+
+  /* ── EXAMPLE WALKTHROUGH ── */
+  .example-header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .cmd-block {
+    font-family: monospace;
+    background: #0a0f1a;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--green);
+    letter-spacing: 0.3px;
+  }
+  .cmd-block span { color: var(--yellow); }
+
+  .trace-btn {
+    background: linear-gradient(135deg, var(--blue-dim), var(--blue));
+    border: none;
+    border-radius: var(--radius-sm);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .trace-btn:hover { opacity: 0.85; }
+  .trace-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .consultant-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .consul-field { }
+  .consul-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 4px; }
+  .consul-value { font-size: 13px; color: var(--accent); }
+  .consul-value.mono { font-family: monospace; color: var(--green); }
+
+  .trace-steps { display: flex; flex-direction: column; gap: 0; }
+  .trace-step {
+    display: flex;
+    gap: 20px;
+    padding: 0 0 32px 0;
+    position: relative;
+    opacity: 0.35;
+    transition: opacity 0.4s ease;
+  }
+  .trace-step.active { opacity: 1; }
+  .trace-step.visited { opacity: 0.75; }
+  .trace-step::before {
+    content: '';
+    position: absolute;
+    left: 23px;
+    top: 46px;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+  .trace-step:last-child::before { display: none; }
+  .trace-step.active::before { background: linear-gradient(180deg, var(--blue), var(--border)); }
+
+  .step-num {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 800;
+    flex-shrink: 0;
+    background: var(--surface);
+    transition: all 0.3s ease;
+  }
+  .trace-step.active .step-num {
+    border-color: var(--blue);
+    background: var(--blue-glow);
+    color: var(--blue);
+    box-shadow: 0 0 20px var(--blue-glow);
+  }
+  .trace-step.active.llm-step .step-num {
+    border-color: var(--orange);
+    background: var(--orange-glow);
+    color: var(--orange);
+    box-shadow: 0 0 20px var(--orange-glow);
+  }
+  .trace-step.visited .step-num { border-color: var(--green-dim); color: var(--green); }
+
+  .step-content { flex: 1; padding-top: 10px; }
+  .step-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .step-body {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+  }
+  .step-body p { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .step-body p:last-child { margin-bottom: 0; }
+  .step-body p strong { color: var(--accent); }
+  .step-body code {
+    font-family: monospace;
+    font-size: 11px;
+    background: #0a0f1a;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--green);
+  }
+
+  .score-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .score-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 60px;
+    align-items: center;
+    gap: 10px;
+  }
+  .score-row-label { font-size: 11px; color: var(--muted); text-align: right; }
+  .score-row-bar-track {
+    height: 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .score-row-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--blue-dim), var(--blue));
+    transition: width 0.8s ease;
+  }
+  .score-row-val { font-size: 12px; font-weight: 700; color: var(--blue); font-family: monospace; }
+  .total-score-display {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: rgba(59,130,246,0.1);
+    border: 1px solid var(--blue);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .total-score-label { font-size: 13px; font-weight: 700; color: var(--blue); }
+  .total-score-val { font-size: 24px; font-weight: 800; color: var(--blue); }
+  .total-band {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    background: rgba(34,197,94,0.15);
+    color: var(--green);
+    border: 1px solid var(--green);
+    margin-left: 8px;
+  }
+
+  .llm-output-box {
+    background: rgba(249,115,22,0.06);
+    border: 1px solid rgba(249,115,22,0.3);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-top: 10px;
+  }
+  .llm-output-box .llm-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--orange);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .llm-output-box p { font-size: 13px; color: var(--accent); line-height: 1.7; font-style: italic; }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 32px 48px;
+    color: var(--muted);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* TOOLTIP */
+  [title] { cursor: help; }
+
+  /* ANIMATIONS */
+  .pulse { animation: pulse 2s infinite; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    header { padding: 20px 20px 16px; }
+    main { padding: 24px 20px 48px; }
+    .scoring-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>DSM — Demand-Supply Matcher Pipeline</h1>
+  <p>5-stage staffing recommendation engine &nbsp;·&nbsp; Local CLI &nbsp;·&nbsp; Deterministic scoring with LLM at the edges</p>
+  <div class="header-badges">
+    <span class="badge badge-blue"><span class="dot dot-blue"></span>Deterministic (no LLM)</span>
+    <span class="badge badge-orange"><span class="dot dot-orange"></span>LLM-powered (DSPy → OpenRouter)</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SECTION 1: PIPELINE MINDMAP                -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section>
+    <h2><span class="sec-num">1</span>Pipeline Flow — Click any stage to expand</h2>
+
+    <div class="pipeline-container">
+      <div class="pipeline-flow">
+
+        <!-- INGEST -->
+        <div class="stage-wrapper">
+          <div class="stage-node" id="node-ingest" onclick="toggleDetail('ingest')">
+            <div class="node-card blue">
+              <div class="node-icon">📥</div>
+              <div class="node-title">Ingest</div>
+              <div class="node-subtitle">Excel + PDF + Markdown</div>
+              <span class="node-llm-badge no-llm">No LLM</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="connector">
+          <div class="connector-line"></div>
+          <div class="connector-arrow">▶</div>
+          <div class="connector-label">list[Role]<br>list[Consultant]</div>
+        </div>
+
+        <!-- NORMALISE -->
+        <div class="stage-wrapper">
+          <div class="stage-node" id="node-normalise" onclick="toggleDetail('normalise')">
+            <div class="node-card blue">
+              <div class="node-icon">🔧</div>
+              <div class="node-title">Normalise</div>
+              <div class="node-subtitle">Dedup · Locations · PII</div>
+              <span class="node-llm-badge no-llm">No LLM</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="connector">
+          <div class="connector-line"></div>
+          <div class="connector-arrow">▶</div>
+          <div class="connector-label">clean data<br>+ pii_token_map</div>
+        </div>
+
+        <!-- EXTRACT -->
+        <div class="stage-wrapper">
+          <div class="stage-node" id="node-extract" onclick="toggleDetail('extract')">
+            <div class="node-card orange">
+              <div class="node-icon">🤖</div>
+              <div class="node-title">Extract</div>
+              <div class="node-subtitle">Skills · Signals · Trend</div>
+              <span class="node-llm-badge llm">LLM (gpt-4o-mini)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="connector">
+          <div class="connector-line"></div>
+          <div class="connector-arrow">▶</div>
+          <div class="connector-label">signals<br>+ vectors</div>
+        </div>
+
+        <!-- INDEX -->
+        <div class="stage-wrapper">
+          <div class="stage-node" id="node-index" onclick="toggleDetail('index')">
+            <div class="node-card blue">
+              <div class="node-icon">🗄️</div>
+              <div class="node-title">Index</div>
+              <div class="node-subtitle">Milvus · MiniLM-L6-v2</div>
+              <span class="node-llm-badge no-llm">No LLM (local embed)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="connector">
+          <div class="connector-line"></div>
+          <div class="connector-arrow">▶</div>
+          <div class="connector-label">vector DB<br>ready</div>
+        </div>
+
+        <!-- MATCH -->
+        <div class="stage-wrapper">
+          <div class="stage-node" id="node-match" onclick="toggleDetail('match')">
+            <div class="node-card blue">
+              <div class="node-icon">⚖️</div>
+              <div class="node-title">Match</div>
+              <div class="node-subtitle">Filters · Score · Rank</div>
+              <span class="node-llm-badge no-llm">No LLM</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="connector">
+          <div class="connector-line"></div>
+          <div class="connector-arrow">▶</div>
+          <div class="connector-label">ScoredCandidate<br>list[ranked]</div>
+        </div>
+
+        <!-- EXPLAIN -->
+        <div class="stage-wrapper">
+          <div class="stage-node" id="node-explain" onclick="toggleDetail('explain')">
+            <div class="node-card orange">
+              <div class="node-icon">💬</div>
+              <div class="node-title">Explain</div>
+              <div class="node-subtitle">Natural language output</div>
+              <span class="node-llm-badge llm">LLM (gpt-4o)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- DETAIL PANELS -->
+
+    <div class="detail-panel" id="detail-ingest">
+      <div class="detail-header">
+        <h3>📥 Ingest Stage &nbsp;<span style="color:var(--blue);font-size:13px;">— Deterministic</span></h3>
+        <button class="close-btn" onclick="closeDetail('ingest')">✕</button>
+      </div>
+      <div class="detail-body">
+        <div class="detail-col">
+          <h4>Functions</h4>
+          <ul class="fn-list">
+            <li class="fn-item">
+              <div class="fn-name">ingest_roles(xlsx_path)</div>
+              <div class="fn-desc">Parses "Open Roles" sheet from Excel workbook</div>
+              <div class="fn-io">→ list[Role]</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-name">ingest_consultants_from_workbook(xlsx_path)</div>
+              <div class="fn-desc">Reads 3 supply-state sheets: Beach, Rolling Off, New Joiners</div>
+              <div class="fn-io">→ list[Consultant] (no skills yet)</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-name">ingest_consultants(profiles_dir, workbook_consultants)</div>
+              <div class="fn-desc">Enriches with raw PDF text via Docling + optional OCR</div>
+              <div class="fn-io">→ list[Consultant] with raw_profile_text</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-name">ingest_feedback(feedback_dir, consultants)</div>
+              <div class="fn-desc">Parses markdown files — 3 sections per consultant: project / client / beach</div>
+              <div class="fn-io">→ list[Consultant] enriched with feedback_text</div>
+            </li>
+          </ul>
+        </div>
+        <div class="detail-col">
+          <h4>Why No LLM?</h4>
+          <div class="why-box blue">
+            <div class="why-title">Reason</div>
+            <p>Ingest is purely <strong>data collection</strong>. Excel rows map 1-to-1 to typed fields; PDFs are read as raw text only (semantic extraction happens later in Extract). Using an LLM here would incur cost and latency with zero benefit — the data is already structured.</p>
+            <p style="margin-top:10px;">Docling handles PDF→text conversion deterministically. OCR is Tesseract-based, not neural. Data gaps (unreadable PDFs, OCR failures) are tracked as <code>data_gaps</code> flags on the Consultant model.</p>
+          </div>
+          <h4 style="margin-top:16px;">Data Gaps Tracked</h4>
+          <ul class="fn-list">
+            <li class="fn-item" style="padding:8px 14px;">
+              <div class="fn-desc"><code>profile_pdf_unreadable</code> — PDF could not be parsed</div>
+            </li>
+            <li class="fn-item" style="padding:8px 14px;">
+              <div class="fn-desc"><code>profile_pdf_ocr_used</code> — OCR fallback was triggered</div>
+            </li>
+            <li class="fn-item" style="padding:8px 14px;">
+              <div class="fn-desc"><code>profile_pdf_low_confidence</code> — OCR confidence &lt; 0.6</div>
+            </li>
+            <li class="fn-item" style="padding:8px 14px;">
+              <div class="fn-desc"><code>profile_pdf_unmatched</code> — PDF exists but no workbook row found</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-panel" id="detail-normalise">
+      <div class="detail-header">
+        <h3>🔧 Normalise Stage &nbsp;<span style="color:var(--blue);font-size:13px;">— Deterministic</span></h3>
+        <button class="close-btn" onclick="closeDetail('normalise')">✕</button>
+      </div>
+      <div class="detail-body">
+        <div class="detail-col">
+          <h4>Functions</h4>
+          <ul class="fn-list">
+            <li class="fn-item">
+              <div class="fn-name">canonicalise_locations(consultants)</div>
+              <div class="fn-desc">Static map: "bangalore" → "Bengaluru", "remote india" → "Remote-India"</div>
+              <div class="fn-io">→ list[Consultant] with normalised locations</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-name">dedup_by_email(consultants)</div>
+              <div class="fn-desc">Removes duplicates keyed by email, keeps first occurrence</div>
+              <div class="fn-io">→ de-duplicated list[Consultant]</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-name">scrub_pii(consultants)</div>
+              <div class="fn-desc">Presidio + spaCy en_core_web_sm NER. Replaces emails, phones, names with tokens. Validates no residual PII via regex.</div>
+              <div class="fn-io">→ scrubbed_text + pii_token_map {&lt;EMAIL_0&gt;: "john@x.com"}</div>
+            </li>
+          </ul>
+        </div>
+        <div class="detail-col">
+          <h4>Why No LLM for PII Scrubbing?</h4>
+          <div class="why-box blue">
+            <div class="why-title">Critical Reason</div>
+            <p>Sending PII-containing text to an external LLM <em>before</em> scrubbing it would be a data-privacy violation. Presidio runs <strong>fully locally</strong> using rule-based patterns + spaCy NER — no text leaves the machine.</p>
+            <p style="margin-top:10px;">Using an LLM to scrub PII would also be non-deterministic. Presidio is auditable: you get a structured entity list with offsets, which is turned into a reversible token map for later rehydration in Explain.</p>
+          </div>
+          <h4 style="margin-top:16px;">Token Map (Rehydration)</h4>
+          <div class="fn-item" style="padding:10px 14px;">
+            <div class="fn-desc">Scrubbed text passed to LLM contains: <code>&lt;PERSON_0&gt;</code>, <code>&lt;EMAIL_ADDRESS_1&gt;</code></div>
+            <div class="fn-desc" style="margin-top:6px;">After LLM generates explanation, <code>rehydrate_text()</code> replaces tokens back with original values for human-readable output.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-panel" id="detail-extract">
+      <div class="detail-header">
+        <h3>🤖 Extract Stage &nbsp;<span style="color:var(--orange);font-size:13px;">— LLM (gpt-4o-mini via OpenRouter)</span></h3>
+        <button class="close-btn" onclick="closeDetail('extract')">✕</button>
+      </div>
+      <div class="detail-body">
+        <div class="detail-col">
+          <h4>DSPy Signatures</h4>
+          <ul class="fn-list">
+            <li class="fn-item">
+              <div class="fn-name">ProfileExtraction</div>
+              <div class="fn-desc">Input: raw_profile_text (scrubbed PDF). Output: skills_json, location, grade, evidence_spans</div>
+              <div class="fn-io">Runs once per consultant with a PDF</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-name">FeedbackSignalExtraction</div>
+              <div class="fn-desc">Input: feedback_text per source. Output: sentiment, strengths, concerns, client_keep_signal, domain_depth, evidence_spans</div>
+              <div class="fn-io">Runs per consultant per feedback source (project / client / beach)</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-name">AdaptabilitySignalExtraction</div>
+              <div class="fn-desc">Input: combined profile + feedback. Output: tech_transitions (int), cross_domain (int), learning_speed_mentions, upskilling (booleans)</div>
+              <div class="fn-io">Runs once per consultant</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-name">PerformanceTrendExtraction</div>
+              <div class="fn-desc">Input: combined text. Output: improving / stable / declining / unknown</div>
+              <div class="fn-io">Runs once per consultant</div>
+            </li>
+          </ul>
+        </div>
+        <div class="detail-col">
+          <h4>Why LLM here?</h4>
+          <div class="why-box orange">
+            <div class="why-title">Reason</div>
+            <p>PDF CVs and markdown feedback are <strong>unstructured prose</strong>. Rules cannot reliably extract "3 tech-era transitions" or "client requested retention" from narrative text. Only an LLM can interpret semantic meaning at this level.</p>
+            <p style="margin-top:10px;">All 4 signatures require <code>evidence_spans</code> — verbatim substrings grounding each claim. This prevents hallucinated signals from propagating into scoring.</p>
+          </div>
+          <h4 style="margin-top:16px;">Cost Controls</h4>
+          <ul class="fn-list">
+            <li class="fn-item" style="padding:8px 14px;">
+              <div class="fn-desc"><strong>Incremental cache:</strong> results stored by <code>source_hash</code>. Re-extraction only on file change.</div>
+            </li>
+            <li class="fn-item" style="padding:8px 14px;">
+              <div class="fn-desc"><strong>Model:</strong> <code>openai/gpt-4o-mini</code> (cheapest capable model)</div>
+            </li>
+            <li class="fn-item" style="padding:8px 14px;">
+              <div class="fn-desc"><strong>Concurrency:</strong> max 5 parallel extractions</div>
+            </li>
+            <li class="fn-item" style="padding:8px 14px;">
+              <div class="fn-desc"><strong>Budget guard:</strong> <code>max_cost_usd_per_run</code> check after each consultant</div>
+            </li>
+            <li class="fn-item" style="padding:8px 14px;">
+              <div class="fn-desc"><strong>Prompt injection defense:</strong> all inputs wrapped with document boundary markers</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-panel" id="detail-index">
+      <div class="detail-header">
+        <h3>🗄️ Index Stage &nbsp;<span style="color:var(--blue);font-size:13px;">— Deterministic (local embedding)</span></h3>
+        <button class="close-btn" onclick="closeDetail('index')">✕</button>
+      </div>
+      <div class="detail-body">
+        <div class="detail-col">
+          <h4>Functions</h4>
+          <ul class="fn-list">
+            <li class="fn-item">
+              <div class="fn-name">build_index(consultants, roles, index_dir)</div>
+              <div class="fn-desc">Embeds each consultant skill name with all-MiniLM-L6-v2 (384-dim). Stores in Milvus Lite at .cache/milvus/</div>
+              <div class="fn-io">Fields stored: consultant_email, skill_name, vector</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-name">load_index(index_dir)</div>
+              <div class="fn-desc">Loads existing Milvus collection at match time. Returns client + model handle.</div>
+              <div class="fn-io">→ (MilvusClient, SentenceTransformer)</div>
+            </li>
+          </ul>
+          <div class="fn-item" style="margin-top:12px;padding:12px 14px;">
+            <div class="fn-name" style="color:var(--yellow);">Purpose in Scoring</div>
+            <div class="fn-desc" style="margin-top:4px;">When a required skill has no exact or adjacency match, the skill_match dimension queries Milvus: embed the required skill → search consultant's skill vectors → if cosine distance ≥ 0.65, grant <code>c_vector = 65</code> credit.</div>
+            <div class="fn-desc" style="margin-top:6px;">Example: Role needs "FastAPI" → consultant has "Flask" → vector similarity 0.72 → credit 65 (between adjacent 60 and exact 100).</div>
+          </div>
+        </div>
+        <div class="detail-col">
+          <h4>Why No LLM?</h4>
+          <div class="why-box blue">
+            <div class="why-title">Reason</div>
+            <p><code>all-MiniLM-L6-v2</code> is a <strong>sentence-transformer</strong> — a small (22M param) encoder that runs fully locally. No text leaves the machine. It is deterministic, fast (&lt;10ms per embedding), and sufficient for skill-name similarity.</p>
+            <p style="margin-top:10px;">Using an LLM to judge skill similarity would be 100× more expensive and non-deterministic. The vector index only supplements the skill adjacency map — it is not the primary matching mechanism.</p>
+          </div>
+          <h4 style="margin-top:16px;">Vector Similarity Threshold</h4>
+          <div class="fn-item" style="padding:10px 14px;">
+            <div class="fn-desc">Threshold: <code>skill_vector_similarity = 0.65</code> (cosine distance)</div>
+            <div class="fn-desc" style="margin-top:4px;">Credit awarded: <code>c_vector = 65</code> (between adjacent 60 and exact 100)</div>
+            <div class="fn-desc" style="margin-top:4px;">Set in <code>config/default.yaml</code> — not hardcoded</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-panel" id="detail-match">
+      <div class="detail-header">
+        <h3>⚖️ Match Stage &nbsp;<span style="color:var(--blue);font-size:13px;">— Fully Deterministic</span></h3>
+        <button class="close-btn" onclick="closeDetail('match')">✕</button>
+      </div>
+      <div class="detail-body">
+        <div class="detail-col">
+          <h4>Hard Filters (pre-scoring elimination)</h4>
+          <ul class="fn-list">
+            <li class="fn-item">
+              <div class="fn-name">Availability Filter</div>
+              <div class="fn-desc">Beach consultants: always pass. Rolling-off: must be within 5-day buffer of role start_date (10-day for medium confidence). New joiners: within 7-day buffer.</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-name">Location Filter</div>
+              <div class="fn-desc">Only applies if <code>role.co_located = true</code>. Consultant primary location must match role's first location.</div>
+            </li>
+          </ul>
+          <h4 style="margin-top:16px;">6 Scoring Dimensions</h4>
+          <ul class="fn-list">
+            <li class="fn-item">
+              <div class="fn-name">skill_match <span style="color:var(--blue)">(35%)</span></div>
+              <div class="fn-desc">exact(100) → proficiency-short(70) → adjacent(60) → vector-sim(65) → new-joiner(40)</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-name">feedback_quality <span style="color:var(--blue)">(25%)</span></div>
+              <div class="fn-desc">project(50%) + client(30%) + beach(20%) weighted by sentiment + keyword bonuses</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-name">availability <span style="color:var(--blue)">(15%)</span></div>
+              <div class="fn-desc">Linear decay over 30-day horizon; rolloff confidence penalty (0/10/30%)</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-name">adaptability <span style="color:var(--blue)">(15%)</span></div>
+              <div class="fn-desc">Base 50 + bonuses: transitions(+15), cross-domain(+10), upskilling(+10), learning(+10)</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-name">supply_state <span style="color:var(--blue)">(5%)</span></div>
+              <div class="fn-desc">beach(100) → rolling_off(70) → new_joiner(40)</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-name">performance_trend <span style="color:var(--blue)">(5%)</span></div>
+              <div class="fn-desc">improving(100) → stable(70) → declining(30) → unknown(50)</div>
+            </li>
+          </ul>
+        </div>
+        <div class="detail-col">
+          <h4>Ranking & Bands</h4>
+          <ul class="fn-list">
+            <li class="fn-item">
+              <div class="fn-name">ranker.rank_candidates()</div>
+              <div class="fn-desc">Sort: total_score DESC → availability DESC → data_confidence DESC → supply_state DESC. Ties share rank.</div>
+            </li>
+            <li class="fn-item">
+              <div class="fn-desc"><strong style="color:var(--green)">Strong</strong> ≥ 75 &nbsp;·&nbsp; <strong style="color:var(--yellow)">Partial</strong> ≥ 40 &nbsp;·&nbsp; <strong style="color:var(--orange)">Gap</strong> &lt; 40</div>
+            </li>
+          </ul>
+          <h4 style="margin-top:16px;">Why No LLM?</h4>
+          <div class="why-box blue">
+            <div class="why-title">Core Design Principle</div>
+            <p><strong>The LLM never sets a rank.</strong> Ranking must be deterministic and auditable. LLM rankings are non-deterministic, cannot be explained by pointing to specific config values, and cannot be re-run reproducibly.</p>
+            <p style="margin-top:10px;">All signal extraction was done in the Extract stage. Match only applies arithmetic formulas. Every score can be traced back to a config value in <code>config/default.yaml</code> and an evidence string in the dimension output.</p>
+          </div>
+          <h4 style="margin-top:16px;">Gap Analysis</h4>
+          <div class="fn-item" style="padding:10px 14px;">
+            <div class="fn-desc">If all candidates fail hard filters: re-run with filters disabled to show <em>why</em> each was rejected. Bench distribution (grade × supply_state) reported for capacity planning.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-panel" id="detail-explain">
+      <div class="detail-header">
+        <h3>💬 Explain Stage &nbsp;<span style="color:var(--orange);font-size:13px;">— LLM (gpt-4o via OpenRouter)</span></h3>
+        <button class="close-btn" onclick="closeDetail('explain')">✕</button>
+      </div>
+      <div class="detail-body">
+        <div class="detail-col">
+          <h4>DSPy Signature</h4>
+          <ul class="fn-list">
+            <li class="fn-item">
+              <div class="fn-name">CandidateExplanation</div>
+              <div class="fn-desc"><strong>Inputs:</strong> role_title, candidate_name (rehydrated), dimension_scores_json (all 6), why_not_higher_context (gap vs rank above)</div>
+              <div class="fn-desc" style="margin-top:6px;"><strong>Outputs:</strong> explanation (2-3 sentences), why_not_higher (1-2 sentences, empty for rank 1)</div>
+              <div class="fn-io">Validation: explanation must reference dimension vocabulary</div>
+            </li>
+          </ul>
+          <h4 style="margin-top:16px;">Post-Processing</h4>
+          <ul class="fn-list">
+            <li class="fn-item" style="padding:8px 14px;">
+              <div class="fn-desc">PII tokens rehydrated: <code>&lt;PERSON_0&gt;</code> → "Alice Patel" before display</div>
+            </li>
+            <li class="fn-item" style="padding:8px 14px;">
+              <div class="fn-desc">Fallback model: <code>anthropic/claude-3-haiku</code> if primary fails</div>
+            </li>
+            <li class="fn-item" style="padding:8px 14px;">
+              <div class="fn-desc">Skip with <code>--no-explanations</code> flag to save cost</div>
+            </li>
+          </ul>
+        </div>
+        <div class="detail-col">
+          <h4>Why LLM here?</h4>
+          <div class="why-box orange">
+            <div class="why-title">Reason</div>
+            <p><strong>Natural language generation of trade-off reasoning</strong> cannot be done deterministically. "Alice scores high on skills but her rolling-off date adds risk" requires synthesising multiple dimension values into coherent prose — this is exactly what LLMs are for.</p>
+            <p style="margin-top:10px;">The LLM only <em>narrates</em> the scores — it does not recompute or change them. If the explanation contradicts the numbers, the numbers win.</p>
+          </div>
+          <h4 style="margin-top:16px;">Cost Controls</h4>
+          <ul class="fn-list">
+            <li class="fn-item" style="padding:8px 14px;">
+              <div class="fn-desc">Only runs for top-N candidates (default 5). A 20-consultant bench → 5 LLM calls, not 20.</div>
+            </li>
+            <li class="fn-item" style="padding:8px 14px;">
+              <div class="fn-desc">Model: <code>gpt-4o</code> — higher quality justified here since this is user-facing output</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SECTION 2: SCORING DIMENSIONS              -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section>
+    <h2><span class="sec-num">2</span>Scoring Dimensions — All weights from config/default.yaml</h2>
+
+    <div class="scoring-grid">
+
+      <div class="score-card">
+        <div class="score-card-header">
+          <div class="score-card-title">Skill Match</div>
+          <div class="score-weight">35%</div>
+        </div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:35%"></div></div>
+        <div class="score-tiers">
+          <div class="score-tier"><span class="tier-dot" style="background:#22c55e"></span><span class="tier-val" style="color:#22c55e">100</span><span class="tier-label">Exact skill match</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#3b82f6"></span><span class="tier-val" style="color:#3b82f6">70</span><span class="tier-label">Exact match, proficiency below bar</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#8b5cf6"></span><span class="tier-val" style="color:#8b5cf6">65</span><span class="tier-label">Vector similarity ≥ 0.65</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#6366f1"></span><span class="tier-val" style="color:#6366f1">60</span><span class="tier-label">Adjacent skill (skill_adjacency.yaml)</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#f97316"></span><span class="tier-val" style="color:#f97316">40</span><span class="tier-label">New joiner fallback</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#475569"></span><span class="tier-val" style="color:#475569">0</span><span class="tier-label">No match</span></div>
+          <div class="score-tier" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
+            <span class="tier-label" style="font-size:10px;">+ up to 10pt bonus for optional skills (5pt/skill)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-card-header">
+          <div class="score-card-title">Feedback Quality</div>
+          <div class="score-weight">25%</div>
+        </div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:25%"></div></div>
+        <div class="score-tiers">
+          <div class="score-tier"><span class="tier-dot" style="background:#22c55e"></span><span class="tier-val" style="color:#22c55e">80</span><span class="tier-label">Positive sentiment base</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#94a3b8"></span><span class="tier-val" style="color:#94a3b8">50</span><span class="tier-label">Neutral sentiment base</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#ef4444"></span><span class="tier-val" style="color:#ef4444">20</span><span class="tier-label">Negative sentiment base</span></div>
+          <div class="score-tier" style="margin-top:4px;"><span class="tier-dot" style="background:#eab308"></span><span class="tier-val" style="color:#eab308">+10</span><span class="tier-label">Client keep signal</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#eab308"></span><span class="tier-val" style="color:#eab308">+5</span><span class="tier-label">Domain depth signal</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#ef4444"></span><span class="tier-val" style="color:#ef4444">-10</span><span class="tier-label">Concern flag</span></div>
+          <div class="score-tier" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
+            <span class="tier-label" style="font-size:10px;">Weighted: project(50%) + client(30%) + beach(20%)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-card-header">
+          <div class="score-card-title">Availability</div>
+          <div class="score-weight">15%</div>
+        </div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:15%"></div></div>
+        <div class="score-tiers">
+          <div class="score-tier"><span class="tier-dot" style="background:#22c55e"></span><span class="tier-val" style="color:#22c55e">100</span><span class="tier-label">Available immediately</span></div>
+          <div class="score-tier" style="margin-top:4px;"><span class="tier-label">Linear decay: 100 - (100/30) × days_late</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#94a3b8"></span><span class="tier-val" style="color:#94a3b8">0%</span><span class="tier-label">High confidence penalty</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#eab308"></span><span class="tier-val" style="color:#eab308">-10%</span><span class="tier-label">Medium confidence penalty</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#ef4444"></span><span class="tier-val" style="color:#ef4444">-30%</span><span class="tier-label">Low confidence penalty</span></div>
+          <div class="score-tier" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
+            <span class="tier-label" style="font-size:10px;">Horizon: 30 days · No start date → neutral 50</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-card-header">
+          <div class="score-card-title">Adaptability</div>
+          <div class="score-weight">15%</div>
+        </div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:15%"></div></div>
+        <div class="score-tiers">
+          <div class="score-tier"><span class="tier-dot" style="background:#94a3b8"></span><span class="tier-val" style="color:#94a3b8">50</span><span class="tier-label">Neutral baseline</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#22c55e"></span><span class="tier-val" style="color:#22c55e">+15</span><span class="tier-label">≥2 tech-era transitions</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#22c55e"></span><span class="tier-val" style="color:#22c55e">+10</span><span class="tier-label">≥2 cross-domain industries</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#22c55e"></span><span class="tier-val" style="color:#22c55e">+10</span><span class="tier-label">Upskilling evidence</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#22c55e"></span><span class="tier-val" style="color:#22c55e">+10</span><span class="tier-label">Learning speed mentions</span></div>
+          <div class="score-tier" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
+            <span class="tier-label" style="font-size:10px;">Signals extracted by LLM in Extract stage</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-card-header">
+          <div class="score-card-title">Supply State</div>
+          <div class="score-weight">5%</div>
+        </div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:5%"></div></div>
+        <div class="score-tiers">
+          <div class="score-tier"><span class="tier-dot" style="background:#22c55e"></span><span class="tier-val" style="color:#22c55e">100</span><span class="tier-label">Beach (available now)</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#eab308"></span><span class="tier-val" style="color:#eab308">70</span><span class="tier-label">Rolling off</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#f97316"></span><span class="tier-val" style="color:#f97316">40</span><span class="tier-label">New joiner</span></div>
+          <div class="score-tier" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
+            <span class="tier-label" style="font-size:10px;">Simple lookup table. Lowest weight — availability dimension captures the nuance.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-card-header">
+          <div class="score-card-title">Performance Trend</div>
+          <div class="score-weight">5%</div>
+        </div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:5%"></div></div>
+        <div class="score-tiers">
+          <div class="score-tier"><span class="tier-dot" style="background:#22c55e"></span><span class="tier-val" style="color:#22c55e">100</span><span class="tier-label">Improving</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#eab308"></span><span class="tier-val" style="color:#eab308">70</span><span class="tier-label">Stable</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#94a3b8"></span><span class="tier-val" style="color:#94a3b8">50</span><span class="tier-label">Unknown (no data)</span></div>
+          <div class="score-tier"><span class="tier-dot" style="background:#ef4444"></span><span class="tier-val" style="color:#ef4444">30</span><span class="tier-label">Declining</span></div>
+          <div class="score-tier" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
+            <span class="tier-label" style="font-size:10px;">Trend extracted by LLM (PerformanceTrendExtraction)</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SECTION 3: LLM DECISION MATRIX             -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section>
+    <h2><span class="sec-num">3</span>LLM Decision Matrix — Why each stage is or isn't LLM-powered</h2>
+
+    <table class="decision-table">
+      <thead>
+        <tr>
+          <th style="width:120px">Stage</th>
+          <th style="width:140px">LLM?</th>
+          <th style="width:180px">Model</th>
+          <th>Why / Why Not</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="stage-col">📥 Ingest</td>
+          <td><span class="pill pill-no">✕ No LLM</span></td>
+          <td class="model-col">—</td>
+          <td class="why-col">Data is already structured (Excel rows) or just raw text being collected (PDF text, markdown). No semantic interpretation needed yet. Docling handles PDF→text deterministically.</td>
+        </tr>
+        <tr>
+          <td class="stage-col">🔧 Normalise</td>
+          <td><span class="pill pill-no">✕ No LLM</span></td>
+          <td class="model-col">—</td>
+          <td class="why-col">PII scrubbing <em>must</em> run locally before any text leaves the machine — using an LLM for scrubbing would send unredacted PII to an external API. Presidio + spaCy provide auditable, deterministic PII detection. Location canonicalisation is a simple static map.</td>
+        </tr>
+        <tr>
+          <td class="stage-col">🤖 Extract</td>
+          <td><span class="pill pill-yes">✓ LLM</span></td>
+          <td class="model-col">openai/gpt-4o-mini</td>
+          <td class="why-col">CV text and feedback are unstructured prose. Detecting "3 tech-era transitions", "client keep signal", or "improving trend" from narrative text requires semantic understanding that rules cannot provide. Results are cached by file hash — LLM cost is amortised across all future match runs.</td>
+        </tr>
+        <tr>
+          <td class="stage-col">🗄️ Index</td>
+          <td><span class="pill pill-no">✕ No LLM</span></td>
+          <td class="model-col">all-MiniLM-L6-v2 (local)</td>
+          <td class="why-col">Sentence-transformer embeddings are deterministic, fast, and run entirely locally (22M param model). No text leaves the machine. LLM-quality semantic judgement is not needed for skill-name similarity — a small encoder is sufficient and 100× cheaper.</td>
+        </tr>
+        <tr>
+          <td class="stage-col">⚖️ Match</td>
+          <td><span class="pill pill-no">✕ No LLM</span></td>
+          <td class="model-col">—</td>
+          <td class="why-col">Scoring must be reproducible and auditable. Every score traces back to a config value in default.yaml and an evidence string. LLM rankings cannot be re-run deterministically and cannot be explained by pointing to specific config values. The LLM <em>never sets a rank.</em></td>
+        </tr>
+        <tr>
+          <td class="stage-col">💬 Explain</td>
+          <td><span class="pill pill-yes">✓ LLM</span></td>
+          <td class="model-col">openai/gpt-4o</td>
+          <td class="why-col">Natural language synthesis of trade-off reasoning cannot be done deterministically. The LLM only <em>narrates</em> the pre-computed scores — it does not change them. Constrained to top-5 candidates to cap cost. PII tokens are rehydrated post-generation so the LLM never sees real names/emails.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SECTION 4: EXAMPLE WALKTHROUGH             -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section>
+    <h2><span class="sec-num">4</span>End-to-End Example — Step-by-step trace</h2>
+
+    <div class="example-header">
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">Command</div>
+        <div class="cmd-block">$ dsm match <span>"Senior Python Engineer, Bengaluru"</span> --top 3</div>
+      </div>
+      <button class="trace-btn" id="trace-btn" onclick="runTrace()">▶ Trace Example</button>
+    </div>
+
+    <div class="consultant-card">
+      <div class="consul-field">
+        <div class="consul-label">Consultant</div>
+        <div class="consul-value">Alice Patel</div>
+      </div>
+      <div class="consul-field">
+        <div class="consul-label">Email (scrubbed)</div>
+        <div class="consul-value mono">&lt;EMAIL_ADDRESS_0&gt;</div>
+      </div>
+      <div class="consul-field">
+        <div class="consul-label">Supply State</div>
+        <div class="consul-value" style="color:var(--yellow)">Rolling Off</div>
+      </div>
+      <div class="consul-field">
+        <div class="consul-label">Available In</div>
+        <div class="consul-value">3 days (confidence: medium)</div>
+      </div>
+      <div class="consul-field">
+        <div class="consul-label">Location</div>
+        <div class="consul-value mono">bangalore → Bengaluru ✓</div>
+      </div>
+      <div class="consul-field">
+        <div class="consul-label">Skills</div>
+        <div class="consul-value">Python (5yr, expert) · Django (3yr, proficient)</div>
+      </div>
+      <div class="consul-field">
+        <div class="consul-label">Feedback</div>
+        <div class="consul-value" style="color:var(--green)">Positive · Client keep ✓ · Domain depth ✓</div>
+      </div>
+      <div class="consul-field">
+        <div class="consul-label">Adaptability</div>
+        <div class="consul-value">3 tech transitions · 2 cross-domain</div>
+      </div>
+      <div class="consul-field">
+        <div class="consul-label">Trend</div>
+        <div class="consul-value" style="color:var(--green)">Improving</div>
+      </div>
+    </div>
+
+    <div class="trace-steps" id="trace-steps">
+
+      <div class="trace-step" id="step-1">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">📥 INGEST <span style="font-size:12px;color:var(--blue);font-weight:400">(deterministic)</span></div>
+          <div class="step-body">
+            <p>Alice found in the <strong>"Rolling Off" sheet</strong> of demand-supply.xlsx. Available date: +3 days. Rolloff confidence: medium.</p>
+            <p>PDF <code>alice-patel.pdf</code> read by Docling → raw text extracted. Feedback file <code>feedback/alice.md</code> parsed into 3 sections: project, client, beach.</p>
+            <p>Output: <code>Consultant(email="alice.patel@example.com", supply_state="rolling_off", rolloff_confidence="medium", raw_profile_text="...", feedback_text={project: "...", client: "..."})</code></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="trace-step" id="step-2">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">🔧 NORMALISE <span style="font-size:12px;color:var(--blue);font-weight:400">(deterministic)</span></div>
+          <div class="step-body">
+            <p><strong>Location:</strong> "bangalore" matched in static map → normalised to <code>"Bengaluru"</code> ✓</p>
+            <p><strong>Dedup:</strong> No duplicate email found. Passes.</p>
+            <p><strong>PII Scrub:</strong> Presidio detects <code>alice.patel@example.com</code> → replaced with <code>&lt;EMAIL_ADDRESS_0&gt;</code>. Name "Alice Patel" → <code>&lt;PERSON_0&gt;</code>. Token map saved: <code>{"&lt;EMAIL_ADDRESS_0&gt;": "alice.patel@example.com", "&lt;PERSON_0&gt;": "Alice Patel"}</code></p>
+            <p>Post-scrub regex validation: no residual emails or phone numbers detected. <code>data_gaps</code> = ["pii_scrubbed"].</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="trace-step llm-step" id="step-3">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">🤖 EXTRACT <span style="font-size:12px;color:var(--orange);font-weight:400">(LLM — gpt-4o-mini)</span></div>
+          <div class="step-body">
+            <p><strong>Cache check:</strong> source_hash of alice-patel.pdf + alice.md not in <code>.cache/extracted_consultants.json</code> → run extraction.</p>
+            <div class="llm-output-box">
+              <div class="llm-label">⚡ ProfileExtraction → LLM call</div>
+              <p>Input: scrubbed PDF text (alice-patel.pdf)<br>Output: <code>skills_json=[{name:"Python",years:5,proficiency:5},{name:"Django",years:3,proficiency:4}], location:"Bengaluru", grade:"Senior Consultant"</code></p>
+            </div>
+            <div class="llm-output-box" style="margin-top:8px;">
+              <div class="llm-label">⚡ FeedbackSignalExtraction → 2 LLM calls (project + client)</div>
+              <p>Project: <code>{sentiment:"positive", strengths:["strong delivery"], client_keep_signal:false, domain_depth:true}</code><br>Client: <code>{sentiment:"positive", client_keep_signal:true, domain_depth:true, concerns:[]}</code></p>
+            </div>
+            <div class="llm-output-box" style="margin-top:8px;">
+              <div class="llm-label">⚡ AdaptabilitySignalExtraction + PerformanceTrendExtraction → 2 LLM calls</div>
+              <p>Adaptability: <code>{tech_transitions:3, cross_domain:2, learning_speed_mentions:true, upskilling:true}</code><br>Trend: <code>{trend:"improving"}</code></p>
+            </div>
+            <p style="margin-top:8px;">Results saved to cache. Future match runs skip this stage for Alice.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="trace-step" id="step-4">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">🗄️ INDEX <span style="font-size:12px;color:var(--blue);font-weight:400">(local embed — no LLM)</span></div>
+          <div class="step-body">
+            <p>all-MiniLM-L6-v2 embeds skill names locally: "Python" → 384-dim vector, "Django" → 384-dim vector.</p>
+            <p>Stored in Milvus Lite at <code>.cache/milvus/</code>. Index ready for vector similarity fallback during scoring.</p>
+            <p>At match time: <code>load_index()</code> returns (MilvusClient, SentenceTransformer) for use in skill_match dimension.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="trace-step" id="step-5">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">⚖️ MATCH — Hard Filters <span style="font-size:12px;color:var(--blue);font-weight:400">(deterministic)</span></div>
+          <div class="step-body">
+            <p><strong>Availability filter:</strong> rolling_off, days_late = 3 days. Buffer for rolling_off = 5 days. 3 ≤ 5 → <span style="color:var(--green)">✓ PASS</span> (with "date uncertain" flag because rolloff_confidence = medium).</p>
+            <p><strong>Location filter:</strong> Role not co_located → <span style="color:var(--green)">✓ PASS</span> (filter skipped).</p>
+            <p>Alice advances to scoring.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="trace-step" id="step-6">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <div class="step-title">⚖️ MATCH — Score 6 Dimensions <span style="font-size:12px;color:var(--blue);font-weight:400">(deterministic)</span></div>
+          <div class="step-body">
+            <p>Role requires: Python (mandatory), Django (mandatory)</p>
+            <div class="score-breakdown">
+              <div class="score-row">
+                <div class="score-row-label">skill_match (35%)</div>
+                <div class="score-row-bar-track"><div class="score-row-bar" style="width:100%"></div></div>
+                <div class="score-row-val">100.0</div>
+              </div>
+              <div class="score-row">
+                <div class="score-row-label">feedback_quality (25%)</div>
+                <div class="score-row-bar-track"><div class="score-row-bar" style="width:81%"></div></div>
+                <div class="score-row-val">81.0</div>
+              </div>
+              <div class="score-row">
+                <div class="score-row-label">availability (15%)</div>
+                <div class="score-row-bar-track"><div class="score-row-bar" style="width:81%"></div></div>
+                <div class="score-row-val">81.0</div>
+              </div>
+              <div class="score-row">
+                <div class="score-row-label">adaptability (15%)</div>
+                <div class="score-row-bar-track"><div class="score-row-bar" style="width:75%"></div></div>
+                <div class="score-row-val">75.0</div>
+              </div>
+              <div class="score-row">
+                <div class="score-row-label">supply_state (5%)</div>
+                <div class="score-row-bar-track"><div class="score-row-bar" style="width:70%"></div></div>
+                <div class="score-row-val">70.0</div>
+              </div>
+              <div class="score-row">
+                <div class="score-row-label">performance_trend (5%)</div>
+                <div class="score-row-bar-track"><div class="score-row-bar" style="width:100%"></div></div>
+                <div class="score-row-val">100.0</div>
+              </div>
+            </div>
+            <div class="total-score-display">
+              <div>
+                <div class="total-score-label">Total Score</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px;">(0.35×100)+(0.25×81)+(0.15×81)+(0.15×75)+(0.05×70)+(0.05×100)</div>
+                <div style="font-size:11px;color:var(--muted);">= 35 + 20.25 + 12.15 + 11.25 + 3.50 + 5.00</div>
+              </div>
+              <div style="text-align:right">
+                <div class="total-score-val">87.15 <span class="total-band">Strong</span></div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px;">Rank #1 (highest scorer)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="trace-step llm-step" id="step-7">
+        <div class="step-num">7</div>
+        <div class="step-content">
+          <div class="step-title">💬 EXPLAIN <span style="font-size:12px;color:var(--orange);font-weight:400">(LLM — gpt-4o)</span></div>
+          <div class="step-body">
+            <p>Input to LLM: role_title="Senior Python Engineer", candidate_name="&lt;PERSON_0&gt;", dimension_scores_json=[...6 dims...], why_not_higher_context="" (rank 1).</p>
+            <div class="llm-output-box">
+              <div class="llm-label">⚡ CandidateExplanation → LLM call</div>
+              <p>"&lt;PERSON_0&gt; is a strong match for the Senior Python Engineer role, scoring 87 overall. Expert-level Python and Django skills drive a perfect skill_match score, while consistently positive feedback with client retention signal and domain depth underpin a high feedback_quality score. The rolling-off availability in 3 days adds minor uncertainty given medium rolloff confidence."</p>
+            </div>
+            <p style="margin-top:8px;"><strong>PII Rehydration:</strong> <code>rehydrate_text()</code> replaces <code>&lt;PERSON_0&gt;</code> → "Alice Patel".</p>
+            <p><strong>Final output displayed to user:</strong> "Alice Patel is a strong match for the Senior Python Engineer role, scoring 87 overall. Expert-level Python and Django skills..."</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  DSM — Demand-Supply Matcher &nbsp;·&nbsp; Entry point: <code>src/matcher/cli.py</code> &nbsp;·&nbsp; Scoring config: <code>config/default.yaml</code> &nbsp;·&nbsp; Skill adjacency: <code>config/skill_adjacency.yaml</code>
+</footer>
+
+<script>
+  // ── Detail panel toggle ──
+  let activeDetail = null;
+
+  function toggleDetail(id) {
+    const panel = document.getElementById('detail-' + id);
+    const node = document.getElementById('node-' + id);
+
+    if (activeDetail && activeDetail !== id) {
+      document.getElementById('detail-' + activeDetail).classList.remove('show');
+      document.getElementById('node-' + activeDetail).classList.remove('active');
+    }
+
+    if (panel.classList.contains('show')) {
+      panel.classList.remove('show');
+      node.classList.remove('active');
+      activeDetail = null;
+    } else {
+      panel.classList.add('show');
+      node.classList.add('active');
+      activeDetail = id;
+      setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+    }
+  }
+
+  function closeDetail(id) {
+    document.getElementById('detail-' + id).classList.remove('show');
+    document.getElementById('node-' + id).classList.remove('active');
+    activeDetail = null;
+  }
+
+  // ── Trace animation ──
+  let traceRunning = false;
+  let traceIndex = 0;
+  const stepCount = 7;
+
+  function runTrace() {
+    if (traceRunning) return;
+    traceRunning = true;
+
+    const btn = document.getElementById('trace-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Tracing...';
+
+    // Reset all steps
+    for (let i = 1; i <= stepCount; i++) {
+      const el = document.getElementById('step-' + i);
+      el.classList.remove('active', 'visited');
+    }
+    traceIndex = 0;
+
+    const delays = [0, 1200, 2600, 4000, 5200, 6400, 7800, 9200];
+
+    for (let i = 1; i <= stepCount; i++) {
+      (function(idx) {
+        setTimeout(() => {
+          // Mark previous as visited
+          if (idx > 1) {
+            document.getElementById('step-' + (idx - 1)).classList.remove('active');
+            document.getElementById('step-' + (idx - 1)).classList.add('visited');
+          }
+          const el = document.getElementById('step-' + idx);
+          el.classList.add('active');
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+          if (idx === stepCount) {
+            setTimeout(() => {
+              el.classList.remove('active');
+              el.classList.add('visited');
+              btn.disabled = false;
+              btn.textContent = '↺ Replay';
+              traceRunning = false;
+            }, 1800);
+          }
+        }, delays[idx]);
+      })(i);
+    }
+  }
+
+  // ── Animate score bars on scroll ──
+  const scoreBarFills = document.querySelectorAll('.score-bar-fill');
+  const rowBars = document.querySelectorAll('.score-row-bar');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        // bars already have widths via inline style, CSS transition handles it
+        entry.target.style.opacity = '1';
+      }
+    });
+  }, { threshold: 0.3 });
+
+  scoreBarFills.forEach(b => observer.observe(b));
+</script>
+
+</body>
+</html>
