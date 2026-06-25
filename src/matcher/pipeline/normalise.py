@@ -40,25 +40,38 @@ def scrub_pii(consultants: list[Consultant]) -> list[Consultant]:
     for consultant in consultants:
         combined_token_map: dict[str, str] = {}
         update: dict[str, Any] = {}
+        pii_scrub_failed = False
 
         scrubbed_profile, profile_map = scrub_text(consultant.raw_profile_text)
-        assert_no_residual_pii(scrubbed_profile)
-        combined_token_map.update(profile_map)
-        update["raw_profile_text"] = scrubbed_profile
+        try:
+            assert_no_residual_pii(scrubbed_profile)
+            combined_token_map.update(profile_map)
+            update["raw_profile_text"] = scrubbed_profile
+        except ValueError:
+            pii_scrub_failed = True
+            update["raw_profile_text"] = ""
 
         scrubbed_feedback: dict[str, str] = {}
         for source, feedback_content in consultant.feedback_text.items():
             scrubbed_content, feedback_map = scrub_text(feedback_content)
-            assert_no_residual_pii(scrubbed_content)
-            combined_token_map.update(feedback_map)
-            scrubbed_feedback[source] = scrubbed_content
+            try:
+                assert_no_residual_pii(scrubbed_content)
+                combined_token_map.update(feedback_map)
+                scrubbed_feedback[source] = scrubbed_content
+            except ValueError:
+                pii_scrub_failed = True
+
         if scrubbed_feedback:
             update["feedback_text"] = scrubbed_feedback
 
         update["pii_token_map"] = combined_token_map
 
-        if combined_token_map:
-            update["data_gaps"] = [*consultant.data_gaps, "pii_scrubbed"]
+        data_gaps = list(consultant.data_gaps)
+        if pii_scrub_failed:
+            data_gaps.append("pii_scrub_failed")
+        elif combined_token_map:
+            data_gaps.append("pii_scrubbed")
+        update["data_gaps"] = data_gaps
 
         scrubbed_list.append(consultant.model_copy(update=update))
 
