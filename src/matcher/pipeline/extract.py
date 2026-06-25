@@ -55,6 +55,7 @@ def extract_signals(
 
         if app_config is not None:
             from matcher.observability.telemetry import check_budget
+
             check_budget(app_config.max_cost_usd_per_run, app_config.max_tokens_per_run)
 
     return result
@@ -96,16 +97,25 @@ async def _extract_one(
             consultant = await loop.run_in_executor(
                 None,
                 extract_adaptability,
-                consultant, combined_text, config, primary_lm, fallback_lm,
+                consultant,
+                combined_text,
+                config,
+                primary_lm,
+                fallback_lm,
             )
             consultant = await loop.run_in_executor(
                 None,
                 extract_trend,
-                consultant, combined_text, config, primary_lm, fallback_lm,
+                consultant,
+                combined_text,
+                config,
+                primary_lm,
+                fallback_lm,
             )
 
         if app_config is not None:
             from matcher.observability.telemetry import check_budget
+
             check_budget(app_config.max_cost_usd_per_run, app_config.max_tokens_per_run)
 
         return consultant
@@ -121,7 +131,6 @@ async def extract_signals_async(
 ) -> list[Consultant]:
     semaphore = asyncio.Semaphore(max_workers)
     tasks = [
-        _extract_one(c, config, semaphore, primary_lm, fallback_lm, app_config)
-        for c in consultants
+        _extract_one(c, config, semaphore, primary_lm, fallback_lm, app_config) for c in consultants
     ]
     return list(await asyncio.gather(*tasks))

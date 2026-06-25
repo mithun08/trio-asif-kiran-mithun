@@ -16,9 +16,7 @@ def load_store(store_path: Path) -> list[Consultant]:
 
 def save_store(consultants: list[Consultant], store_path: Path) -> None:
     store_path.parent.mkdir(parents=True, exist_ok=True)
-    store_path.write_text(
-        json.dumps([c.model_dump(mode="json") for c in consultants], indent=2)
-    )
+    store_path.write_text(json.dumps([c.model_dump(mode="json") for c in consultants], indent=2))
 
 
 def hash_consultant_sources(

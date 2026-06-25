@@ -42,8 +42,7 @@ def test_max_workers_respected() -> None:
         return c
 
     consultants = [
-        Consultant(email=f"{i}@b.com", name=str(i), raw_profile_text="text")
-        for i in range(10)
+        Consultant(email=f"{i}@b.com", name=str(i), raw_profile_text="text") for i in range(10)
     ]
     with (
         patch("matcher.pipeline.extract.extract_profile", side_effect=slow_extract),

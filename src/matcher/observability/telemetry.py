@@ -27,11 +27,9 @@ def check_budget(max_cost_usd: float, max_tokens: int) -> None:
 
     if max_cost_usd > 0 and current_telemetry.total_cost_usd > max_cost_usd:
         raise BudgetExceededError(
-            f"Run cost ${current_telemetry.total_cost_usd:.4f} exceeds "
-            f"budget ${max_cost_usd:.4f}"
+            f"Run cost ${current_telemetry.total_cost_usd:.4f} exceeds budget ${max_cost_usd:.4f}"
         )
     if max_tokens > 0 and current_telemetry.total_tokens > max_tokens:
         raise BudgetExceededError(
-            f"Run used {current_telemetry.total_tokens} tokens, "
-            f"exceeds budget {max_tokens}"
+            f"Run used {current_telemetry.total_tokens} tokens, exceeds budget {max_tokens}"
         )

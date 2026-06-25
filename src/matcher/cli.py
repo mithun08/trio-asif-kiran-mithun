@@ -56,11 +56,13 @@ def _compute_snapshot_id(
 ) -> str:
     h = hashlib.sha256()
 
-    for path in sorted([
-        workbook,
-        Path("config/default.yaml"),
-        Path("config/skill_adjacency.yaml"),
-    ]):
+    for path in sorted(
+        [
+            workbook,
+            Path("config/default.yaml"),
+            Path("config/skill_adjacency.yaml"),
+        ]
+    ):
         if path.exists():
             s = path.stat()
             h.update(f"{path.name}:{s.st_mtime}:{s.st_size}".encode())
@@ -187,6 +189,7 @@ def match(
     embedding_model = None
     if index_client is not None:
         from sentence_transformers import SentenceTransformer
+
         embedding_model = SentenceTransformer(config.embedding_model)
 
     with stage_timer("match", _telemetry.current_telemetry):
@@ -287,10 +290,14 @@ def ingest(
     consultants_unchanged: list[Consultant] = []
     for consultant in consultants:
         pdf_path = data_path / "profiles" / f"{consultant.email}.pdf"
-        feedback_paths = [
-            data_path / "project_feedback" / f
-            for f in (data_path / "project_feedback").glob(f"{consultant.email}_*.md")
-        ] if (data_path / "project_feedback").exists() else []
+        feedback_paths = (
+            [
+                data_path / "project_feedback" / f
+                for f in (data_path / "project_feedback").glob(f"{consultant.email}_*.md")
+            ]
+            if (data_path / "project_feedback").exists()
+            else []
+        )
         current_hash = hash_consultant_sources(
             pdf_path if pdf_path.exists() else None,
             feedback_paths,
@@ -298,12 +305,14 @@ def ingest(
         existing = existing_by_email.get(consultant.email.casefold())
         if existing is not None and existing.source_hash == current_hash and not force:
             consultants_unchanged.append(
-                existing.model_copy(update={
-                    "available_from": consultant.available_from,
-                    "supply_state": consultant.supply_state,
-                    "rolloff_confidence": consultant.rolloff_confidence,
-                    "days_on_beach": consultant.days_on_beach,
-                })
+                existing.model_copy(
+                    update={
+                        "available_from": consultant.available_from,
+                        "supply_state": consultant.supply_state,
+                        "rolloff_confidence": consultant.rolloff_confidence,
+                        "days_on_beach": consultant.days_on_beach,
+                    }
+                )
             )
         else:
             consultants_to_extract.append(

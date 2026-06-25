@@ -37,12 +37,14 @@ def build_index(
     rows: list[dict[str, Any]] = []
     for consultant in consultants:
         for skill in consultant.skills:
-            rows.append({
-                "id": len(rows),
-                "consultant_email": consultant.email,
-                "skill_name": skill.name,
-                "vector": model.encode(skill.name.lower()).tolist(),
-            })
+            rows.append(
+                {
+                    "id": len(rows),
+                    "consultant_email": consultant.email,
+                    "skill_name": skill.name,
+                    "vector": model.encode(skill.name.lower()).tolist(),
+                }
+            )
 
     if rows:
         client.insert(collection_name=_COLLECTION, data=rows)
