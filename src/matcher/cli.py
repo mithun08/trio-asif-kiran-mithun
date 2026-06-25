@@ -260,6 +260,7 @@ def ingest(
 ) -> None:
     """Ingest source files and report ingestion quality."""
     config = AppConfig.from_yaml(Path("config/default.yaml"))
+    configure_log_sink(config.observability.log_path)
     data_path = Path(data_dir)
     workbook = data_path / "demand-supply.xlsx"
     try:
@@ -325,7 +326,9 @@ def ingest(
     save_store(all_consultants, store_path)
 
     report = build_ingestion_report(roles, all_consultants, data_path / "project_feedback", [])
-    build_index(all_consultants, roles, config.cache_dir / "milvus", model_name=config.embedding_model)
+    build_index(
+        all_consultants, roles, config.cache_dir / "milvus", model_name=config.embedding_model
+    )
     if output_json:
         typer.echo(report.model_dump_json(indent=2))
     else:

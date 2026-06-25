@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import re
 from typing import Any, Literal
 
@@ -16,8 +15,6 @@ from matcher.llm.modules import (
 )
 from matcher.models.consultant import Consultant, Skill
 from matcher.models.signals import AdaptabilitySignals, FeedbackSignal
-
-_LOG = logging.getLogger(__name__)
 
 _LmType = Any
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import structlog
@@ -8,11 +9,28 @@ logger = structlog.get_logger()
 
 _sink_configured = False
 
+_NOISY_LOGGERS = (
+    "docling",
+    "dspy",
+    "sentence_transformers",
+    "pymilvus",
+    "urllib3",
+    "httpx",
+    "httpcore",
+)
+
+
+def _suppress_noisy_loggers() -> None:
+    logging.getLogger().setLevel(logging.WARNING)
+    for name in _NOISY_LOGGERS:
+        logging.getLogger(name).setLevel(logging.WARNING)
+
 
 def configure_log_sink(path: Path) -> None:
     global _sink_configured
     if _sink_configured:
         return
+    _suppress_noisy_loggers()
     path.parent.mkdir(parents=True, exist_ok=True)
     structlog.configure(
         processors=[

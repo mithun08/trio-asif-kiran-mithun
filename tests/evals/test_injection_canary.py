@@ -32,8 +32,6 @@ def test_system_rule_present_in_all_extraction_signatures() -> None:
 
 
 def test_document_boundary_markers_in_input_fields() -> None:
-    import dspy
-
     from matcher.llm.modules import (
         AdaptabilitySignalExtraction,
         FeedbackSignalExtraction,
