@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+import os
+
+# Milvus Lite and torch (via sentence-transformers) each link their own libomp;
+# the duplicate OpenMP init segfaults on macOS. Allow the duplicate before any
+# native lib is imported.
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+
 import asyncio
 import hashlib
 import uuid

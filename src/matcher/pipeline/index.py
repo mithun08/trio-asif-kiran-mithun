@@ -57,4 +57,5 @@ def load_index(index_dir: Path) -> Any:
     client: Any = MilvusClient(str(db_path))
     if not client.has_collection(_COLLECTION):
         return None
+    client.load_collection(_COLLECTION)
     return client
