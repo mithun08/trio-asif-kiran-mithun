@@ -1,53 +1,78 @@
 # Demand-Supply Matcher
 
-A local CLI staffing recommendation engine for Parity Partners. Produces ranked, explainable shortlists matching consultants to open roles — reducing structural bias and surfacing supply gaps.
+A local CLI staffing recommendation engine. Produces ranked, explainable shortlists matching consultants to open roles — reducing structural bias and surfacing supply gaps.
 
 ## Architecture
 
-Five-stage pipeline: **Ingest → Normalise → Index → Match → Explain**
+Two-phase pipeline: **Ingest** (LLM-heavy, cached) → **Match** (deterministic, fast)
 
 ```
-                         ┌─────────────────────────────────────────────┐
-  demand-supply.xlsx ───►│  1. Ingest & Parse                           │
-  profiles/*.pdf  ──────►│     • Workbook reader (Pydantic models)      │
-  project_feedback/*.md ►│     • Docling PDF extraction (+ OCR)         │
-                         │     • Feedback parser (keyed by email)       │
-                         └───────────────────┬─────────────────────────┘
+                         ┌─────────────────────────────────────────────────┐
+  demand-supply.xlsx ───►│  dsm ingest                                      │
+  profiles/*.pdf  ──────►│                                                  │
+  project_feedback/*.md ►│  1. Ingest & Parse                               │
+                         │     • Workbook reader (Pydantic models)          │
+                         │     • Docling PDF extraction (+ OCR fallback)    │
+                         │     • Feedback parser (keyed by email)           │
+                         │                                                  │
+                         │  2. Normalise                                    │
+                         │     • Location canonicalisation                  │
+                         │     • Dedup by email                             │
+                         │     • PII scrub (Presidio — email, phone,        │
+                         │       person, organisation); post-scrub gate     │
+                         │                                                  │
+                         │  3. Extract signals (async, concurrent)          │
+                         │     • Skills, grade, location from PDF (DSPy)   │
+                         │     • Sentiment, strengths, concerns from        │
+                         │       feedback (DSPy)                            │
+                         │     • Adaptability + performance trend (DSPy)   │
+                         │     • Cross-model fallback + budget guard        │
+                         │                                                  │
+                         │  4. Index                                        │
+                         │     • Embed skills → Milvus Lite (local)         │
+                         │     • Persist extracted signals to JSON store    │
+                         └───────────────────┬─────────────────────────────┘
+                                             │  .cache/extracted_consultants.json
+                                             │  .cache/milvus/skills.db
                                              ▼
-                         ┌─────────────────────────────────────────────┐
-                         │  2. Normalise & Resolve                      │
-                         │     • Location canonicalisation              │
-                         │     • Dedup by email                         │
-                         │     • Confidence scoring + data-gap flags    │
-                         │     • PII detection/scrubbing (Presidio)     │
-                         └───────────────────┬─────────────────────────┘
-                                             ▼
-                         ┌─────────────────────────────────────────────┐
-                         │  3. Index (one-off / on refresh)             │
-                         │     • Embed skills/roles/profiles            │
-                         │     • Store vectors in Milvus Lite           │
-                         └───────────────────┬─────────────────────────┘
-                                             ▼
-  role (ID | free-text) ─►┌─────────────────────────────────────────────┐
-                         │  4. Match per role                           │
-                         │     a. Hard filters (location, availability) │
-                         │     b. Skill match: static map + vector sim  │
-                         │        (Milvus) + LLM judgment               │
-                         │     c. Score 6 dimensions                    │
-                         │     d. Rank + tiebreak                       │
-                         │     e. Gap analysis if needed                │
-                         └───────────────────┬─────────────────────────┘
-                                             ▼
-                         ┌─────────────────────────────────────────────┐
-                         │  5. Explain & Render (DSPy → OpenRouter)     │
-                         │     • NL explanations grounded in data       │
-                         │     • Text + JSON output, snapshot timestamp │
-                         └─────────────────────────────────────────────┘
+  role (ID | free-text) ─►┌─────────────────────────────────────────────────┐
+                         │  dsm match                                       │
+                         │                                                  │
+                         │  5. Match per role                               │
+                         │     a. Hard filters (location, availability)     │
+                         │     b. Skill match — three tiers:                │
+                         │        exact → adjacency map → vector similarity │
+                         │     c. Score 6 dimensions (weighted)             │
+                         │     d. Rank + tiebreak                           │
+                         │     e. Gap analysis if all filtered              │
+                         │                                                  │
+                         │  6. Explain (DSPy → OpenRouter)                  │
+                         │     • NL explanations grounded in dimension data │
+                         │     • Text + JSON output, reproducible snapshot  │
+                         └─────────────────────────────────────────────────┘
 ```
 
-- Deterministic scoring core (no LLM in the ranking logic)
-- LLM at the edges only: PDF extraction, semantic assist, explanation generation
-- Stateless per run — reads a snapshot, produces output, no mutable database
+**Key invariants:**
+- The LLM never sets a rank — only arithmetic scoring does
+- `dsm ingest` is the LLM-heavy phase; `dsm match` is purely deterministic
+- Unchanged consultants are skipped on re-ingest (source file hash check)
+- No text leaves the machine except for LLM extraction/explanation calls to OpenRouter
+- PII is scrubbed before any LLM call; post-scrub assertion gate enforces fail-closed
+
+## Scoring
+
+Six weighted dimensions — all weights and thresholds live in `config/default.yaml`:
+
+| Dimension | Weight | Notes |
+|---|---|---|
+| `skill_match` | 0.35 | exact (100) → adjacency map (60) → vector similarity (65) → new joiner (40) |
+| `feedback_quality` | 0.25 | project (50%) + client (30%) + beach (20%) sentiment weighted average |
+| `availability` | 0.15 | days-late penalty; hard-filtered at 30 days |
+| `adaptability` | 0.15 | tech transitions, learning speed, cross-domain, upskilling signals |
+| `supply_state` | 0.05 | beach (100) → rolling off (70) → new joiner (40) |
+| `performance_trend` | 0.05 | improving (100) → stable (70) → declining (30) |
+
+Bands: **Strong** ≥ 75 · **Partial** ≥ 40 · **Gap** < 40
 
 ## Tech Stack
 
@@ -58,12 +83,13 @@ Five-stage pipeline: **Ingest → Normalise → Index → Match → Explain**
 | Tool pinning | mise |
 | Data models | Pydantic v2 |
 | Document extraction | Docling (PDF + OCR) |
-| LLM orchestration | DSPy |
+| LLM orchestration | DSPy (typed signatures, disk cache, context-scoped LM) |
 | LLM access | OpenRouter API |
-| PII scrubbing | Presidio + spaCy |
-| Embedding model | sentence-transformers (`all-MiniLM-L6-v2`, local — no text leaves the machine) |
-| Vector store | Milvus Lite |
-| Evaluation | Promptfoo + DeepEval |
+| PII scrubbing | Presidio + spaCy (`en_core_web_sm`) |
+| Embedding model | `sentence-transformers` (`all-MiniLM-L6-v2`, local) |
+| Vector store | Milvus Lite (local file, no server) |
+| Observability | structlog (JSONL run log), cost/token telemetry |
+| Evaluation | DeepEval + Promptfoo |
 
 ## Quick Start
 
@@ -71,56 +97,169 @@ Five-stage pipeline: **Ingest → Normalise → Index → Match → Explain**
 # Install dependencies
 make install
 
-# Ingest source files and build the vector index
+# Set API key
+export DSM_OPENROUTER_API_KEY=<your-key>
+
+# Ingest source files, extract signals, build vector index (runs LLM calls)
 dsm ingest --data-dir data/
 
-# Match consultants for a role
-dsm match "role-001" --top 5
+# Match consultants for a role (deterministic — no LLM, reads from cache)
+dsm match ROLE-01 --top 5
+
+# Free-text role spec
+dsm match --free-text "Senior Python engineer, London, start ASAP"
 
 # Emit JSON output
-dsm match "Senior Python Engineer" --json
+dsm match ROLE-01 --json
+
+# Skip explanation generation
+dsm match ROLE-01 --no-explanations
+
+# Run without any LLM calls (offline mode)
+dsm ingest --no-llm
+dsm match ROLE-01 --no-llm
 ```
 
 ## Development
 
 ```bash
-make install      # install all deps including dev extras
-make lint         # ruff check
-make fmt          # ruff format
+make install      # uv sync --extra dev
+make lint         # ruff check src/ tests/
+make fmt          # ruff format src/ tests/
 make typecheck    # mypy strict
-make test-unit    # unit tests
-make test         # all tests
+make test-unit    # pytest tests/unit/
+make test         # pytest tests/
+make eval         # pytest tests/evals/test_deepeval_golden.py
+```
+
+Run a single test:
+
+```bash
+uv run pytest tests/unit/test_scoring.py::test_name -v
 ```
 
 ## Configuration
 
-Edit `config/default.yaml` to adjust scoring weights, model IDs, similarity thresholds, and cache paths. All values can be overridden via environment variables prefixed with `DSM_`.
+All scoring weights, model IDs, similarity thresholds, budget limits, and cache paths live in `config/default.yaml`. Values can be overridden via environment variables prefixed `DSM_`.
 
-Required environment variable:
+**Required:**
 
 ```bash
 DSM_OPENROUTER_API_KEY=<your-key>
 ```
 
+**Key config sections (`config/default.yaml`):**
+
+```yaml
+models:
+  extraction: "openai/gpt-4o-mini"   # PDF + feedback signal extraction
+  explanation: "openai/gpt-4o"       # candidate explanation generation
+  fallback: "anthropic/claude-3-haiku"  # cross-model fallback on LLM failure
+
+llm:
+  max_concurrent_extractions: 5      # async extraction parallelism
+
+budget:
+  max_cost_usd_per_run: 0.0          # 0 = no limit
+  max_tokens_per_run: 0              # 0 = no limit
+
+embedding:
+  model: "all-MiniLM-L6-v2"          # local sentence-transformers model
+
+scoring:
+  weights: { skill_match: 0.35, ... }
+  config: { band_strong: 75, c_vector: 65, ... }
+```
+
+## Security
+
+- **PII scrubbing**: Presidio detects and redacts email, phone, person name, and organisation before any text reaches the LLM. A post-scrub regex gate raises `ValueError` on missed patterns (fail-closed).
+- **Prompt injection defence**: All DSPy extraction signatures include a `SYSTEM RULE` preamble and `[DOCUMENT START]` / `[DOCUMENT END]` boundary markers on untrusted input fields.
+- **Model safety**: DSPy pickle cache is restricted (`restrict_pickle=True`). Secrets are loaded via env vars only (`secrets_dir=None`).
+- **Budget guard**: `check_budget()` enforces configurable cost and token ceilings; raises `BudgetExceededError` mid-run on both sync and async extraction paths.
+
+## Incremental Ingest
+
+`dsm ingest` computes a SHA-256 hash (mtime + size) of each consultant's PDF and feedback files. On subsequent runs it skips unchanged consultants — only new or modified files trigger LLM re-extraction.
+
+```bash
+# Force full re-extraction (ignores hashes)
+dsm ingest --force
+```
+
+The extracted signal store at `.cache/extracted_consultants.json` is a plain JSON file — human-readable and diff-able.
+
+## Reproducibility
+
+Every `RunOutput` includes a `snapshot_id` — a 16-character hex digest of all inputs (workbook, PDF profiles, feedback files, config YAMLs, embedding model name). Two runs on identical inputs always produce the same `snapshot_id`.
+
+## CI
+
+GitHub Actions runs four jobs on every push:
+
+| Job | What it checks |
+|---|---|
+| `lint` | `ruff check` + `ruff format --check` |
+| `typecheck` | `mypy src/` (strict) |
+| `unit-test` | `pytest tests/unit/` with coverage |
+| `eval` | `pytest tests/evals/test_deepeval_golden.py` against synthetic golden dataset |
+
+The eval job runs deterministic scoring only (no API key required). Pass rate must be in `[0.70, 0.85]` against the committed golden dataset at `evals/golden/roles.yaml`.
+
 ## Project Structure
 
 ```
 src/matcher/
-  cli.py            # Typer CLI entry point (dsm)
-  config.py         # Pydantic settings + YAML loader
-  models/           # role, consultant, score, output
-  pipeline/         # ingest → normalise → index → match → explain
-  scoring/          # deterministic filters + 6-dimension scorer + ranker
-  llm/              # DSPy signatures and cache helpers
-  privacy/          # Presidio PII scrub / rehydrate
-  observability/    # structured run logging (structlog)
+  cli.py                # Typer CLI (dsm ingest, dsm match)
+  config.py             # Pydantic settings + YAML loader (AppConfig)
+  models/               # role, consultant, score, signals, output, telemetry
+  pipeline/
+    ingest.py           # workbook + PDF + feedback reader
+    normalise.py        # location canonicalisation, dedup, PII scrub
+    extract.py          # async signal extraction orchestrator
+    store.py            # JSON store (load/save/hash)
+    index.py            # Milvus Lite build + load
+    match.py            # hard filters → score → rank
+    explain.py          # LLM explanation generation
+    gap.py              # gap analysis when no candidates pass filters
+  scoring/
+    dimensions.py       # 6 scoring functions + 3-tier _best_credit
+    filters.py          # hard filters (availability, location)
+    ranker.py           # sort + band assignment
+    confidence.py       # High / Medium / Low confidence levels
+    info_flags.py       # long_bench, sector_match, grade_mismatch, skill_gap
+  llm/
+    modules.py          # DSPy Signature definitions (with injection defence)
+    extract.py          # extract_profile, extract_feedback, extract_adaptability, extract_trend
+    explain_module.py   # generate_explanation
+    client.py           # make_lm, configure_lm (with fallback)
+    cache.py            # DSPy disk cache config
+  privacy/
+    scrubber.py         # scrub_text, rehydrate_text, assert_no_residual_pii
+  observability/
+    run_log.py          # structlog JSONL sink
+    telemetry.py        # cost/token accumulator + check_budget
+    timing.py           # stage_timer context manager
+    cost_table.py       # model pricing lookup
+  render/
+    json.py             # JSON output
+    text.py             # human-readable table output
 tests/
-  unit/             # per-stage unit tests
-  integration/      # end-to-end pipeline tests
-  evals/            # Promptfoo scenarios + DeepEval groundedness suite
+  unit/                 # per-stage unit tests (321 tests)
+  integration/          # end-to-end pipeline tests
+  evals/
+    test_deepeval_golden.py   # golden pass-rate gate [0.70, 0.85]
+    test_injection_canary.py  # static SYSTEM RULE / boundary marker checks
+    test_latency_eval.py      # p95 latency guard (skipped by default)
+    deepeval_suite.py         # faithfulness test case builder
 config/
-  default.yaml      # scoring weights, model IDs, thresholds
-  skill_adjacency.yaml  # static skill synonym map
+  default.yaml              # scoring weights, model IDs, thresholds, budget
+  skill_adjacency.yaml      # static skill synonym map
+evals/
+  golden/roles.yaml         # synthetic golden evaluation entries
+  fixtures/eval_data.xlsx   # synthetic workbook for CI eval (no real data)
+scripts/
+  generate_eval_fixtures.py # regenerates evals/fixtures/eval_data.xlsx
 ```
 
 ## Specifications
