@@ -23,6 +23,13 @@ def print_results(
         print(f"  profiles parsed: {ingestion_report.profiles_parsed}")
         if ingestion_report.profiles_low_confidence:
             print(f"  low confidence: {len(ingestion_report.profiles_low_confidence)}")
+        if ingestion_report.admitted_external:
+            n_admitted = len(ingestion_report.admitted_external)
+            print(f"  admitted (external, low confidence): {n_admitted}")
+        if ingestion_report.quarantined_records:
+            print(f"  quarantined: {len(ingestion_report.quarantined_records)}")
+            for q in ingestion_report.quarantined_records:
+                print(f"    - {q}")
         if ingestion_report.feedback_unmatched:
             print(f"  unmatched feedback: {', '.join(ingestion_report.feedback_unmatched)}")
         if ingestion_report.supply_without_profile:

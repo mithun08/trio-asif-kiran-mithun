@@ -9,4 +9,6 @@ class IngestionReport(BaseModel):
     feedback_matched: int = 0
     feedback_unmatched: list[str] = Field(default_factory=list)
     supply_without_profile: list[str] = Field(default_factory=list)
+    admitted_external: list[str] = Field(default_factory=list)
+    quarantined_records: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

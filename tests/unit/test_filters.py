@@ -190,6 +190,83 @@ def test_both_disabled_all_pass() -> None:
     assert len(rejected) == 0
 
 
+def test_exclude_location_hard_drops_regardless_of_co_located() -> None:
+    role = _role(co_located=False, location="").model_copy(
+        update={"exclude_locations": ["Chennai"]}
+    )
+    c = _consultant(location="Chennai")
+    passing, rejected = apply_hard_filters([c], role)
+    assert len(passing) == 0
+    assert rejected[0][1] == "location_excluded"
+
+
+def test_exclude_location_normalises_before_compare() -> None:
+    role = _role(co_located=False, location="").model_copy(
+        update={"exclude_locations": ["Bangalore"]}
+    )
+    c = _consultant(location="Bengaluru")
+    passing, rejected = apply_hard_filters([c], role)
+    assert len(passing) == 0
+    assert rejected[0][1] == "location_excluded"
+
+
+def test_exclude_location_absent_passes() -> None:
+    role = _role(co_located=False, location="").model_copy(
+        update={"exclude_locations": ["Chennai"]}
+    )
+    c = _consultant(location="Mumbai")
+    passing, rejected = apply_hard_filters([c], role)
+    assert len(passing) == 1
+    assert len(rejected) == 0
+
+
+def test_exclude_supply_state_hard_drops() -> None:
+    role = _role().model_copy(update={"exclude_supply_states": ["new_joiner"]})
+    c = _consultant(supply_state="new_joiner", available_from=date(2026, 7, 1))
+    passing, rejected = apply_hard_filters([c], role)
+    assert len(passing) == 0
+    assert rejected[0][1] == "supply_state_excluded"
+
+
+def test_exclude_supply_state_absent_passes() -> None:
+    role = _role().model_copy(update={"exclude_supply_states": ["new_joiner"]})
+    c = _consultant(supply_state="beach")
+    passing, rejected = apply_hard_filters([c], role)
+    assert len(passing) == 1
+    assert len(rejected) == 0
+
+
+def test_admitted_external_fails_availability_filter() -> None:
+    role = _role(start=date(2026, 7, 1))
+    c = _consultant(supply_state="beach").model_copy(
+        update={"data_gaps": ["admitted_external", "no_workbook_record"]}
+    )
+    passing, rejected = apply_hard_filters([c], role)
+    assert len(passing) == 0
+    assert len(rejected) == 1
+    assert rejected[0][1] == "availability unknown (admitted-external record)"
+
+
+def test_admitted_external_passes_when_availability_filter_disabled() -> None:
+    role = _role(start=date(2026, 7, 1))
+    c = _consultant(supply_state="beach").model_copy(
+        update={"data_gaps": ["admitted_external", "no_workbook_record"]}
+    )
+    passing, rejected = apply_hard_filters([c], role, disable_availability_filter=True)
+    assert len(passing) == 1
+    assert len(rejected) == 0
+
+
+def test_admitted_external_skipped_when_no_start_date() -> None:
+    role = _role(start=None)
+    c = _consultant(supply_state="beach").model_copy(
+        update={"data_gaps": ["admitted_external", "no_workbook_record"]}
+    )
+    passing, rejected = apply_hard_filters([c], role)
+    assert len(passing) == 1
+    assert len(rejected) == 0
+
+
 def test_default_args_unchanged() -> None:
     role = _role(co_located=True, location="Bengaluru", start=date(2026, 7, 1))
     c_pass = _consultant(location="Bengaluru")

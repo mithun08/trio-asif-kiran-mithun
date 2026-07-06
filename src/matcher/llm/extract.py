@@ -15,6 +15,7 @@ from matcher.llm.modules import (
 )
 from matcher.models.consultant import Consultant, Skill
 from matcher.models.signals import AdaptabilitySignals, FeedbackSignal
+from matcher.observability.telemetry import tap_lm_history as _tap_lm_history
 
 _LmType = Any
 
@@ -36,26 +37,6 @@ def _run_predict(
             result = predictor(**kwargs)
         _tap_lm_history(effective, "extract")
         return result
-
-
-def _tap_lm_history(lm: object, task: str) -> None:
-    from matcher.observability import telemetry as _tel
-    from matcher.observability.cost_table import cost_for
-
-    history = getattr(lm, "history", None)
-    if not history:
-        return
-    last = history[-1]
-    usage = getattr(last, "usage", None) or {}
-    if isinstance(usage, dict):
-        pt = int(usage.get("prompt_tokens", 0))
-        ct = int(usage.get("completion_tokens", 0))
-    else:
-        pt = int(getattr(usage, "prompt_tokens", 0) or 0)
-        ct = int(getattr(usage, "completion_tokens", 0) or 0)
-    model = str(getattr(lm, "model", "") or "")
-    cache = bool(getattr(last, "cache_hit", False) or False)
-    _tel.record_llm_call(task, pt + ct, cost_for(model, pt, ct), cache)
 
 
 _PROFICIENCY_MAP: dict[str, int] = {

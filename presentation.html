@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Demand-Supply Matcher — Presentation</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+    --accent3: #d29922;
+    --accent4: #f78166;
+    --accent5: #bc8cff;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --slide-w: 960px;
+    --slide-h: 560px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px 20px 80px;
+  }
+
+  /* ── Controls ── */
+  #controls {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 20px;
+    z-index: 100;
+    box-shadow: 0 4px 24px rgba(0,0,0,.5);
+  }
+  #controls button {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 6px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background .15s, border-color .15s;
+  }
+  #controls button:hover { background: var(--border); border-color: var(--accent); }
+  #controls button:disabled { opacity: .35; cursor: default; }
+  #slide-counter { font-size: 13px; color: var(--muted); min-width: 60px; text-align: center; }
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent5));
+    transition: width .3s ease;
+    z-index: 200;
+  }
+
+  /* ── Slide container ── */
+  #deck {
+    width: var(--slide-w);
+    max-width: 100%;
+    position: relative;
+  }
+
+  .slide {
+    display: none;
+    width: var(--slide-w);
+    max-width: 100%;
+    min-height: var(--slide-h);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 52px 60px;
+    animation: fadeIn .3s ease;
+    box-shadow: 0 8px 40px rgba(0,0,0,.4);
+  }
+  .slide.active { display: flex; flex-direction: column; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Slide types ── */
+  .slide-title {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #1a1f2b 100%);
+  }
+  .slide-title .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .slide-title h1 {
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1.15;
+    background: linear-gradient(135deg, var(--text) 40%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 20px;
+  }
+  .slide-title .subtitle {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 620px;
+    line-height: 1.6;
+  }
+  .slide-title .tag-row {
+    margin-top: 28px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .tag {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ── Section header ── */
+  .slide-section {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: linear-gradient(135deg, #0d1117, #161b22);
+  }
+  .section-number {
+    font-size: 60px;
+    font-weight: 700;
+    color: var(--border);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .section-label {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .section-sub {
+    margin-top: 12px;
+    font-size: 15px;
+    color: var(--muted);
+  }
+
+  /* ── Content slide ── */
+  .slide h2 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 28px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .slide h2 .accent { color: var(--accent); }
+
+  /* ── Two-column grid ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; flex: 1; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; flex: 1; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .card.highlight-blue  { border-color: var(--accent);  }
+  .card.highlight-green { border-color: var(--accent2); }
+  .card.highlight-yellow{ border-color: var(--accent3); }
+  .card.highlight-red   { border-color: var(--accent4); }
+  .card.highlight-purple{ border-color: var(--accent5); }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .card-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .card-value.blue   { color: var(--accent); }
+  .card-value.green  { color: var(--accent2); }
+  .card-value.yellow { color: var(--accent3); }
+  .card-value.red    { color: var(--accent4); }
+  .card-value.purple { color: var(--accent5); }
+
+  /* ── Lists ── */
+  ul.bullets { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  ul.bullets li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  ul.bullets li::before {
+    content: "▸";
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  ul.bullets li.green::before  { color: var(--accent2); }
+  ul.bullets li.yellow::before { color: var(--accent3); }
+  ul.bullets li.red::before    { color: var(--accent4); }
+  ul.bullets li.purple::before { color: var(--accent5); }
+
+  /* ── Pipeline ── */
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex: 1;
+  }
+  .pipe-stage {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 12px;
+    text-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color .2s;
+  }
+  .pipe-stage:hover { border-color: var(--accent); }
+  .pipe-stage + .pipe-stage { margin-left: 8px; }
+  .pipe-stage + .pipe-stage::before {
+    content: "→";
+    position: absolute;
+    left: -16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 18px;
+    pointer-events: none;
+  }
+  .pipe-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: .08em;
+  }
+  .pipe-icon { font-size: 26px; }
+  .pipe-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .pipe-detail {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .pipe-stage.s1 { border-top: 3px solid var(--accent);  }
+  .pipe-stage.s2 { border-top: 3px solid var(--accent2); }
+  .pipe-stage.s3 { border-top: 3px solid var(--accent5); }
+  .pipe-stage.s4 { border-top: 3px solid var(--accent3); }
+  .pipe-stage.s5 { border-top: 3px solid var(--accent4); }
+
+  /* ── Score dimensions ── */
+  .dim-grid { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .dim-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 60px;
+    align-items: center;
+    gap: 12px;
+  }
+  .dim-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .dim-bar-track {
+    height: 20px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .dim-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease;
+  }
+  .dim-weight { font-size: 13px; font-weight: 700; text-align: right; }
+
+  /* ── Table ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  th {
+    text-align: left;
+    padding: 8px 12px;
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+    line-height: 1.4;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  .badge {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-blue   { background: rgba(88,166,255,.15); color: var(--accent);  border: 1px solid rgba(88,166,255,.3); }
+  .badge-green  { background: rgba(63,185,80,.15);  color: var(--accent2); border: 1px solid rgba(63,185,80,.3); }
+  .badge-yellow { background: rgba(210,153,34,.15); color: var(--accent3); border: 1px solid rgba(210,153,34,.3); }
+  .badge-purple { background: rgba(188,140,255,.15);color: var(--accent5); border: 1px solid rgba(188,140,255,.3); }
+  .badge-red    { background: rgba(247,129,102,.15);color: var(--accent4); border: 1px solid rgba(247,129,102,.3); }
+
+  /* ── Callout ── */
+  .callout {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-top: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .callout.blue   { background: rgba(88,166,255,.08);  border-left: 3px solid var(--accent); }
+  .callout.green  { background: rgba(63,185,80,.08);   border-left: 3px solid var(--accent2); }
+  .callout.yellow { background: rgba(210,153,34,.08);  border-left: 3px solid var(--accent3); }
+  .callout.purple { background: rgba(188,140,255,.08); border-left: 3px solid var(--accent5); }
+
+  .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 6px; }
+  .spacer { flex: 1; }
+
+  /* ── Roadmap ── */
+  .roadmap { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .roadmap-item {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .roadmap-phase {
+    text-align: right;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    padding-top: 2px;
+  }
+  .roadmap-body {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .roadmap-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .roadmap-desc  { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .metric-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+  }
+  .metric-value { font-size: 32px; font-weight: 700; }
+  .metric-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  code {
+    font-family: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 12px;
+    color: var(--accent5);
+  }
+
+  /* slide number dot nav */
+  #dot-nav {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 100;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+    transition: background .2s, transform .2s;
+  }
+  .dot.active { background: var(--accent); transform: scale(1.4); }
+  .dot:hover  { background: var(--muted); }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<div id="deck">
+
+  <!-- ───────────────── SLIDE 0: TITLE ───────────────── -->
+  <div class="slide slide-title active" id="s0">
+    <div class="eyebrow">Parity Partners · Staffing Intelligence</div>
+    <h1>Demand-Supply<br>Matcher</h1>
+    <p class="subtitle">AI-powered staffing recommendations — ranked, explainable, privacy-first</p>
+    <div class="tag-row">
+      <span class="tag">Python 3.12</span>
+      <span class="tag">DSPy · OpenRouter</span>
+      <span class="tag">Milvus Lite</span>
+      <span class="tag">Presidio · spaCy</span>
+      <span class="tag">Pydantic v2</span>
+      <span class="tag">Docling OCR</span>
+    </div>
+  </div>
+
+  <!-- ───────────────── SLIDE 1: PROBLEM ───────────────── -->
+  <div class="slide" id="s1">
+    <h2>The <span class="accent">Problem</span> We're Solving</h2>
+    <div class="two-col">
+      <div>
+        <div class="label">Today's reality</div>
+        <ul class="bullets" style="margin-top:10px">
+          <li>Staffing managers match consultants to roles <strong>by hand in a spreadsheet</strong></li>
+          <li class="yellow">Slow — decision latency slows bench-to-role placement</li>
+          <li class="red">Inconsistent — judgment varies person-to-person, meeting-to-meeting</li>
+          <li class="red">No audit trail — hard to justify or revisit recommendations</li>
+          <li class="yellow">Growing fast — <strong>~5 % headcount per month</strong>; spreadsheets don't scale</li>
+        </ul>
+        <div class="callout yellow" style="margin-top:18px">
+          <strong>Supply pool:</strong> Beach · Rolling-off · New joiners — all in constant flux
+        </div>
+      </div>
+      <div>
+        <div class="label">What we want</div>
+        <ul class="bullets" style="margin-top:10px">
+          <li class="green">A <strong>ranked, explainable shortlist</strong> for any open role</li>
+          <li class="green">Surfaces trade-offs so a human makes the final call</li>
+          <li class="green">Consistent, reproducible scoring across runs</li>
+          <li class="green">Privacy-safe — PII scrubbed before any cloud call</li>
+          <li>Works on a laptop — no server infra required in v1</li>
+        </ul>
+        <div class="callout green" style="margin-top:18px">
+          <code>dsm match "Senior Python Engineer" --top 5</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────── SLIDE 2: DESIGN PHILOSOPHY ───────────────── -->
+  <div class="slide" id="s2">
+    <h2>Design <span class="accent">Philosophy</span></h2>
+    <div class="three-col">
+      <div class="card highlight-blue">
+        <div class="card-title">Principle 1</div>
+        <div class="card-value blue" style="font-size:20px">Deterministic<br>Core</div>
+        <p style="margin-top:10px;font-size:13px;color:var(--muted);line-height:1.5">
+          Filtering, weighting, ranking, and tiebreaks are pure Python — no randomness, no cloud call.
+          The LLM is used only at the <em>edges</em>: extraction and explanation.
+        </p>
+      </div>
+      <div class="card highlight-green">
+        <div class="card-title">Principle 2</div>
+        <div class="card-value green" style="font-size:20px">LLM Never<br>Sets Rank</div>
+        <p style="margin-top:10px;font-size:13px;color:var(--muted);line-height:1.5">
+          LLM explains a rank already computed deterministically. A hallucinated explanation
+          cannot change who is recommended.
+        </p>
+      </div>
+      <div class="card highlight-purple">
+        <div class="card-title">Principle 3</div>
+        <div class="card-value purple" style="font-size:20px">Privacy<br>First</div>
+        <p style="margin-top:10px;font-size:13px;color:var(--muted);line-height:1.5">
+          PII is scrubbed via Presidio <em>before</em> any text leaves the machine.
+          Embeddings are generated locally — no profile text sent off-device for similarity.
+        </p>
+      </div>
+      <div class="card highlight-yellow">
+        <div class="card-title">Principle 4</div>
+        <div class="card-value yellow" style="font-size:20px">Cost<br>Discipline</div>
+        <p style="margin-top:10px;font-size:13px;color:var(--muted);line-height:1.5">
+          Slice-1 = zero LLM calls. LLM is added only where unstructured input genuinely needs it.
+          DSPy response caching makes warm runs free.
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-title">Principle 5</div>
+        <div class="card-value" style="font-size:20px">Config<br>Driven</div>
+        <p style="margin-top:10px;font-size:13px;color:var(--muted);line-height:1.5">
+          All weights, thresholds, and model IDs live in <code>config/default.yaml</code>.
+          Zero magic numbers in source code.
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-title">Principle 6</div>
+        <div class="card-value" style="font-size:20px">Testable<br>Stages</div>
+        <p style="margin-top:10px;font-size:13px;color:var(--muted);line-height:1.5">
+          Each pipeline stage is independently unit-testable with no cross-stage coupling.
+          Evals gate both LLM extractions and explanations.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────── SLIDE 3: PIPELINE OVERVIEW ───────────────── -->
+  <div class="slide" id="s3">
+    <h2>The <span class="accent">5-Stage</span> Pipeline</h2>
+    <div class="pipeline" style="margin-bottom:20px">
+      <div class="pipe-stage s1">
+        <div class="pipe-num">01</div>
+        <div class="pipe-icon">📥</div>
+        <div class="pipe-name">Ingest</div>
+        <div class="pipe-detail">Excel workbook · PDF profiles · Markdown feedback</div>
+      </div>
+      <div class="pipe-stage s2">
+        <div class="pipe-num">02</div>
+        <div class="pipe-icon">🔧</div>
+        <div class="pipe-name">Normalise</div>
+        <div class="pipe-detail">Dedup · Location canon · PII scrub · Confidence scoring</div>
+      </div>
+      <div class="pipe-stage s3">
+        <div class="pipe-num">03</div>
+        <div class="pipe-icon">🔍</div>
+        <div class="pipe-name">Index</div>
+        <div class="pipe-detail">Local embeddings · Milvus Lite vector store</div>
+      </div>
+      <div class="pipe-stage s4">
+        <div class="pipe-num">04</div>
+        <div class="pipe-icon">⚖️</div>
+        <div class="pipe-name">Match</div>
+        <div class="pipe-detail">Hard filters · 6D scoring · Rank · Gap analysis</div>
+      </div>
+      <div class="pipe-stage s5">
+        <div class="pipe-num">05</div>
+        <div class="pipe-icon">💬</div>
+        <div class="pipe-name">Explain</div>
+        <div class="pipe-detail">DSPy → OpenRouter · Grounded NL explanations</div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="callout blue">
+        <strong>Ingest is a one-off:</strong> run once per data refresh. Match queries reuse the cached index — no re-embedding on every query.
+      </div>
+      <div class="callout green">
+        <strong>Stateless per run:</strong> each invocation reads a snapshot, produces output. No mutable application database in v1.
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────── SLIDE 4: DATA SOURCES ───────────────── -->
+  <div class="slide" id="s4">
+    <h2>Data <span class="accent">Sources</span> &amp; Ingestion</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Source</th>
+          <th>Format</th>
+          <th>Contents</th>
+          <th>Parser</th>
+          <th>Join key</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>demand-supply.xlsx</strong></td>
+          <td><span class="badge badge-green">XLSX</span></td>
+          <td>Open roles + three supply tabs: Beach, Rolling Off, New Joiners</td>
+          <td><code>openpyxl</code></td>
+          <td>Role ID / Email</td>
+        </tr>
+        <tr>
+          <td><strong>profiles/*.pdf</strong></td>
+          <td><span class="badge badge-blue">PDF</span></td>
+          <td>50 consultant profiles — structured template or free-form + scanned</td>
+          <td><code>Docling</code> + OCR fallback</td>
+          <td>Filename stem → name → email</td>
+        </tr>
+        <tr>
+          <td><strong>project_feedback/*.md</strong></td>
+          <td><span class="badge badge-purple">Markdown</span></td>
+          <td>Project, client, and beach feedback sections per consultant</td>
+          <td>Regex section parser</td>
+          <td><code>**Email (key):**</code> header</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout yellow" style="margin-top:18px">
+      <strong>Data resilience:</strong> the pipeline never drops a consultant due to missing data.
+      Low-confidence sources reduce <code>data_confidence</code> score and add <code>data_gaps</code> flags — never silently omit a person.
+    </div>
+    <div class="metric-grid" style="margin-top:16px">
+      <div class="metric-card">
+        <div class="metric-value blue">50</div>
+        <div class="metric-label">Consultant profiles</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value green">3</div>
+        <div class="metric-label">Supply states</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value yellow">&lt; 10 min</div>
+        <div class="metric-label">Full ingest target</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────── SLIDE 5: SCORING ───────────────── -->
+  <div class="slide" id="s5">
+    <h2>6-Dimension <span class="accent">Scoring</span></h2>
+    <div class="dim-grid" id="dim-grid">
+      <div class="dim-row">
+        <div class="dim-name">🎯 Skill Match</div>
+        <div class="dim-bar-track"><div class="dim-bar-fill" style="width:0%;background:var(--accent)" data-w="35"></div></div>
+        <div class="dim-weight blue">35 %</div>
+      </div>
+      <div class="dim-row">
+        <div class="dim-name">📊 Feedback Quality</div>
+        <div class="dim-bar-track"><div class="dim-bar-fill" style="width:0%;background:var(--accent2)" data-w="25"></div></div>
+        <div class="dim-weight green">25 %</div>
+      </div>
+      <div class="dim-row">
+        <div class="dim-name">📅 Availability</div>
+        <div class="dim-bar-track"><div class="dim-bar-fill" style="width:0%;background:var(--accent3)" data-w="15"></div></div>
+        <div class="dim-weight yellow">15 %</div>
+      </div>
+      <div class="dim-row">
+        <div class="dim-name">🔄 Adaptability</div>
+        <div class="dim-bar-track"><div class="dim-bar-fill" style="width:0%;background:var(--accent5)" data-w="15"></div></div>
+        <div class="dim-weight purple">15 %</div>
+      </div>
+      <div class="dim-row">
+        <div class="dim-name">📦 Supply State</div>
+        <div class="dim-bar-track"><div class="dim-bar-fill" style="width:0%;background:var(--muted)" data-w="5"></div></div>
+        <div class="dim-weight">5 %</div>
+      </div>
+      <div class="dim-row">
+        <div class="dim-name">📈 Performance Trend</div>
+        <div class="dim-bar-track"><div class="dim-bar-fill" style="width:0%;background:var(--accent4)" data-w="5"></div></div>
+        <div class="dim-weight red">5 %</div>
+      </div>
+    </div>
+    <div class="two-col" style="margin-top:18px">
+      <div class="callout blue">
+        <strong>Skill match layers:</strong> Exact match (100) → adjacent/synonym map (60) → local vector similarity (65) → new joiner credit (40)
+      </div>
+      <div class="callout green">
+        <strong>55 % deterministic · 45 % LLM-enriched.</strong> Feedback quality, adaptability, and performance trend come from LLM extraction — never from the LLM's opinion.
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────── SLIDE 6: LLM EXTRACTION ───────────────── -->
+  <div class="slide" id="s6">
+    <h2>LLM <span class="accent">Extraction</span> — How It Works</h2>
+    <div class="two-col">
+      <div>
+        <div class="label">What the LLM extracts</div>
+        <table style="margin-top:10px">
+          <thead>
+            <tr><th>Dimension</th><th>Signals extracted</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Feedback Quality</strong></td>
+              <td>Sentiment (positive/neutral/negative), client-keep signal, domain depth, concerns</td>
+            </tr>
+            <tr>
+              <td><strong>Adaptability</strong></td>
+              <td>Tech transitions ≥ 2, learning-speed mentions, cross-domain ≥ 2, upskilling evidence</td>
+            </tr>
+            <tr>
+              <td><strong>Performance Trend</strong></td>
+              <td>improving / stable / declining / unknown</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout yellow" style="margin-top:14px">
+          <strong>Grounding invariant:</strong> each extracted claim must be traceable to a span in the source text.
+          Ungrounded extractions are flagged, not scored.
+        </div>
+      </div>
+      <div>
+        <div class="label">DSPy modules (typed signatures)</div>
+        <ul class="bullets" style="margin-top:10px">
+          <li><code>ProfileExtraction</code> — free-form PDF → structured fields</li>
+          <li><code>FeedbackSignalExtraction</code> — markdown feedback → signals</li>
+          <li><code>AdaptabilitySignalExtraction</code> — combined text → adaptability flags</li>
+          <li><code>PerformanceTrendExtraction</code> — text → trend direction</li>
+          <li class="green"><code>CandidateExplanation</code> — evidence package → NL explanation</li>
+        </ul>
+        <div class="callout purple" style="margin-top:14px">
+          <strong>Model tier:</strong> <code>gpt-4o-mini</code> for extraction (high-volume, cheap) · <code>gpt-4o</code> for explanations (low-volume, quality matters) · <code>claude-3-haiku</code> fallback
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────── SLIDE 7: PRIVACY & SECURITY ───────────────── -->
+  <div class="slide" id="s7">
+    <h2>Privacy &amp; <span class="accent">Security</span></h2>
+    <div class="two-col">
+      <div>
+        <div class="label">PII pipeline (Presidio + spaCy)</div>
+        <ul class="bullets" style="margin-top:10px">
+          <li class="green">Scrub-before-send: names, emails, phone numbers, client names removed/pseudonymised before any API call</li>
+          <li class="green">Token map stored locally — rehydrated after LLM returns, never in transit</li>
+          <li class="green">PII gate test is a <strong>release blocker</strong></li>
+          <li>Entities detected: <code>PERSON</code>, <code>EMAIL_ADDRESS</code>, <code>PHONE_NUMBER</code>, <code>ORGANIZATION</code></li>
+        </ul>
+        <div class="callout green" style="margin-top:16px">
+          Embeddings generated locally with <code>all-MiniLM-L6-v2</code> — <strong>no profile text leaves the machine</strong> for the similarity step.
+        </div>
+      </div>
+      <div>
+        <div class="label">Data flow security</div>
+        <table style="margin-top:10px">
+          <thead>
+            <tr><th>Step</th><th>What happens</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Normalise</td>
+              <td><span class="badge badge-green">PII scrubbed</span> stored as tokens in <code>pii_token_map</code></td>
+            </tr>
+            <tr>
+              <td>Index</td>
+              <td>Vectors computed locally — <span class="badge badge-green">never sent</span></td>
+            </tr>
+            <tr>
+              <td>LLM extract</td>
+              <td>Only scrubbed text transmitted</td>
+            </tr>
+            <tr>
+              <td>LLM explain</td>
+              <td>Evidence package (scrubbed) sent; result rehydrated locally</td>
+            </tr>
+            <tr>
+              <td>Output</td>
+              <td>Real names restored from local token map</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout blue" style="margin-top:14px">
+          <strong>Provider:</strong> OpenRouter with zero-retention / no-training providers required per TDD §5.2
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────── SLIDE 8: COST & PERFORMANCE ───────────────── -->
+  <div class="slide" id="s8">
+    <h2>Cost &amp; <span class="accent">Performance</span></h2>
+    <div class="metric-grid" style="margin-bottom:20px">
+      <div class="metric-card">
+        <div class="metric-value green">~$0.02</div>
+        <div class="metric-label">Cost per cold run (full 50 consultants)</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value blue">$0.00</div>
+        <div class="metric-label">Warm run cost (DSPy cache hit)</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value yellow">~90–120 s</div>
+        <div class="metric-label">Warm run wall time</div>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Mode</th>
+          <th>Dimensions scored</th>
+          <th>Wall time (per role)</th>
+          <th>Cost</th>
+          <th>Deterministic</th>
+          <th>Best for</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>--no-llm</code></td>
+          <td>3 of 6 (real data)</td>
+          <td>~90–120 s</td>
+          <td><span class="badge badge-green">$0.00</span></td>
+          <td><span class="badge badge-green">✓ always</span></td>
+          <td>CI, iteration, debugging</td>
+        </tr>
+        <tr>
+          <td>LLM-on (cold)</td>
+          <td>6 of 6</td>
+          <td>~5–10 min</td>
+          <td><span class="badge badge-yellow">~$0.02</span></td>
+          <td><span class="badge badge-yellow">band-stable</span></td>
+          <td>First production run</td>
+        </tr>
+        <tr>
+          <td>LLM-on (warm)</td>
+          <td>6 of 6</td>
+          <td>~90–120 s</td>
+          <td><span class="badge badge-green">$0.00</span></td>
+          <td><span class="badge badge-green">✓ always</span></td>
+          <td>Stakeholder reports</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout blue" style="margin-top:16px">
+      <strong>LLM uplift:</strong> consultants with strong signals gain up to <strong>+16–22 pts</strong> over neutral — enough to shift 2–3 band boundaries and break ties that matter.
+    </div>
+  </div>
+
+  <!-- ───────────────── SLIDE 9: PROS ───────────────── -->
+  <div class="slide" id="s9">
+    <h2>Why This Approach <span class="accent">Works</span></h2>
+    <div class="two-col">
+      <div>
+        <ul class="bullets">
+          <li class="green"><strong>Explainable by design</strong> — every score carries evidence strings traceable to source data; no black-box ranking</li>
+          <li class="green"><strong>Privacy-safe</strong> — PII gate is a release blocker; embeddings never leave the machine</li>
+          <li class="green"><strong>Cost-efficient</strong> — ~$0.02 cold, $0.00 warm; embeddings are free and cached</li>
+          <li class="green"><strong>Reproducible</strong> — deterministic core + DSPy caching makes re-runs byte-identical on warm cache</li>
+          <li class="green"><strong>Resilient to missing data</strong> — degraded confidence, not dropped candidates</li>
+        </ul>
+      </div>
+      <div>
+        <ul class="bullets">
+          <li class="blue"><strong>Independently testable stages</strong> — each pipeline step has its own unit-test surface; no integration-only coverage</li>
+          <li class="blue"><strong>Config-driven flexibility</strong> — weights and thresholds tunable without code changes</li>
+          <li class="blue"><strong>Scales gracefully</strong> — Milvus Lite handles POC; swap to managed Milvus when volume demands</li>
+          <li class="blue"><strong>Two modes</strong> — <code>--no-llm</code> for fast offline iteration; LLM-on for full-signal production reports</li>
+          <li class="blue"><strong>Audit trail</strong> — structured run log: timings, token spend, data-quality flags per run</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout green" style="margin-top:18px">
+      <strong>Human stays in the loop:</strong> the tool surfaces trade-offs and surfaces gap candidates when no one passes hard filters — it never makes the placement decision.
+    </div>
+  </div>
+
+  <!-- ───────────────── SLIDE 10: TECH STACK ───────────────── -->
+  <div class="slide" id="s10">
+    <h2>Tech <span class="accent">Stack</span></h2>
+    <table>
+      <thead>
+        <tr><th>Layer</th><th>Technology</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Language</td>
+          <td><span class="badge badge-blue">Python 3.12+</span></td>
+          <td>Core runtime; strict mypy typing end-to-end</td>
+        </tr>
+        <tr>
+          <td>Dependency mgmt</td>
+          <td><span class="badge badge-blue">uv · mise</span></td>
+          <td>Lockfile-reproducible installs; pinned tool versions</td>
+        </tr>
+        <tr>
+          <td>Data models</td>
+          <td><span class="badge badge-purple">Pydantic v2</span></td>
+          <td>All inter-module data — no plain dicts crossing boundaries</td>
+        </tr>
+        <tr>
+          <td>Document extraction</td>
+          <td><span class="badge badge-yellow">Docling + OCR</span></td>
+          <td>Layout-aware PDF parsing, scanned profile fallback</td>
+        </tr>
+        <tr>
+          <td>LLM orchestration</td>
+          <td><span class="badge badge-green">DSPy</span></td>
+          <td>Typed signatures, structured outputs, response caching</td>
+        </tr>
+        <tr>
+          <td>LLM access</td>
+          <td><span class="badge badge-blue">OpenRouter API</span></td>
+          <td>Model-agnostic routing; provider diversity + cost control</td>
+        </tr>
+        <tr>
+          <td>Privacy / NLP</td>
+          <td><span class="badge badge-red">Presidio · spaCy</span></td>
+          <td>PII detection and scrubbing before every API call</td>
+        </tr>
+        <tr>
+          <td>Embeddings</td>
+          <td><span class="badge badge-purple">sentence-transformers</span></td>
+          <td>Local <code>all-MiniLM-L6-v2</code> — no text off-device</td>
+        </tr>
+        <tr>
+          <td>Vector store</td>
+          <td><span class="badge badge-blue">Milvus Lite</span></td>
+          <td>Embedded vector store at <code>.cache/milvus/</code></td>
+        </tr>
+        <tr>
+          <td>Observability</td>
+          <td><span class="badge badge-yellow">structlog · JSONL</span></td>
+          <td>Structured run log with per-stage timings + cost telemetry</td>
+        </tr>
+        <tr>
+          <td>Evaluation</td>
+          <td><span class="badge badge-green">DeepEval · Promptfoo</span></td>
+          <td>Faithfulness + groundedness checks; CI regression gates</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ───────────────── SLIDE 11: NEXT IMPROVEMENTS ───────────────── -->
+  <div class="slide" id="s11">
+    <h2>Next-Level <span class="accent">Improvements</span></h2>
+    <div class="roadmap">
+      <div class="roadmap-item">
+        <div class="roadmap-phase" style="color:var(--accent)">v1.2<br>Near term</div>
+        <div class="roadmap-body">
+          <div class="roadmap-title">PDF extraction caching</div>
+          <div class="roadmap-desc">Cache Docling output to disk — skip re-extraction for unchanged PDFs. Cuts warm run time from ~90 s to &lt; 5 s for the scoring path.</div>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-phase" style="color:var(--accent2)">v2.0<br>Medium term</div>
+        <div class="roadmap-body">
+          <div class="roadmap-title">Feedback loop from placement outcomes</div>
+          <div class="roadmap-desc">Capture actual staffing decisions and overrides. Feed them back into scoring-weight calibration and DSPy prompt optimisation — closing the quality loop.</div>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-phase" style="color:var(--accent3)">v2.0</div>
+        <div class="roadmap-body">
+          <div class="roadmap-title">Golden dataset + automated eval gates</div>
+          <div class="roadmap-desc">Curate a labelled set of roles with expected shortlists. Wire DeepEval groundedness + rank-accuracy checks as CI quality gates — measurable pass-rate target (70–85 %).</div>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-phase" style="color:var(--accent5)">v3.0<br>Scale</div>
+        <div class="roadmap-body">
+          <div class="roadmap-title">Scale to managed Milvus + multi-region</div>
+          <div class="roadmap-desc">Graduate from Milvus Lite to managed Milvus cluster. Add live data sync from HRIS. Support parallel matching across all open roles simultaneously.</div>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-phase" style="color:var(--accent4)">v3.0+</div>
+        <div class="roadmap-body">
+          <div class="roadmap-title">Fairness &amp; bias review</div>
+          <div class="roadmap-desc">Audit scoring dimensions for systemic bias (e.g. feedback quality correlating with protected characteristics). Add fairness metrics to eval suite before production at scale.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────── SLIDE 12: SUMMARY ───────────────── -->
+  <div class="slide slide-title" id="s12" style="background:linear-gradient(135deg,#0d1117,#161b22,#1a1f2b)">
+    <div class="eyebrow">Summary</div>
+    <h1 style="font-size:36px">Deterministic core.<br>LLM at the edges.<br>Human makes the call.</h1>
+    <div class="two-col" style="margin-top:28px;text-align:left;max-width:780px">
+      <ul class="bullets">
+        <li class="green">5-stage pipeline: Ingest → Normalise → Index → Match → Explain</li>
+        <li class="green">6-dimension scoring — weights externalised, never hardcoded</li>
+        <li class="green">LLM enriches 45 % of score via extraction, never sets rank</li>
+      </ul>
+      <ul class="bullets">
+        <li class="blue">PII scrubbed before every cloud call; embeddings stay local</li>
+        <li class="blue">~$0.02 cold / $0.00 warm — cost-disciplined from day one</li>
+        <li class="blue">Runs on a laptop; scales to managed infra when needed</li>
+      </ul>
+    </div>
+    <div class="tag-row" style="margin-top:32px">
+      <span class="tag" style="color:var(--accent2);border-color:var(--accent2)">github.com/trio-asif-kiran-mithun</span>
+      <span class="tag">mithun.narayanaswamy@equalexperts.com</span>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<!-- dot nav -->
+<div id="dot-nav"></div>
+
+<div id="controls">
+  <button id="prev-btn" disabled>← Prev</button>
+  <span id="slide-counter">1 / 13</span>
+  <button id="next-btn">Next →</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+  const counter = document.getElementById('slide-counter');
+  const progress = document.getElementById('progress-bar');
+  const dotNav = document.getElementById('dot-nav');
+
+  // build dots
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.title = 'Slide ' + (i + 1);
+    d.addEventListener('click', () => goTo(i));
+    dotNav.appendChild(d);
+  }
+
+  function goTo(n) {
+    slides[current].classList.remove('active');
+    dotNav.children[current].classList.remove('active');
+    current = Math.max(0, Math.min(total - 1, n));
+    slides[current].classList.add('active');
+    dotNav.children[current].classList.add('active');
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+    counter.textContent = (current + 1) + ' / ' + total;
+    progress.style.width = ((current + 1) / total * 100) + '%';
+
+    // animate bars on slide 5
+    if (current === 5) animateBars();
+  }
+
+  function animateBars() {
+    document.querySelectorAll('.dim-bar-fill').forEach(el => {
+      const w = el.getAttribute('data-w');
+      // scale to fill bar proportionally (max weight is 35)
+      const pct = (parseFloat(w) / 35 * 100).toFixed(0);
+      el.style.width = pct + '%';
+    });
+  }
+
+  prevBtn.addEventListener('click', () => goTo(current - 1));
+  nextBtn.addEventListener('click', () => goTo(current + 1));
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                    { e.preventDefault(); goTo(current - 1); }
+    if (e.key === 'Home') goTo(0);
+    if (e.key === 'End')  goTo(total - 1);
+  });
+
+  // init progress
+  progress.style.width = (1 / total * 100) + '%';
+</script>
+</body>
+</html>

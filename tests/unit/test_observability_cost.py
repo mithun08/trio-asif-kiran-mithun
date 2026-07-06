@@ -58,3 +58,54 @@ def test_reset_clears_telemetry() -> None:
     _tel.reset()
     assert _tel.current_telemetry.llm_calls == 0
     assert _tel.current_telemetry.total_cost_usd == 0.0
+
+
+class _FakeLm:
+    def __init__(self, history: list[dict]) -> None:
+        self.history = history
+        self.model = "openai/gpt-4o-mini"
+
+
+def test_tap_lm_history_reads_dict_history_entries() -> None:
+    lm = _FakeLm([{"usage": {"prompt_tokens": 100, "completion_tokens": 20}, "cost": 0.01}])
+    _tel.tap_lm_history(lm, "extract")
+    assert _tel.current_telemetry.llm_calls == 1
+    assert _tel.current_telemetry.total_tokens == 120
+    assert _tel.current_telemetry.cache_hits == 0
+
+
+def test_tap_lm_history_prefers_dspy_cost_field() -> None:
+    lm = _FakeLm([{"usage": {"prompt_tokens": 1_000_000, "completion_tokens": 0}, "cost": 0.5}])
+    _tel.tap_lm_history(lm, "extract")
+    assert abs(_tel.current_telemetry.total_cost_usd - 0.5) < 1e-9
+
+
+def test_tap_lm_history_falls_back_to_cost_table_when_cost_missing() -> None:
+    lm = _FakeLm([{"usage": {"prompt_tokens": 1_000_000, "completion_tokens": 0}}])
+    _tel.tap_lm_history(lm, "extract")
+    assert abs(_tel.current_telemetry.total_cost_usd - 0.15) < 1e-6
+
+
+def test_tap_lm_history_detects_cache_hit() -> None:
+    lm = _FakeLm([{"usage": {}, "cost": None}])
+    _tel.tap_lm_history(lm, "extract")
+    assert _tel.current_telemetry.cache_hits == 1
+    assert _tel.current_telemetry.total_tokens == 0
+
+
+def test_tap_lm_history_detects_cache_hit_with_stale_nonzero_cost() -> None:
+    # dspy/clients/cache.py:_prepare_cached_response clears `usage` on a cache
+    # hit but leaves `cost` at the original call's stale, non-None value —
+    # empty usage alone must be enough to flag the hit, and cost must be
+    # forced to 0 rather than re-reporting the stale charge.
+    lm = _FakeLm([{"usage": {}, "cost": 0.5}])
+    _tel.tap_lm_history(lm, "extract")
+    assert _tel.current_telemetry.cache_hits == 1
+    assert _tel.current_telemetry.total_tokens == 0
+    assert _tel.current_telemetry.total_cost_usd == 0.0
+
+
+def test_tap_lm_history_empty_history_is_noop() -> None:
+    lm = _FakeLm([])
+    _tel.tap_lm_history(lm, "extract")
+    assert _tel.current_telemetry.llm_calls == 0

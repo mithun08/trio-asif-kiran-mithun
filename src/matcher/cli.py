@@ -3,12 +3,16 @@ from __future__ import annotations
 import os
 
 # Milvus Lite and torch (via sentence-transformers) each link their own libomp;
-# the duplicate OpenMP init segfaults on macOS. Allow the duplicate before any
-# native lib is imported.
+# the duplicate OpenMP init segfaults on macOS. Allow the duplicate, and force
+# faiss's HNSW add single-threaded — allowing the duplicate alone is not enough,
+# only pinning threads avoids the crash in faiss `add`. Set before any native
+# lib is imported so libomp reads it at init and Milvus Lite inherits it.
 os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+os.environ.setdefault("OMP_NUM_THREADS", "1")
 
 import asyncio
 import hashlib
+import resource
 import uuid
 from datetime import date
 from pathlib import Path
@@ -21,6 +25,7 @@ from matcher.llm.client import configure_lm, make_lm
 from matcher.models.consultant import Consultant
 from matcher.models.errors import IngestionError
 from matcher.models.output import DataQualityReport, RunOutput
+from matcher.models.role import Role
 from matcher.observability import telemetry as _telemetry
 from matcher.observability.run_log import configure_log_sink, log_data_quality, log_run_start
 from matcher.observability.timing import stage_timer
@@ -39,11 +44,37 @@ from matcher.pipeline.ingest import (
 from matcher.pipeline.ingestion_report import build as build_ingestion_report
 from matcher.pipeline.match import match_role
 from matcher.pipeline.normalise import canonicalise_locations, dedup_by_email, scrub_pii
-from matcher.pipeline.store import hash_consultant_sources, load_store, save_store
+from matcher.pipeline.reconcile import reconcile_external_people
+from matcher.pipeline.store import (
+    hash_consultant_sources,
+    load_store,
+    load_text_cache,
+    save_store,
+    save_text_cache,
+)
 from matcher.render.json import render_json
 from matcher.render.text import print_results
 from matcher.scoring.confidence import attach_confidence_levels
 from matcher.scoring.info_flags import attach_info_flags
+
+_FD_LIMIT_TARGET = 8192
+
+
+def _raise_fd_limit() -> None:
+    # Concurrent LLM extraction opens more file descriptors (sockets + model
+    # files + litellm's per-call lazy imports) than macOS's default ulimit -n
+    # of 256 allows, causing Errno 24. Raise the soft limit once at startup
+    # instead of requiring a manual `ulimit -n` before every run.
+    try:
+        soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+        target = _FD_LIMIT_TARGET if hard == resource.RLIM_INFINITY else min(_FD_LIMIT_TARGET, hard)
+        if soft < target:
+            resource.setrlimit(resource.RLIMIT_NOFILE, (target, hard))
+    except (ValueError, OSError):
+        pass
+
+
+_raise_fd_limit()
 
 app = typer.Typer(name="dsm", help="Demand-Supply Matcher CLI")
 
@@ -80,6 +111,26 @@ def _compute_snapshot_id(
     return h.hexdigest()[:16]
 
 
+def _describe_parsed_role(role: Role) -> str:
+    parts = [f"title={role.title!r}"]
+    required = [rs.name for rs in role.required_skills if rs.mandatory]
+    preferred = [rs.name for rs in role.required_skills if not rs.mandatory]
+    if required:
+        parts.append(f"require={required}")
+    if preferred:
+        parts.append(f"prefer={preferred}")
+    if role.exclude_skills:
+        parts.append(f"exclude_skills={role.exclude_skills}")
+    if role.locations:
+        parts.append(f"locations={role.locations}")
+    if role.exclude_locations:
+        parts.append(f"exclude_locations={role.exclude_locations}")
+    if role.exclude_supply_states:
+        parts.append(f"exclude_supply_states={role.exclude_supply_states}")
+    parts.append(f"start_date={role.start_date}")
+    return " | ".join(parts)
+
+
 @app.command()
 def match(
     role_id: str | None = typer.Argument(None, help="Role ID (e.g. ROLE-01)"),
@@ -108,29 +159,47 @@ def match(
 
     primary_lm = None
     fallback_lm = None
+    query_lm = None
     if not no_llm:
         configure_dspy_cache(config.cache_dir)
         primary_lm = configure_lm(config)
         fallback_lm = make_lm(config.model_fallback, config)
+        query_lm = make_lm(config.model_skill_inference, config)
 
     workbook = config.data_dir / "demand-supply.xlsx"
+    text_cache_path = config.cache_dir / "profile_text_cache.json"
+    text_cache = load_text_cache(text_cache_path)
 
     with stage_timer("ingest", _telemetry.current_telemetry):
         try:
             roles = ingest_roles(workbook)
             consultants = ingest_consultants_from_workbook(workbook)
             consultants = ingest_consultants(
-                config.data_dir / "profiles", consultants, ocr_config=config.ocr
+                config.data_dir / "profiles",
+                consultants,
+                ocr_config=config.ocr,
+                cache=text_cache,
             )
             consultants = ingest_feedback(config.data_dir / "project_feedback", consultants)
+            consultants, reconcile_result = reconcile_external_people(
+                consultants,
+                config.data_dir / "profiles",
+                config.data_dir / "project_feedback",
+                config.ocr,
+                cache=text_cache,
+            )
         except IngestionError as exc:
             typer.echo(str(exc), err=True)
             raise typer.Exit(code=1)
+        save_text_cache(text_cache, text_cache_path)
 
     if free_text is not None:
         known_locations = {loc for r in roles for loc in r.locations}
         known_skills = {s.name for r in roles for s in r.required_skills}
-        role, ambiguities = parse_free_text_role(free_text, known_locations, known_skills)
+        role, ambiguities = parse_free_text_role(
+            free_text, known_locations, known_skills, lm=query_lm, today=date.today()
+        )
+        typer.echo(f"  interpreted as: {_describe_parsed_role(role)}", err=True)
         if ambiguities:
             for amb in ambiguities:
                 typer.echo(f"  warning: {amb}", err=True)
@@ -147,7 +216,7 @@ def match(
 
     stale_warnings = stale_date.check(role, date.today())
     ingestion_rep = build_ingestion_report(
-        roles, consultants, config.data_dir / "project_feedback", stale_warnings
+        roles, consultants, config.data_dir / "project_feedback", stale_warnings, reconcile_result
     )
 
     with stage_timer("normalise", _telemetry.current_telemetry):
@@ -273,14 +342,26 @@ def ingest(
     configure_log_sink(config.observability.log_path)
     data_path = Path(data_dir)
     workbook = data_path / "demand-supply.xlsx"
+    text_cache_path = config.cache_dir / "profile_text_cache.json"
+    text_cache = {} if force else load_text_cache(text_cache_path)
     try:
         roles = ingest_roles(workbook)
         consultants = ingest_consultants_from_workbook(workbook)
-        consultants = ingest_consultants(data_path / "profiles", consultants)
+        consultants = ingest_consultants(
+            data_path / "profiles", consultants, cache=text_cache
+        )
         consultants = ingest_feedback(data_path / "project_feedback", consultants)
+        consultants, reconcile_result = reconcile_external_people(
+            consultants,
+            data_path / "profiles",
+            data_path / "project_feedback",
+            config.ocr,
+            cache=text_cache,
+        )
     except IngestionError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=1)
+    save_text_cache(text_cache, text_cache_path)
 
     store_path = config.cache_dir / "extracted_consultants.json"
     existing_store = load_store(store_path) if not force else []
@@ -341,7 +422,9 @@ def ingest(
     all_consultants = consultants_unchanged + extracted
     save_store(all_consultants, store_path)
 
-    report = build_ingestion_report(roles, all_consultants, data_path / "project_feedback", [])
+    report = build_ingestion_report(
+        roles, all_consultants, data_path / "project_feedback", [], reconcile_result
+    )
     build_index(
         all_consultants, roles, config.cache_dir / "milvus", model_name=config.embedding_model
     )
@@ -352,6 +435,8 @@ def ingest(
         typer.echo(f"low_confidence: {len(report.profiles_low_confidence)}")
         typer.echo(f"feedback_matched: {report.feedback_matched}")
         typer.echo(f"feedback_unmatched: {len(report.feedback_unmatched)}")
+        typer.echo(f"admitted_external: {len(report.admitted_external)}")
+        typer.echo(f"quarantined_records: {len(report.quarantined_records)}")
         typer.echo(f"supply_without_profile: {len(report.supply_without_profile)}")
         for w in report.warnings:
             typer.echo(f"  warning: {w}", err=True)

@@ -81,6 +81,28 @@ def score_skill_match(
     raw = min(100.0, required_mean + skill_bonus)
 
     evidence = [f"mandatory mean={required_mean:.1f}", f"bonus={skill_bonus:.1f}"]
+
+    matched_excludes = [
+        name
+        for name in role.exclude_skills
+        if _best_credit(
+            RequiredSkill(name=name),
+            consultant,
+            adjacency_map,
+            config,
+            index_client,
+            embedding_model,
+        )
+        > 0
+    ]
+    if matched_excludes:
+        exclude_penalty = min(
+            config.skill_exclude_penalty_per * len(matched_excludes),
+            config.skill_exclude_penalty_cap,
+        )
+        raw = max(0.0, raw - exclude_penalty)
+        evidence.append(f"excluded skills matched: {', '.join(matched_excludes)}")
+
     weight = weights.skill_match
     return DimensionScore(
         name="skill_match",

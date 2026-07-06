@@ -78,6 +78,8 @@ class ScoringConfig(BaseModel):
     gap_top_n: int = 3
     skill_vector_similarity: float = 0.65
     c_vector: float = 65.0
+    skill_exclude_penalty_per: float = 15.0
+    skill_exclude_penalty_cap: float = 30.0
 
     @field_validator("band_strong", "band_partial", mode="before")
     @classmethod
@@ -182,6 +184,11 @@ class ScoringConfig(BaseModel):
     @field_validator("c_vector", mode="before")
     @classmethod
     def _clamp_c_vector(cls, v: object, info: Any) -> float:
+        return _clamp(v, 0.0, 100.0, info.field_name)
+
+    @field_validator("skill_exclude_penalty_per", "skill_exclude_penalty_cap", mode="before")
+    @classmethod
+    def _clamp_exclude_penalty(cls, v: object, info: Any) -> float:
         return _clamp(v, 0.0, 100.0, info.field_name)
 
 

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import os
+import time
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from matcher.config import OCRConfig
 from matcher.models.consultant import Consultant
 from matcher.pipeline.ingest import ingest_consultants
 
@@ -21,6 +24,11 @@ _MINIMAL_PDF = (
 
 def _make_consultant(name: str = "Test Consultant", email: str = "test@example.com") -> Consultant:
     return Consultant(name=name, email=email)
+
+
+_LONG_TEXT = (
+    "Skills: Python (expert), Java (advanced). Location: London, five years experience."
+)
 
 
 def test_profile_enriches_raw_text(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -70,3 +78,107 @@ def test_missing_profiles_dir_returns_unchanged() -> None:
     result = ingest_consultants(Path("/nonexistent/path"), [consultant])
 
     assert result == [consultant]
+
+
+def _counting_convert(text: str) -> Any:
+    calls = {"count": 0}
+
+    def _mock_convert(self: Any, path: str) -> Any:
+        calls["count"] += 1
+
+        class _FakeDoc:
+            class document:
+                @staticmethod
+                def export_to_text() -> str:
+                    return text
+
+        return _FakeDoc()
+
+    _mock_convert.calls = calls  # type: ignore[attr-defined]
+    return _mock_convert
+
+
+def test_cache_hit_skips_second_convert_call(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pdf_path = tmp_path / "test_consultant_pp.pdf"
+    pdf_path.write_bytes(_MINIMAL_PDF)
+    mock_convert = _counting_convert(_LONG_TEXT)
+    monkeypatch.setattr("docling.document_converter.DocumentConverter.convert", mock_convert)
+
+    cache: dict[str, Any] = {}
+    consultant = _make_consultant(name="Test Consultant")
+
+    first = ingest_consultants(tmp_path, [consultant], cache=cache)
+    second = ingest_consultants(tmp_path, [consultant], cache=cache)
+
+    assert mock_convert.calls["count"] == 1
+    assert first[0].raw_profile_text == second[0].raw_profile_text
+
+
+def test_cache_invalidated_by_mtime_change(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    pdf_path = tmp_path / "test_consultant_pp.pdf"
+    pdf_path.write_bytes(_MINIMAL_PDF)
+    mock_convert = _counting_convert(_LONG_TEXT)
+    monkeypatch.setattr("docling.document_converter.DocumentConverter.convert", mock_convert)
+
+    cache: dict[str, Any] = {}
+    consultant = _make_consultant(name="Test Consultant")
+    ingest_consultants(tmp_path, [consultant], cache=cache)
+
+    time.sleep(0.01)
+    os.utime(pdf_path, None)
+    ingest_consultants(tmp_path, [consultant], cache=cache)
+
+    assert mock_convert.calls["count"] == 2
+
+
+def test_cache_invalidated_by_ocr_config_change(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pdf_path = tmp_path / "test_consultant_pp.pdf"
+    pdf_path.write_bytes(_MINIMAL_PDF)
+    mock_convert = _counting_convert(_LONG_TEXT)
+    monkeypatch.setattr("docling.document_converter.DocumentConverter.convert", mock_convert)
+
+    cache: dict[str, Any] = {}
+    consultant = _make_consultant(name="Test Consultant")
+    ingest_consultants(
+        tmp_path, [consultant], ocr_config=OCRConfig(text_floor_chars=50), cache=cache
+    )
+    ingest_consultants(
+        tmp_path, [consultant], ocr_config=OCRConfig(text_floor_chars=10), cache=cache
+    )
+
+    assert mock_convert.calls["count"] == 2
+
+
+def test_failed_extraction_is_not_cached(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    pdf_path = tmp_path / "test_consultant_pp.pdf"
+    pdf_path.write_bytes(_MINIMAL_PDF)
+    calls = {"count": 0}
+
+    def _mock_convert(self: Any, path: str) -> Any:
+        calls["count"] += 1
+        if calls["count"] == 1:
+            raise RuntimeError("transient failure")
+
+        class _FakeDoc:
+            class document:
+                @staticmethod
+                def export_to_text() -> str:
+                    return _LONG_TEXT
+
+        return _FakeDoc()
+
+    monkeypatch.setattr("docling.document_converter.DocumentConverter.convert", _mock_convert)
+
+    cache: dict[str, Any] = {}
+    consultant = _make_consultant(name="Test Consultant")
+
+    first = ingest_consultants(tmp_path, [consultant], cache=cache)
+    second = ingest_consultants(tmp_path, [consultant], cache=cache)
+
+    assert "profile_pdf_unreadable" in first[0].data_gaps
+    assert second[0].raw_profile_text != ""
+    assert calls["count"] == 2

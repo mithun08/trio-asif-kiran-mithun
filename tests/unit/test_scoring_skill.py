@@ -112,3 +112,56 @@ def test_mean_over_multiple_required_skills() -> None:
     c = _consultant(Skill(name="Kotlin", proficiency=3))
     result = score_skill_match(c, role, _ADJ, _W, _CFG)
     assert result.raw_score == (100.0 + 0.0) / 2
+
+
+def test_excluded_skill_held_applies_penalty() -> None:
+    role = Role(
+        id="R1",
+        title="T",
+        required_skills=[RequiredSkill(name="Kotlin")],
+        exclude_skills=["Scala"],
+    )
+    c = _consultant(Skill(name="Kotlin", proficiency=3), Skill(name="Scala", proficiency=3))
+    result = score_skill_match(c, role, _ADJ, _W, _CFG)
+    assert result.raw_score == 100.0 - _CFG.skill_exclude_penalty_per
+
+
+def test_excluded_skill_not_held_no_penalty() -> None:
+    role = Role(
+        id="R1",
+        title="T",
+        required_skills=[RequiredSkill(name="Kotlin")],
+        exclude_skills=["Rust"],
+    )
+    c = _consultant(Skill(name="Kotlin", proficiency=3))
+    result = score_skill_match(c, role, _ADJ, _W, _CFG)
+    assert result.raw_score == 100.0
+
+
+def test_excluded_skill_penalty_capped() -> None:
+    role = Role(
+        id="R1",
+        title="T",
+        required_skills=[RequiredSkill(name="Kotlin")],
+        exclude_skills=["Scala", "Java", "Rust"],
+    )
+    c = _consultant(
+        Skill(name="Kotlin", proficiency=3),
+        Skill(name="Scala", proficiency=3),
+        Skill(name="Java", proficiency=3),
+        Skill(name="Rust", proficiency=3),
+    )
+    result = score_skill_match(c, role, _ADJ, _W, _CFG)
+    assert result.raw_score == 100.0 - _CFG.skill_exclude_penalty_cap
+
+
+def test_excluded_skill_never_drops_below_zero() -> None:
+    role = Role(
+        id="R1",
+        title="T",
+        required_skills=[RequiredSkill(name="Obscure")],
+        exclude_skills=["Scala"],
+    )
+    c = _consultant(Skill(name="Scala", proficiency=3))
+    result = score_skill_match(c, role, _ADJ, _W, _CFG)
+    assert result.raw_score >= 0.0

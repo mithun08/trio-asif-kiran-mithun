@@ -110,3 +110,39 @@ def test_app_config_from_yaml_loads_skill_inference_model() -> None:
 def test_app_config_skill_inference_default() -> None:
     config = AppConfig()
     assert config.model_skill_inference == "openai/gpt-4o-mini"
+
+
+def test_skill_exclude_penalty_defaults_in_range() -> None:
+    sc = ScoringConfig()
+    assert 0.0 <= sc.skill_exclude_penalty_per <= 100.0
+    assert 0.0 <= sc.skill_exclude_penalty_cap <= 100.0
+
+
+def test_skill_exclude_penalty_clamps_over_100() -> None:
+    import warnings
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        sc = ScoringConfig(skill_exclude_penalty_per=150.0, skill_exclude_penalty_cap=200.0)
+    assert sc.skill_exclude_penalty_per == 100.0
+    assert sc.skill_exclude_penalty_cap == 100.0
+    assert any("skill_exclude_penalty_per" in str(warning.message) for warning in w)
+    assert any("skill_exclude_penalty_cap" in str(warning.message) for warning in w)
+
+
+def test_skill_exclude_penalty_clamps_below_zero() -> None:
+    import warnings
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        sc = ScoringConfig(skill_exclude_penalty_per=-5.0)
+    assert sc.skill_exclude_penalty_per == 0.0
+    assert any("skill_exclude_penalty_per" in str(warning.message) for warning in w)
+
+
+def test_yaml_loads_skill_exclude_penalty_fields() -> None:
+    from pathlib import Path
+
+    config = AppConfig.from_yaml(Path("config/default.yaml"))
+    assert config.scoring_config.skill_exclude_penalty_per == 15.0
+    assert config.scoring_config.skill_exclude_penalty_cap == 30.0

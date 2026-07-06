@@ -12,6 +12,7 @@ from matcher.models.consultant import Consultant, Skill
 from matcher.models.errors import IngestionError
 from matcher.models.role import RequiredSkill, Role
 from matcher.pipeline.normalise import normalise_location
+from matcher.pipeline.store import hash_file
 
 _PROFICIENCY_MAP: dict[str, int] = {
     "expert": 5,
@@ -231,10 +232,40 @@ def _extract_pdf_text(
     return raw_text, [], 1.0
 
 
+def _ocr_config_fingerprint(ocr_config: OCRConfig | None) -> str:
+    cfg = ocr_config if ocr_config is not None else OCRConfig()
+    return f"{cfg.enabled}:{cfg.text_floor_chars}:{cfg.confidence_floor}"
+
+
+def _extract_pdf_text_cached(
+    pdf_path: Path,
+    ocr_config: OCRConfig | None,
+    cache: dict[str, dict[str, Any]] | None,
+) -> tuple[str, list[str], float]:
+    if cache is None:
+        return _extract_pdf_text(pdf_path, ocr_config)
+
+    validity_key = f"{hash_file(pdf_path)}|{_ocr_config_fingerprint(ocr_config)}"
+    cached = cache.get(pdf_path.name)
+    if cached is not None and cached.get("validity_key") == validity_key:
+        return cached["raw_text"], list(cached["data_gaps"]), cached["confidence_factor"]
+
+    raw_text, data_gaps, confidence_factor = _extract_pdf_text(pdf_path, ocr_config)
+    if raw_text:
+        cache[pdf_path.name] = {
+            "validity_key": validity_key,
+            "raw_text": raw_text,
+            "data_gaps": data_gaps,
+            "confidence_factor": confidence_factor,
+        }
+    return raw_text, data_gaps, confidence_factor
+
+
 def ingest_consultants(
     profiles_dir: Path,
     workbook_consultants: list[Consultant],
     ocr_config: OCRConfig | None = None,
+    cache: dict[str, dict[str, Any]] | None = None,
 ) -> list[Consultant]:
     import logging
 
@@ -255,7 +286,9 @@ def ingest_consultants(
             logging.getLogger(__name__).warning("No workbook match for PDF: %s", pdf_path.name)
             continue
 
-        raw_text, data_gaps_update, confidence_factor = _extract_pdf_text(pdf_path, ocr_config)
+        raw_text, data_gaps_update, confidence_factor = _extract_pdf_text_cached(
+            pdf_path, ocr_config, cache
+        )
 
         current = updated[matched.email.casefold()]
         new_gaps = [*current.data_gaps, *data_gaps_update]
