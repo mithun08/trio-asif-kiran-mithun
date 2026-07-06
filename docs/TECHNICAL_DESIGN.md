@@ -30,6 +30,10 @@ The Demand-Supply Matcher is a **local Python CLI application** that calls hoste
                                              ▼
                          ┌─────────────────────────────────────────────┐
                          │  2. Normalise & Resolve                      │
+                         │     • Identity reconciliation: admit         │
+                         │       orphaned profile+feedback pairs not    │
+                         │       in the supply sheet, via corroborated  │
+                         │       name match (Low confidence, flagged)   │
                          │     • Location canonicalisation (FR-11)      │
                          │     • Dedup by email (FR-12)                 │
                          │     • Confidence scoring + data-gap flags    │
@@ -80,6 +84,7 @@ The Demand-Supply Matcher is a **local Python CLI application** that calls hoste
 | PII / NLP | **Presidio + spaCy** | Detect and scrub PII before external LLM calls; NLP feature extraction | Security (§5) |
 | Embedding model | **sentence-transformers** (local, e.g. `all-MiniLM-L6-v2` / `bge-small`) | Generate skill/role/profile embeddings on-device — privacy-aligned (no text leaves the machine) | FR-21, FR-36 |
 | Vector store | **Milvus Lite** *(deferred)* | Embedded vector storage & semantic retrieval | FR-21, FR-36 |
+| Date resolution | **dateparser** | Deterministic relative-date resolution ("in 15 days", "next month") for free-text role queries — always called with an explicit reference date, never the system clock, to preserve reproducibility (NFR-04) | FR-44 |
 | Evaluation | **Promptfoo + DeepEval** *(one is sufficient to start)* | LLM eval, regression testing, quality gates | Eval suite (§6) |
 
 > **Toolbox principle (team guidance 2026-06-17).** The stack above is a *menu, not a mandate* — adopt each tool only when it earns its place. The lean default path is: static adjacency map (no vector store) → in-memory `numpy` cosine similarity at POC scale (~50 consultants) → a single eval tool → minimal LLM orchestration (Instructor or DSPy). Milvus Lite, the second eval tool, and DSPy's prompt-optimisation are **deferred** until the simpler path proves insufficient. This keeps cost and complexity proportional to the POC.
@@ -184,8 +189,7 @@ The data handled is highly sensitive: consultant PII (names, emails, locations, 
 
 ## 5.4 Auditability
 - Snapshot timestamp (FR-34) plus persisted input snapshot and JSON output (FR-52) provide a reproducible audit trail for forum decisions.
-
-> ⚠ Missing Information — **Retention.** Define whether/where input snapshots and outputs are persisted, and for how long.
+- **✅ Resolved (2026-07-06).** Every `dsm match` run auto-persists its full JSON output to `.cache/snapshots/<timestamp>_<run_id>.json` (`observability/snapshot_archive.py`), pruned to the newest `snapshot_retention` runs (config-driven, default 50; `0` = unlimited). Each record carries both a `run_id` (unique per invocation) and a `snapshot_id` (a hash of the input data + config state — shared across runs against unchanged data), so a specific run's output and the data snapshot it was produced from are both independently addressable.
 
 ## 5.5 Compliance & fairness
 - Processing employee performance data may engage data-protection obligations (e.g. India's DPDP Act; GDPR for any EU staff/clients).
@@ -239,7 +243,7 @@ Each run emits (NFR-09):
 | TR2 | Per-role LLM latency breaches NFR-01 | Medium | Medium | Precompute embeddings, cache responses, batch/parallelise explanations; revise target if needed |
 | TR3 | PII leakage to third-party provider | High | Medium | Presidio scrub-before-send (§5.1), zero-retention providers (§5.2), data-minimisation policy |
 | TR4 | LLM non-determinism breaks reproducibility | Medium | Medium | `temperature=0`, pinned model, DSPy caching, eval tolerance (NFR-04) |
-| TR5 | Email join key unreliable (typos, alias, case) | Medium | Medium | Normalisation + unmatched-record report (FR-50) |
+| TR5 | Email join key unreliable (typos, alias, case); some people exist only as an orphaned profile PDF + feedback file, absent from the supply sheet entirely | Medium | Medium | Normalisation + unmatched-record report (FR-50); **✅ resolved (2026-07-06)** — `pipeline/reconcile.py` admits orphaned profile+feedback pairs via corroborated exact-name matching (not email alone), entering at reduced/Low confidence and flagged `admitted_external`; ambiguous names or single-source records are quarantined and surfaced, never guessed |
 | TR6 | OpenRouter / network outage during forum prep | Medium | Low | Retry with backoff; cache prior results; surface clear error (no offline mode in v1) |
 | TR7 | LLM cost overruns | Medium | Medium | Caching, model-tier selection, per-run cost ceiling + telemetry (§4.5) |
 
@@ -261,7 +265,7 @@ Each run emits (NFR-09):
 2. **OpenRouter model selection** per task, defaults, fallbacks, and cost ceiling (§2, §4.2, §4.5).
 3. **Data-minimisation policy** — the field-level allow/deny list for external transmission (§5.1).
 4. **Provider retention guarantees** and approved provider list (§5.2).
-5. **Authorization model** and snapshot retention policy (§5.3, §5.4).
+5. **Authorization model** (§5.3) — still open. *(Snapshot retention policy, §5.4, is resolved — see §5.4.)*
 6. **Semantic-match layer precedence and thresholds** (§4.3).
 7. **Golden dataset** ownership, size, and labelling process (§6).
 8. **Volume ceiling** for sizing and latency validation (NFR-10).

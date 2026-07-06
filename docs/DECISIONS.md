@@ -37,6 +37,13 @@
 
 **Validation:** Pydantic validators with sensible bounds; out-of-range values clamped + warned (FR-51).
 
+**Added 2026-07-06** (see the three decision sections below for context):
+
+| Key | Default | Range | FR | Purpose |
+|---|---|---|---|---|
+| `skill_exclude_penalty_per` / `skill_exclude_penalty_cap` | 15 / 30 | [0, 100] | FR-02 | Per-match penalty / cap for skills excluded via free-text negation |
+| `observability.snapshot_retention` | 50 | `0` = unlimited | — | Number of persisted `dsm match` run snapshots to retain |
+
 ---
 
 ## Constraint Relaxation Strategy (Slice 3) — 2026-06-24
@@ -99,6 +106,49 @@ Tests structured in 7 phases, ordered by build dependency:
 
 ---
 
+## Identity Reconciliation for Orphaned Profile+Feedback — 2026-07-06
+
+**Problem:** 15 of 35 real feedback files were orphaned — the person existed only as a profile PDF + a feedback file, with no workbook row and no matching email (contradicts PRD Assumption 1). The old pipeline silently dropped them (FR-50 was report-only), wasting the richest feedback signal.
+
+**Decision:** The workbook stays the primary roster, but a person absent from it can be admitted when a valid profile **and** valid feedback corroborate the same identity (exact full-name match). Ambiguous names or single-source records are quarantined and reported, never guessed — no source is trusted blindly.
+
+**Rationale:**
+- Corroboration (two independent sources agreeing) is a much safer identity signal than either source alone.
+- Admitting rather than dropping directly answers the sourcing team's #1 discovery-phase complaint (feedback isn't captured/linked cleanly).
+- Admitted people enter at reduced/Low `data_confidence`, flagged `admitted_external` — never silently treated as equivalent to a verified workbook record.
+
+**Follow-up decision (same day):** admitted-external people have no real availability data (no supply-sheet row). They are held out of any availability-filtered match rather than defaulting to "available now" — see SCORING_SPEC §2.2.
+
+**Implementation:** `pipeline/reconcile.py:reconcile_external_people()`. Result on real data: 15 admitted, 0 quarantined, `feedback_unmatched` 15 → 0.
+
+---
+
+## Free-Text Query Negation + Deterministic Date Resolution — 2026-07-06
+
+**Problem:** the free-text parser was regex-over-known-vocabulary with no negation handling and no relative-date resolution — "not based in Chennai" and "available ASAP" were silently dropped.
+
+**Decision:** parse free text into a typed `QuerySpec` (skills with `require`/`prefer`/`exclude` polarity, include/exclude locations, exclude supply-states, a verbatim date phrase) via a new DSPy signature (`QueryParse`), then apply polarity deterministically — the LLM parses, it never decides drop-vs-rank. Excluded skills are a scoring penalty (not a hard drop, since a strong candidate may hold the excluded skill alongside required ones); excluded locations/supply-states are hard filters.
+
+**Date resolution — library over hand-rolled regex.** Initially hand-rolled (regex list per phrase pattern); replaced with the `dateparser` library after live testing surfaced "after 15 days" resolving to nothing (regex only matched "in N days") and an LLM-JSON-fallback-mode artifact (stray quote characters wrapping the extracted phrase) that a growing regex list would keep re-encountering per new phrasing. `dateparser` is always called with an explicit `RELATIVE_BASE=<today>` — it never reads the system clock — preserving the same determinism/testability the hand-rolled version had. Small special-cases are kept for staffing shorthand no date library understands ("ASAP", "immediately", "now", "today").
+
+**Implementation:** `models/query_spec.py`, `llm/modules.py:QueryParse`, `pipeline/free_text_role.py` (`resolve_relative_date`, `_parse_with_llm`). The old regex-only parser is kept as the `--no-llm` fallback (no negation support there — acceptable since the LLM path is the primary flow, and `--no-llm` is documented as fully deterministic but weaker).
+
+---
+
+## OCR/Text-Extraction Caching + Snapshot Retention — 2026-07-06
+
+**Problem (caching):** `dsm match`/`dsm ingest` re-ran docling PDF text extraction (+ RapidOCR fallback) fresh on every invocation for every profile, even though only the *LLM-derived* signals one layer up were cached (`.cache/extracted_consultants.json`) — the raw text-extraction step had no equivalent, and its output was frequently computed only to be discarded (any consultant already in the LLM-signal store has their whole record replaced by the stored version, making the freshly-recomputed text pure waste). This was the dominant cost of a `dsm match` run (~130s).
+
+**Decision:** cache `_extract_pdf_text`'s output per-file, keyed by file mtime+size (same hashing style as `hash_consultant_sources`) plus an OCR-config fingerprint (so changing `text_floor_chars`/`confidence_floor` correctly invalidates). Failed extractions are deliberately **not** cached, so a transient failure still retries next run rather than becoming permanently stuck. Verified live: ~130s → ~4.2s warm; touching one profile added back only ~4.5s (that profile alone re-extracting).
+
+**Problem (retention):** TDD §5.4 flagged "define whether/where input snapshots and outputs are persisted, and for how long" as missing information — `dsm match`'s JSON output was never persisted, only printed.
+
+**Decision:** every `dsm match` run auto-persists its full output to `.cache/snapshots/<timestamp>_<run_id>.json`, pruned to the newest `snapshot_retention` (default 50, `0` = unlimited — config-driven like every other threshold in this project, not a policy debate to resolve before shipping something). Persistence failures never break the actual match result (`try/except OSError`).
+
+**Implementation:** `pipeline/store.py` (`hash_file`, `load_text_cache`/`save_text_cache`), `pipeline/ingest.py:_extract_pdf_text_cached`, `observability/snapshot_archive.py`.
+
+---
+
 ## Status Summary
 
 | Item | Status | Blocker | Sign-off |
@@ -109,5 +159,9 @@ Tests structured in 7 phases, ordered by build dependency:
 | Constraint relaxation strategy | ✅ 2026-06-24 | No | — |
 | PII rehydration approach | ✅ 2026-06-24 | No | — |
 | Grounding mechanism | ✅ 2026-06-24 | No | — |
+| Identity reconciliation (admitted-external) | ✅ 2026-07-06 | No | — |
+| Free-text negation + date resolution | ✅ 2026-07-06 | No | — |
+| OCR/text-extraction caching | ✅ 2026-07-06 | No | — |
+| Snapshot retention policy | ✅ 2026-07-06 | No | — |
 
-**Next step:** Slice 3 implementation ready to begin (all design decisions documented).
+**Next step:** Slice 3 implementation ready to begin (all design decisions documented). Remaining open items from `SOLUTION_VS_THEMES.md`'s backlog: closed-loop feedback/outcome capture, DSPy compile spike, `skill_vector_similarity` threshold sweep, output-guardrail classifier.

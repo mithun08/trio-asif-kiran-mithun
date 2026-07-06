@@ -173,7 +173,7 @@ Markdown documents keyed by consultant email. Sections: project feedback (engage
 | ID | Requirement |
 |---|---|
 | FR-01 | The system shall accept a role by Role ID from the demand sheet. |
-| FR-02 | The system shall accept a role as a free-text description (e.g., "Senior backend engineer, Python, AWS, FinTech context, start July 1"). |
+| FR-02 | The system shall accept a role as a free-text description (e.g., "Senior backend engineer, Python, AWS, FinTech context, start July 1"). **Extended (2026-07-06):** free-text input now also supports negation — excluded skills (soft penalty, not a hard drop), excluded locations and supply-states (hard filters), and relative start dates ("ASAP", "in 15 days", "mid of next month") resolved deterministically, never by the LLM. |
 | FR-03 | The system shall accept a batch command that generates a shortlist for every open role in the demand sheet. |
 | FR-04 | The system shall parse the Required Skills field to distinguish required skills from preferred skills marked "(nice to have)". |
 | FR-05 | The system shall parse skill proficiency qualifiers (e.g., "expert") from the Required Skills field when present. |
@@ -191,7 +191,7 @@ Markdown documents keyed by consultant email. Sections: project feedback (engage
 | FR-12 | The system shall deduplicate consultant entries across supply tabs using email as the primary key. |
 | FR-48 | The system shall handle image-only / scanned PDFs: either via OCR or by flagging them as unextractable and low-confidence. It shall never silently drop such profiles (links to FR-43). |
 | FR-49 | The system shall report an ingestion summary per run: counts of profiles parsed, profiles flagged low-confidence, feedback files matched/unmatched, and consultants present in supply tabs without a matching profile. |
-| FR-50 | The system shall detect and report consultants present in supply tabs but missing a profile PDF, and feedback files with no matching consultant email. |
+| FR-50 | The system shall detect and report consultants present in supply tabs but missing a profile PDF, and feedback files with no matching consultant email. **Resolved (2026-07-06):** an orphaned profile PDF + feedback file pair (present in neither's expected join key, absent from the supply sheet) is no longer just reported — it is admitted into scoring when the profile and feedback corroborate the same identity via exact name match (`pipeline/reconcile.py`), entering at reduced/Low `data_confidence` and flagged `admitted_external`. Ambiguous names or single-source records are still quarantined and reported, never guessed. |
 
 ### Filtering
 
@@ -257,7 +257,7 @@ Markdown documents keyed by consultant email. Sections: project feedback (engage
 
 | ID | Requirement |
 |---|---|
-| FR-42 | The supply sheet shall be authoritative for availability state. Contradictions with profile data shall be flagged, not resolved. |
+| FR-42 | The supply sheet shall be authoritative for availability state. Contradictions with profile data shall be flagged, not resolved. **Clarified (2026-07-06):** this presumes the consultant is in the supply sheet at all. People admitted via identity reconciliation (FR-50) have no supply-sheet row and therefore no real availability data — they must never be treated as available now by default; they are held out of any availability-filtered match instead (`scoring/filters.py`). |
 | FR-43 | The system shall not silently exclude any consultant due to data quality issues (extraction failures, missing feedback, low-confidence profiles). |
 | FR-44 | When free-text role input is ambiguous, the system shall extract what it can, surface the ambiguities with proposed defaults, and ask for confirmation before proceeding. |
 | FR-45 | When a role's start date is in the past, the system shall warn that the role may be stale and proceed with matching against the current snapshot. |
@@ -337,8 +337,8 @@ Target eval pass rate: **70–85%** (100% indicates insufficient test coverage).
 
 (Confirm each.)
 
-1. Email is a reliable, unique identifier present across all sources.
-2. The supply sheet is authoritative for availability (FR-42).
+1. ~~Email is a reliable, unique identifier present across all sources.~~ **Contradicted (2026-07-06):** 15 of 35 real feedback files were orphaned — the person existed only as a profile PDF + feedback file, absent from the supply sheet, with no matching email. Identity is now corroborated via exact full-name match between profile and feedback (FR-50) when email alone doesn't join records, rather than assumed reliable.
+2. The supply sheet is authoritative for availability (FR-42) — holds for consultants who are *in* the supply sheet; see FR-42's 2026-07-06 clarification for those admitted without one.
 3. The primary user can operate a CLI and read its output.
 4. The Parity Partners profile template is stable enough to parse reliably.
 5. New joiner skills ("from CV") are unverified and should be discounted, not excluded.

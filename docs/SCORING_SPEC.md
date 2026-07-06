@@ -56,6 +56,18 @@ Let `days_late = available_date − role_start` (negative ⇒ available before t
 
 Medium-confidence roll-offs that pass are flagged "date uncertain" (FR-17).
 
+**Admitted-external consultants (added 2026-07-06).** People admitted via identity reconciliation (`pipeline/reconcile.py`, see FR-50) have no supply-sheet row and therefore no real availability data. Rather than defaulting to "Beach ⇒ always passes," they **always fail** this filter whenever a role has a `start_date` — reason `"availability unknown (admitted-external record)"` — and rank normally only when no start date is given or the filter is disabled.
+
+### 2.3 Negation-derived exclusions (added 2026-07-06)
+Free-text queries can express negation ("not based in Chennai", "not a new joiner"); the parsed `Role.exclude_locations`/`exclude_supply_states` are additional hard filters, independent of the co-location check in §2.1:
+
+| Field | Rule | Reason surfaced |
+|---|---|---|
+| `exclude_locations` | Hard drop if the consultant's normalised location matches any excluded location — **unconditional**, not gated by whether the role is co-located. | `location_excluded` |
+| `exclude_supply_states` | Hard drop if the consultant's supply state is in the excluded set. | `supply_state_excluded` |
+
+Excluded **skills** are *not* a hard filter — see §3.1's exclusion-penalty term. Hard-dropping everyone who lists an excluded skill would eliminate a strong candidate who also happens to know it; skill exclusion is a scoring anti-signal instead.
+
 ---
 
 # 3. Dimension Scores
@@ -92,9 +104,10 @@ Default weights (FR-18), configurable, must sum to 100% (FR-51):
 ```
 skill_required = mean( best_credit(s) for s in required_skills )      # missing required ⇒ 0 in the mean
 skill_bonus    = min( nth_bonus_per * (# nice_to_have matched), nth_bonus_cap )
-skill_score    = min(100, skill_required + skill_bonus)
+skill_exclude_penalty = min( skill_exclude_penalty_per * (# excluded skills matched), skill_exclude_penalty_cap )   # added 2026-07-06
+skill_score    = max(0, min(100, skill_required + skill_bonus) - skill_exclude_penalty)
 ```
-Defaults: `nth_bonus_per = 5`, `nth_bonus_cap = 10`. Nice-to-have skills never penalise on absence (FR-04).
+Defaults: `nth_bonus_per = 5`, `nth_bonus_cap = 10`, `skill_exclude_penalty_per = 15`, `skill_exclude_penalty_cap = 30`. Nice-to-have skills never penalise on absence (FR-04). Excluded skills (from free-text negation, e.g. "not Scala") apply a penalty when the consultant is matched against that skill via the same exact/adjacent/vector cascade as §3.1's per-skill credit — never a hard drop (see §2.3).
 
 If the role lists **no** required skills (FR-37): attempt to infer from the title; if inference confidence < `skill_infer_min = 0.5`, **skip** this dimension and renormalise the remaining weights, with a flag in output.
 
@@ -211,6 +224,7 @@ In addition to Appendix A of the PRD:
 |---|---|---|
 | Skill | `nth_bonus_per` / `nth_bonus_cap` | 5 / 10 |
 | Skill | `skill_infer_min` (title-inference confidence floor) | 0.5 |
+| Skill | `skill_exclude_penalty_per` / `skill_exclude_penalty_cap` (added 2026-07-06) | 15 / 30 |
 | Feedback | sentiment bases (pos/neutral/neg) | 80 / 50 / 20 |
 | Feedback | `kw_keep` / `kw_domain` / `kw_concern` | +10 / +5 / −10 |
 | Availability | `avail_horizon_days` | 30 |
@@ -220,6 +234,7 @@ In addition to Appendix A of the PRD:
 | Global | `neutral_baseline` (missing soft signals) | 50 |
 | Output | `band_strong` (Strong band floor) | 75 |
 | Output | `band_partial` (Partial band floor) | 40 |
+| Observability | `snapshot_retention` (added 2026-07-06; `0` = unlimited) | 50 |
 
 ---
 
