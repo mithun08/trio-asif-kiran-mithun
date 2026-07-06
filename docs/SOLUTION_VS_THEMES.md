@@ -2,7 +2,7 @@
 
 **Project:** Demand-Supply Matcher (`dsm` CLI) — local staffing recommendation engine
 **Branch reviewed:** `main`
-**Date:** 2026-06-30 (updated 2026-07-05 — added telemetry-meter bug, feedback-linking fix, and macOS runtime constraints)
+**Date:** 2026-06-30 (updated 2026-07-05 — added telemetry-meter bug, feedback-linking fix, and macOS runtime constraints; updated 2026-07-06 — fixed telemetry meter + cache-hit detection, fd-limit, admitted-external availability handling, free-text negation parsing, OCR/docling text-extraction caching, and snapshot retention/archive policy, all live-verified)
 
 This document maps **what we actually built** (grounded in the code) against the five themes from the *"What's Next? — GenAI Engineer cross-skilling program"* slide:
 **Discovery → Build → Harden → Operate & Improve → Reflect.**
@@ -130,9 +130,9 @@ This insight **directly shaped the architecture**:
 - **Reproducible runs:** `snapshot_id` = hash of input files + config YAMLs + embedding model name; any past run can be replayed from the stored snapshot + cached extraction.
 - **Human-readable signal store:** `.cache/extracted_consultants.json` (diff-able) via `pipeline/store.py`.
 - **Deterministic scoring** means the same inputs always produce the same ranks.
-- **Gap:** no formal snapshot **retention/archive policy** (flagged in TECHNICAL_DESIGN.md). Small follow-up.
+- **✅ Fixed (2026-07-06) — snapshot retention/archive policy.** Previously `snapshot_id` was computed and embedded in the JSON output, but nothing ever persisted it — `render_json` only printed to stdout, so a run's result was gone once the terminal scrolled unless the user manually redirected `--json > file`. `TECHNICAL_DESIGN.md` (line 188) flagged this explicitly as undecided ("Define whether/where input snapshots and outputs are persisted, and for how long"). Now every `dsm match` run auto-persists its full `RunOutput` to `.cache/snapshots/<timestamp>_<run_id>.json` (`observability/snapshot_archive.py`), pruned to the newest `snapshot_retention` (default 50, `0` = unlimited, config-driven like every other threshold). Verified live: 4 runs against unchanged data produced 4 distinct `run_id`s sharing one `snapshot_id`; setting `snapshot_retention: 2` correctly pruned down to the newest 2 files.
 
-**Status:** ✅ Observability structure and auditability done — but ⚠️ **the token/cost/cache meter currently reports zero (bug, fix pending)**; ✅ guardrails done at prompt level (classifier is future hardening).
+**Status:** ✅ Observability, auditability, and the token/cost/cache meter are all done and verified live.
 
 ---
 
@@ -214,7 +214,7 @@ We have a clear, enforced boundary between deterministic logic and LLM use.
 | **Build** | Token economics | ✅ Meter fixed and verified live |
 | **Harden** | Observability | ✅ Structure done; token/cost/cache meter fixed |
 | **Harden** | Guardrails & Red-teaming | ✅ Done (prompt-level) |
-| **Harden** | Auditability | ✅ Done (retention policy = small follow-up) |
+| **Harden** | Auditability | ✅ Done (retention policy fixed and verified live) |
 | **Operate** | Rollout strategy | ❌ Out of scope for v1 |
 | **Operate** | Feedback loop | ⚠️ Ingestion + linking (corroboration union) + availability handling done; closed-loop next |
 | **Reflect** | When not to use AI | ✅ Done (enforced in code) |
@@ -234,15 +234,17 @@ We have a clear, enforced boundary between deterministic logic and LLM use.
 | 7 | DSPy `BootstrapFewShot`/`MIPRO` compile spike vs. golden set | De-risks model switching; auto-tunes prompts | S |
 | 8 | Empirical sweep of `skill_vector_similarity` (0.65) on labelled skill pairs | Evidence-based precision/recall on matching | S |
 | 9 | Output-guardrail classifier on LLM responses | Defense-in-depth beyond prompt rules | M |
-| 10 | Snapshot retention/archive policy | Closes the one open auditability item | S |
+| 10 | ✅ Snapshot retention/archive policy | Closes the one open auditability item | S |
 
-*Items 1, 3, 4, 5, 6 fixed and verified (live run + tests) on 2026-07-06. Item 1's fix initially shipped with a latent bug — DSPy's cache layer leaves a stale, non-`None` `cost` on cache hits, which defeated the original detection condition — caught during item 3's live verification and fixed same day; cache-hit % now confirmed at 100%/$0 on a warm repeat run.*
+*Items 1, 3, 4, 5, 6, 10 fixed and verified (live run + tests) on 2026-07-06. Item 1's fix initially shipped with a latent bug — DSPy's cache layer leaves a stale, non-`None` `cost` on cache hits, which defeated the original detection condition — caught during item 3's live verification and fixed same day; cache-hit % now confirmed at 100%/$0 on a warm repeat run. A separate, unrelated pre-existing bug was found (not fixed, out of scope) while testing item 10: `tests/integration/test_cli_match_with_telemetry.py`'s two original tests fail because `SentenceTransformer`'s tqdm progress bar corrupts Typer `CliRunner`'s captured stdout before JSON parsing — confirmed present on unmodified `main` via `git stash`, unrelated to any change made this session.*
 
 ---
 
 ## ✅ Fixed (2026-07-06) — free-text query parsing negation
 
 Implemented per the fix plan below, live-verified with `dsm match --free-text "Kotlin engineer, not based in Chennai, not a new joiner, available ASAP"` — parsed to `exclude_locations=['Chennai']`, `exclude_supply_states=['new_joiner']`, `start_date=<today>`, and the excluded consultants correctly appeared in the rejected/gap section with reasons `location_excluded` / `supply_state_excluded`. `Role` gained `exclude_skills`/`exclude_locations`/`exclude_supply_states`; the deterministic regex parser is kept as the `--no-llm` fallback. The original gap description and fix plan are kept below for context.
+
+**Follow-up fix (2026-07-06, same day): relative-date phrase coverage.** Live testing surfaced "available after 15 days" resolving to `start_date=None` — two real bugs, not a missing feature: (1) `resolve_relative_date`'s hand-rolled regex only matched `"in N days"`, not `"after N days"`; (2) the LLM's JSON-fallback-mode output wrapped the extracted phrase in literal quote characters (`'"after 15 days"'`) that were never stripped before matching. Rather than keep growing a hand-rolled regex list phrase-by-phrase, replaced the general case with the `dateparser` library (BSD-3-Clause, added as a real dependency), pinned via `RELATIVE_BASE=<today>` so it never touches the system clock — same determinism/testability discipline as the rest of this function, verified via `git stash`-style reasoning: same `(phrase, today)` in always produces the same date out. Kept as explicit special-cases (dateparser doesn't understand these): "ASAP"/"immediately"/"now"/"today" (staffing shorthand, not real calendar expressions) and "mid/end of next month" (already correct, tested logic). Fixed a second latent bug found while wiring this up: the shorthand check for "now" matched the substring inside "15 days from **now**", short-circuiting to `today` before dateparser could resolve the actual 15-day offset — guarded by requiring no digit present in the phrase. Verified live: `resolve_relative_date('"after 15 days"', date(2026,7,6))` → `2026-07-21`.
 
 ### The gap (as originally found)
 The free-text path (`pipeline/free_text_role.py`) is **regex over the vocabulary already present in the workbook** — it has **no negation handling and no relative-date resolution**. Worked example:

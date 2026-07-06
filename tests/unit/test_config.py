@@ -118,6 +118,24 @@ def test_skill_exclude_penalty_defaults_in_range() -> None:
     assert 0.0 <= sc.skill_exclude_penalty_cap <= 100.0
 
 
+def test_observability_config_snapshot_defaults() -> None:
+    from pathlib import Path
+
+    from matcher.config import ObservabilityConfig
+
+    obs = ObservabilityConfig()
+    assert obs.snapshot_dir == Path(".cache/snapshots")
+    assert obs.snapshot_retention == 50
+
+
+def test_app_config_from_yaml_loads_snapshot_settings() -> None:
+    from pathlib import Path
+
+    config = AppConfig.from_yaml(Path("config/default.yaml"))
+    assert config.observability.snapshot_dir == Path(".cache/snapshots")
+    assert config.observability.snapshot_retention == 50
+
+
 def test_skill_exclude_penalty_clamps_over_100() -> None:
     import warnings
 

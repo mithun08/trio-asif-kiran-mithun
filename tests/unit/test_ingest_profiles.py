@@ -26,9 +26,7 @@ def _make_consultant(name: str = "Test Consultant", email: str = "test@example.c
     return Consultant(name=name, email=email)
 
 
-_LONG_TEXT = (
-    "Skills: Python (expert), Java (advanced). Location: London, five years experience."
-)
+_LONG_TEXT = "Skills: Python (expert), Java (advanced). Location: London, five years experience."
 
 
 def test_profile_enriches_raw_text(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

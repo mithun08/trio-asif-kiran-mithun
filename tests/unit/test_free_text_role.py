@@ -102,7 +102,9 @@ def test_resolve_next_week() -> None:
 
 
 def test_resolve_next_month_bare() -> None:
-    assert resolve_relative_date("next month", _TODAY) == date(2026, 8, 1)
+    # Delegated to dateparser (not hand-rolled) — resolves to the same day
+    # next month, not the 1st.
+    assert resolve_relative_date("next month", _TODAY) == date(2026, 8, 6)
 
 
 def test_resolve_mid_next_month() -> None:
@@ -136,6 +138,30 @@ def test_resolve_unrecognised_phrase_returns_none() -> None:
 
 def test_resolve_empty_phrase_returns_none() -> None:
     assert resolve_relative_date("", _TODAY) is None
+
+
+def test_resolve_after_n_days() -> None:
+    # Regression: previously only "in N days" matched; "after N days" fell
+    # through to None even though it means the same thing.
+    assert resolve_relative_date("after 15 days", _TODAY) == date(2026, 7, 21)
+
+
+def test_resolve_n_days_from_now() -> None:
+    assert resolve_relative_date("15 days from now", _TODAY) == date(2026, 7, 21)
+
+
+def test_resolve_strips_wrapping_double_quotes() -> None:
+    # Regression: the LLM's JSON-fallback-mode output sometimes wraps the
+    # extracted phrase in literal quote characters, e.g. '"after 15 days"'.
+    assert resolve_relative_date('"after 15 days"', _TODAY) == date(2026, 7, 21)
+
+
+def test_resolve_strips_wrapping_single_quotes() -> None:
+    assert resolve_relative_date("'ASAP'", _TODAY) == _TODAY
+
+
+def test_resolve_today_shorthand() -> None:
+    assert resolve_relative_date("today", _TODAY) == _TODAY
 
 
 # ---- LLM path ----

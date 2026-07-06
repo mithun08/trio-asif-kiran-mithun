@@ -85,6 +85,8 @@ allowed_models:
 observability:
   log_path: ".cache/run-log.jsonl"
   enable_telemetry: true
+  snapshot_dir: ".cache/snapshots"
+  snapshot_retention: 50
 
 ocr:
   enabled: true

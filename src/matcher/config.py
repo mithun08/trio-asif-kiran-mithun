@@ -200,6 +200,8 @@ def load_adjacency(path: Path = Path("config/skill_adjacency.yaml")) -> dict[str
 class ObservabilityConfig(BaseModel):
     log_path: Path = Path(".cache/run-log.jsonl")
     enable_telemetry: bool = True
+    snapshot_dir: Path = Path(".cache/snapshots")
+    snapshot_retention: int = Field(default=50, description="0 = unlimited")
 
 
 class OCRConfig(BaseModel):

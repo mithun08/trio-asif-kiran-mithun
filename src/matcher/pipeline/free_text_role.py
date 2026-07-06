@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import calendar
 import re
-from datetime import date, timedelta
+from datetime import date, datetime, time
 from typing import Any
 
+import dateparser
 import dspy
 
 from matcher.llm.extract import _parse_json_list
@@ -18,12 +19,9 @@ _ISO_DATE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 _NEXT_MONTH = re.compile(r"\bnext\s+month\b", re.IGNORECASE)
 _END_NEXT_MONTH = re.compile(r"\bend\s+of\s+next\s+month\b", re.IGNORECASE)
 _MID_NEXT_MONTH = re.compile(r"\bmid(?:dle)?\s*(?:of\s+)?next\s+month\b", re.IGNORECASE)
-_NEXT_WEEK = re.compile(r"\bnext\s+week\b", re.IGNORECASE)
-_IN_N_UNITS = re.compile(r"\bin\s+(\d+)\s+(day|week|month)s?\b", re.IGNORECASE)
-_ASAP = re.compile(r"\b(asap|immediately|right away|as soon as possible)\b", re.IGNORECASE)
-_TODAY = re.compile(r"\btoday\b", re.IGNORECASE)
-_TOMORROW = re.compile(r"\btomorrow\b", re.IGNORECASE)
-_NOW = re.compile(r"\bnow\b", re.IGNORECASE)
+_IMMEDIATE = re.compile(
+    r"\b(asap|immediately|right away|as soon as possible|now|today)\b", re.IGNORECASE
+)
 _VALID_SUPPLY_STATES = ("beach", "rolling_off", "new_joiner")
 
 
@@ -39,8 +37,15 @@ def _next_month_first(today: date) -> date:
     return _add_months(today.replace(day=1), 1)
 
 
-def resolve_relative_date(phrase: str, today: date) -> date | None:
+def _strip_wrapping_quotes(phrase: str) -> str:
     phrase = phrase.strip()
+    while len(phrase) >= 2 and phrase[0] == phrase[-1] and phrase[0] in ("'", '"'):
+        phrase = phrase[1:-1].strip()
+    return phrase
+
+
+def resolve_relative_date(phrase: str, today: date) -> date | None:
+    phrase = _strip_wrapping_quotes(phrase)
     if not phrase:
         return None
 
@@ -51,31 +56,33 @@ def resolve_relative_date(phrase: str, today: date) -> date | None:
         except ValueError:
             return None
 
-    if _ASAP.search(phrase) or _NOW.search(phrase) or _TODAY.search(phrase):
+    # "ASAP"/"immediately"/"today" etc. are staffing shorthand, not calendar
+    # expressions — no date library resolves them, so they're special-cased.
+    # Guarded on "no digit": "15 days from now" contains "now" but is a
+    # numeric relative expression, not the immediate shorthand — it must
+    # reach dateparser below, not short-circuit here.
+    if not any(ch.isdigit() for ch in phrase) and _IMMEDIATE.search(phrase):
         return today
-    if _TOMORROW.search(phrase):
-        return today + timedelta(days=1)
     if _END_NEXT_MONTH.search(phrase):
         first = _next_month_first(today)
         last_day = calendar.monthrange(first.year, first.month)[1]
         return first.replace(day=last_day)
     if _MID_NEXT_MONTH.search(phrase):
         return _next_month_first(today).replace(day=15)
-    if _NEXT_MONTH.search(phrase):
-        return _next_month_first(today)
-    if _NEXT_WEEK.search(phrase):
-        return today + timedelta(days=7)
 
-    in_n = _IN_N_UNITS.search(phrase)
-    if in_n:
-        n, unit = int(in_n.group(1)), in_n.group(2).lower()
-        if unit == "day":
-            return today + timedelta(days=n)
-        if unit == "week":
-            return today + timedelta(days=7 * n)
-        return _add_months(today, n)
-
-    return None
+    # Everything else ("in 15 days", "after 15 days", "15 days from now",
+    # "next week", "next month", "tomorrow", weekday names, ...) is delegated
+    # to dateparser rather than hand-rolled — RELATIVE_BASE pins it to `today`
+    # so it never touches the system clock, keeping this deterministic and
+    # testable exactly like the special-cased branches above.
+    parsed = dateparser.parse(
+        phrase,
+        settings={
+            "RELATIVE_BASE": datetime.combine(today, time.min),
+            "PREFER_DATES_FROM": "future",
+        },
+    )
+    return parsed.date() if parsed else None
 
 
 def _parse_deterministic(

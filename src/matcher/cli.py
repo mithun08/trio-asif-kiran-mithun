@@ -28,6 +28,7 @@ from matcher.models.output import DataQualityReport, RunOutput
 from matcher.models.role import Role
 from matcher.observability import telemetry as _telemetry
 from matcher.observability.run_log import configure_log_sink, log_data_quality, log_run_start
+from matcher.observability.snapshot_archive import prune_snapshots, save_snapshot
 from matcher.observability.timing import stage_timer
 from matcher.pipeline import stale_date
 from matcher.pipeline.explain import generate_explanations
@@ -155,7 +156,8 @@ def match(
 
     _telemetry.reset()
     configure_log_sink(config.observability.log_path)
-    log_run_start(uuid.uuid4().hex[:16], "0.1.0")
+    run_id = uuid.uuid4().hex[:16]
+    log_run_start(run_id, "0.1.0")
 
     primary_lm = None
     fallback_lm = None
@@ -303,6 +305,7 @@ def match(
     run_tel = _telemetry.snapshot()
     output = RunOutput(
         snapshot_id=snapshot_id,
+        run_id=run_id,
         role_id=resolved_role_id,
         candidates=ranked,
         gap_report=gap_report,
@@ -311,6 +314,12 @@ def match(
         ingestion_report=ingestion_rep,
         run_telemetry=run_tel,
     )
+
+    try:
+        save_snapshot(output, config.observability.snapshot_dir)
+        prune_snapshots(config.observability.snapshot_dir, config.observability.snapshot_retention)
+    except OSError:
+        pass
 
     log_data_quality(
         ingestion_rep.feedback_unmatched,
@@ -347,9 +356,7 @@ def ingest(
     try:
         roles = ingest_roles(workbook)
         consultants = ingest_consultants_from_workbook(workbook)
-        consultants = ingest_consultants(
-            data_path / "profiles", consultants, cache=text_cache
-        )
+        consultants = ingest_consultants(data_path / "profiles", consultants, cache=text_cache)
         consultants = ingest_feedback(data_path / "project_feedback", consultants)
         consultants, reconcile_result = reconcile_external_people(
             consultants,

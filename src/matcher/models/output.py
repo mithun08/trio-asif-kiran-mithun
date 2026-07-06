@@ -19,6 +19,7 @@ class DataQualityReport(BaseModel):
 
 class RunOutput(BaseModel):
     snapshot_id: str
+    run_id: str = ""
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     role_id: str
     candidates: list[ScoredCandidate] = Field(default_factory=list)
