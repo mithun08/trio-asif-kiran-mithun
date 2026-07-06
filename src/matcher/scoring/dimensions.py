@@ -15,6 +15,8 @@ def _best_credit(
     config: ScoringConfig,
     index_client: Any | None = None,
     embedding_model: Any | None = None,
+    *,
+    apply_new_joiner_fallback: bool = True,
 ) -> float:
     req_name = req.name.casefold()
 
@@ -42,13 +44,40 @@ def _best_credit(
         )
         if results and results[0]:
             hit = results[0][0]
+            # Milvus's COSINE metric returns a distance (1 - cosine_similarity,
+            # lower = more similar), not the similarity itself — convert before
+            # comparing to the similarity threshold.
             distance = hit.get("distance", 0.0)
-            if distance >= config.skill_vector_similarity:
+            similarity = 1.0 - distance
+            if similarity >= config.skill_vector_similarity:
                 return config.c_vector
 
-    if consultant.supply_state == "new_joiner":
+    if apply_new_joiner_fallback and consultant.supply_state == "new_joiner":
         return config.c_newjoiner
     return 0.0
+
+
+def has_domain_evidence(
+    req: RequiredSkill,
+    consultants: list[Consultant],
+    adjacency_map: dict[str, list[str]],
+    config: ScoringConfig,
+    index_client: Any | None = None,
+    embedding_model: Any | None = None,
+) -> bool:
+    return any(
+        _best_credit(
+            req,
+            consultant,
+            adjacency_map,
+            config,
+            index_client,
+            embedding_model,
+            apply_new_joiner_fallback=False,
+        )
+        > 0
+        for consultant in consultants
+    )
 
 
 def score_skill_match(

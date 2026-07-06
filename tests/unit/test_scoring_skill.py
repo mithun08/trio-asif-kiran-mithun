@@ -3,7 +3,7 @@ from __future__ import annotations
 from matcher.config import ScoringConfig, ScoringWeights
 from matcher.models.consultant import Consultant, Skill
 from matcher.models.role import RequiredSkill, Role
-from matcher.scoring.dimensions import score_skill_match
+from matcher.scoring.dimensions import has_domain_evidence, score_skill_match
 
 _CFG = ScoringConfig()
 _W = ScoringWeights()
@@ -165,3 +165,34 @@ def test_excluded_skill_never_drops_below_zero() -> None:
     c = _consultant(Skill(name="Scala", proficiency=3))
     result = score_skill_match(c, role, _ADJ, _W, _CFG)
     assert result.raw_score >= 0.0
+
+
+def test_has_domain_evidence_true_on_exact_match() -> None:
+    req = RequiredSkill(name="Kotlin")
+    consultants = [_consultant(Skill(name="Kotlin", proficiency=3))]
+    assert has_domain_evidence(req, consultants, _ADJ, _CFG) is True
+
+
+def test_has_domain_evidence_true_on_adjacent_match() -> None:
+    req = RequiredSkill(name="Kotlin")
+    consultants = [_consultant(Skill(name="Java", proficiency=3))]
+    assert has_domain_evidence(req, consultants, _ADJ, _CFG) is True
+
+
+def test_has_domain_evidence_false_ignores_new_joiner_fallback() -> None:
+    # Regression guard: a new_joiner consultant gets a flat c_newjoiner credit
+    # from score_skill_match/_best_credit regardless of actual skill overlap —
+    # has_domain_evidence must not treat that fallback as real evidence, or a
+    # nonsense skill like "plumber" would look domain-relevant just because
+    # the pool has any new-joiner.
+    req = RequiredSkill(name="Plumber")
+    consultants = [_consultant(Skill(name="Python", proficiency=3), supply_state="new_joiner")]
+    assert score_skill_match(consultants[0], _role(req), _ADJ, _W, _CFG).raw_score == (
+        _CFG.c_newjoiner
+    )
+    assert has_domain_evidence(req, consultants, _ADJ, _CFG) is False
+
+
+def test_has_domain_evidence_false_on_empty_pool() -> None:
+    req = RequiredSkill(name="Kotlin")
+    assert has_domain_evidence(req, [], _ADJ, _CFG) is False

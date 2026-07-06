@@ -35,8 +35,10 @@ def _make_mock_model(vec: list[float] | None = None) -> MagicMock:
 
 
 def test_vector_tier_awards_c_vector() -> None:
+    # Milvus COSINE metric returns distance = 1 - similarity; a similarity of
+    # 0.80 (well above the 0.65 threshold) is reported as distance=0.20.
     mock_client = MagicMock()
-    mock_client.search.return_value = [[{"distance": 0.80, "skill_name": "TypeScript"}]]
+    mock_client.search.return_value = [[{"distance": 0.20, "skill_name": "TypeScript"}]]
 
     c = _make_consultant(skills=["TypeScript"])
     req = RequiredSkill(name="JavaScript", mandatory=True)
@@ -46,11 +48,27 @@ def test_vector_tier_awards_c_vector() -> None:
 
 
 def test_vector_tier_skipped_below_threshold() -> None:
+    # similarity=0.40 (below threshold) is reported as distance=0.60.
     mock_client = MagicMock()
-    mock_client.search.return_value = [[{"distance": 0.40, "skill_name": "TypeScript"}]]
+    mock_client.search.return_value = [[{"distance": 0.60, "skill_name": "TypeScript"}]]
 
     c = _make_consultant(skills=["TypeScript"])
     req = RequiredSkill(name="JavaScript", mandatory=True)
+    result = _best_credit(req, c, {}, ScoringConfig(), mock_client, _make_mock_model())
+    assert result == 0.0
+
+
+def test_vector_tier_high_distance_regression() -> None:
+    # Regression for a real bug: a high *distance* (0.80, i.e. low similarity
+    # 0.20 — genuinely dissimilar skills, e.g. "plumber" vs "kafka" on the
+    # real trained index) must NOT be awarded credit. The original code
+    # compared raw distance >= threshold directly, which is backwards for a
+    # distance metric and inflated credit for dissimilar skill pairs.
+    mock_client = MagicMock()
+    mock_client.search.return_value = [[{"distance": 0.80, "skill_name": "Kafka"}]]
+
+    c = _make_consultant(skills=["Kafka"])
+    req = RequiredSkill(name="Plumber", mandatory=True)
     result = _best_credit(req, c, {}, ScoringConfig(), mock_client, _make_mock_model())
     assert result == 0.0
 

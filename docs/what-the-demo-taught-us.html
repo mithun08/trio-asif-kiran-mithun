@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What Our Demo Actually Taught Us</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  body{
+    margin: 0;
+    background: #EEF0E9;
+    color: #1C2321;
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page{
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 64px 24px 96px;
+  }
+
+  .eyebrow{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #1F6F63;
+    margin-bottom: 18px;
+  }
+
+  h1{
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 2.5rem;
+    line-height: 1.12;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+
+  .byline{
+    color: #55594F;
+    font-size: 0.95rem;
+    margin-bottom: 40px;
+  }
+
+  .byline .dots{
+    display: inline-flex;
+    gap: 4px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .byline .dot{
+    width: 7px; height: 7px; border-radius: 50%;
+    display: inline-block;
+  }
+  .dot.d1{ background-color: #1F6F63; }
+  .dot.d2{ background-color: #B8742A; }
+  .dot.d3{ background-color: #A14C43; }
+
+  /* Journey strip */
+  .journey{
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 24px 14px;
+    background: #F7F8F3;
+    border: 1px solid #D8DACC;
+    border-radius: 4px;
+    margin-bottom: 48px;
+  }
+  .stop{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 0;
+    min-width: 0;
+    position: relative;
+  }
+  .stop:not(:last-child)::after{
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: calc(50% + 14px);
+    width: calc(100% - 16px);
+    height: 1px;
+    background-color: #D8DACC;
+  }
+  .ring{
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 2px solid #1F6F63;
+    background-color: #1F6F63;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+  .ring.half{
+    background-color: #DCEAE5;
+  }
+  .stop-label{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.01em;
+    color: #55594F;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  p{
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: #1C2321;
+    margin: 0 0 20px;
+  }
+
+  h2{
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 44px 0 18px;
+    padding-top: 20px;
+    border-top: 1px solid #D8DACC;
+  }
+
+  ul{
+    padding-left: 22px;
+    margin: 0 0 20px;
+  }
+  li{
+    font-size: 1.03rem;
+    line-height: 1.65;
+    margin-bottom: 10px;
+  }
+
+  code{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.88em;
+    background-color: #DCEAE5;
+    color: #1F6F63;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* Matrix table */
+  .matrix-wrap{
+    margin: 28px 0 40px;
+    border: 1px solid #D8DACC;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #F7F8F3;
+  }
+  table{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+  thead th{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: left;
+    color: #55594F;
+    background-color: #EEF0E9;
+    padding: 14px 16px;
+    border-bottom: 1px solid #D8DACC;
+  }
+  tbody th{
+    text-align: left;
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 16px;
+    vertical-align: top;
+    width: 110px;
+    border-bottom: 1px solid #D8DACC;
+    color: #1F6F63;
+  }
+  tbody td{
+    padding: 16px;
+    vertical-align: top;
+    border-bottom: 1px solid #D8DACC;
+    border-left: 1px solid #D8DACC;
+    line-height: 1.55;
+    color: #1C2321;
+  }
+  tbody tr:last-child th,
+  tbody tr:last-child td{
+    border-bottom: none;
+  }
+
+  .badge{
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+  }
+  .badge.covered{ background-color: #DCEAE5; color: #1F6F63; }
+  .badge.planned{ background-color: #F3E4CE; color: #B8742A; }
+  .badge.skip{ background-color: #F1DDD8; color: #A14C43; }
+
+  .cell-empty{
+    color: #55594F;
+    opacity: 0.5;
+  }
+
+  .closing{
+    margin-top: 48px;
+    padding-top: 28px;
+    border-top: 1px solid #D8DACC;
+  }
+
+  .closing p:last-child{
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 1.2rem;
+    color: #1F6F63;
+    margin-top: 24px;
+  }
+
+  @media (max-width: 560px){
+    h1{ font-size: 2rem; }
+    .journey{ padding: 18px 8px; }
+    .stop-label{ font-size: 0.52rem; }
+    tbody th{ width: 90px; font-size: 0.9rem; }
+  }
+
+  @media print{
+    body{ background: #EEF0E9; }
+    .journey, .matrix-wrap{ break-inside: avoid; }
+    h2{ break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="eyebrow">GenAI Cross-Skilling Program: Demo Review</div>
+  <h1>What Our Demo Actually Taught Us</h1>
+  <div class="byline">
+    <span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span>
+    Three of us, one CLI, five themes, demoed last week
+  </div>
+
+  <div class="journey">
+    <div class="stop"><div class="ring"></div><div class="stop-label">Discovery</div></div>
+    <div class="stop"><div class="ring half"></div><div class="stop-label">Build</div></div>
+    <div class="stop"><div class="ring half"></div><div class="stop-label">Harden</div></div>
+    <div class="stop"><div class="ring half"></div><div class="stop-label">Operate</div></div>
+    <div class="stop"><div class="ring"></div><div class="stop-label">Reflect</div></div>
+  </div>
+
+  <p>Last week, the three of us presented our GenAI cross-skilling project, a local CLI tool that matches consultants to demand. The whole idea was simple: the LLM should never be the one making the final call. We walked the room through the five themes above: Discovery, Build, Harden, Operate, Reflect, and then came the questions. Good, direct questions that made us look closely at what's actually finished and what isn't.</p>
+
+  <p>Here's what we took away from it.</p>
+
+  <h2>What we got right</h2>
+  <p>From the start, we believed one thing strongly: if you let an LLM decide the actual rank of a candidate, you lose the ability to explain or trust the system. So we built it the other way. Scoring and ranking happen in plain Python. The LLM is only used for extraction and explanation, never for the decision itself.</p>
+  <p>The demo proved this was the right call. Someone asked, "What if a totally unrelated skill like 'plumber' gets added, will it wrongly match a Python role?" The answer is no. Skill matching goes through a strict process: exact match, then adjacency, then vector similarity above a fixed threshold, then a fallback for new joiners, and if nothing matches, it scores zero. There's no LLM anywhere in that path. A random skill fails every step and scores zero. That's not something we're hoping is true, it's right there in <code>scoring/dimensions.py</code>.</p>
+  <p>Same with prompt injection. We had system-level rules, clear markers around any untrusted text, and a test that checks classic injection attempts don't change the output. Because ranking is completely separate from the LLM, even if someone did manage an injection, it still can't move a candidate up the list. That's the part we felt most confident explaining in the room.</p>
+
+  <h2>The gap we already knew about</h2>
+  <p>Before writing any code, we sat down with the actual sourcing team. One thing came up again and again: there's no proper way to record feedback on consultants. It's scattered in notes, half-written, or missing entirely, and yet it's one of the strongest signals for whether someone is a good fit for a role.</p>
+  <p>So feedback became a core input to our system, and we gave it the second-highest weight in scoring, right after skill match. We even built a way to pull structured signals out of messy, free-text feedback.</p>
+  <p>But the demo made one thing very clear: we've only solved half of this. We're good at reading and using feedback. We still haven't built an easy way for people to actually write it down. And we have no way to check whether a recommended candidate was actually placed and how it worked out. So the system can't learn from its own past recommendations yet. We built the part that consumes feedback, not the part that closes the loop. That's now the top item on our list, and it ties straight back to the exact problem the sourcing team told us about at the start.</p>
+
+  <h2>The full picture, theme by theme</h2>
+  <p>Some things we've built. Some we talked about and planned for, but haven't built yet, they're sitting in our backlog on purpose. And a couple of things we chose not to cover at all for this stage. Here's all three, side by side:</p>
+
+  <div class="matrix-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Theme</th>
+          <th>Built &amp; working</th>
+          <th>Considered, not built yet</th>
+          <th>Not covered (by choice)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Discovery</th>
+          <td><span class="badge covered">Covered</span><br>Talked directly to the sourcing team, found the real gap: feedback isn't captured well</td>
+          <td class="cell-empty">-</td>
+          <td class="cell-empty">-</td>
+        </tr>
+        <tr>
+          <th>Build</th>
+          <td><span class="badge covered">Covered</span><br>Easy model switching, cost tracking, CI checks before every change</td>
+          <td><span class="badge planned">Planned</span><br>Auto-tuning prompts per model (a DSPy compile step). We use the framework, but never ran this</td>
+          <td><span class="badge skip">Skipped</span><br>Hosting or deployment. It's a local tool by choice, not a live service</td>
+        </tr>
+        <tr>
+          <th>Harden</th>
+          <td><span class="badge covered">Covered</span><br>Prompt injection checks, PII scrubbing, structured logs, runs that can be replayed and now auto-archived with a retention policy</td>
+          <td><span class="badge planned">Planned</span><br>A separate model to double-check LLM output</td>
+          <td class="cell-empty">-</td>
+        </tr>
+        <tr>
+          <th>Operate</th>
+          <td><span class="badge covered">Covered</span><br>Feedback is used well once it exists, and gets real weight in scoring</td>
+          <td><span class="badge planned">Planned</span><br>An easy way for people to write feedback down, and a way to check if a placement actually worked out</td>
+          <td><span class="badge skip">Skipped</span><br>Staged or gradual rollout, not needed yet at this stage</td>
+        </tr>
+        <tr>
+          <th>Reflect</th>
+          <td><span class="badge covered">Covered</span><br>Very clear on where we use the LLM and where we don't, and why</td>
+          <td class="cell-empty">-</td>
+          <td class="cell-empty">-</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Two themes are fully wrapped up. The other three all have a real, working core, plus a short, specific list of what's next. A specific list beats a vague "it's ongoing" any day.</p>
+
+  <div class="closing">
+    <h2 style="border-top:none;margin-top:0;padding-top:0;">Our takeaways</h2>
+    <p>The most useful part of this whole exercise wasn't the parts that went smoothly. It was having to answer direct questions in front of people who hadn't seen a single line of our code. It forced us to separate what we actually built from what we assumed we'd built. Talking to the sourcing team early gave us the right problem to chase. The demo told us how much of it we'd actually solved.</p>
+    <p>Turns out, about half.</p>
+  </div>
+
+</div>
+</body>
+</html>

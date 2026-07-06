@@ -12,6 +12,8 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 
 import asyncio
 import hashlib
+import json
+import logging
 import resource
 import uuid
 from datetime import date
@@ -46,6 +48,11 @@ from matcher.pipeline.ingestion_report import build as build_ingestion_report
 from matcher.pipeline.match import match_role
 from matcher.pipeline.normalise import canonicalise_locations, dedup_by_email, scrub_pii
 from matcher.pipeline.reconcile import reconcile_external_people
+from matcher.pipeline.relevance import (
+    RelevanceVerdict,
+    check_domain_plausibility,
+    check_skill_evidence,
+)
 from matcher.pipeline.store import (
     hash_consultant_sources,
     load_store,
@@ -76,6 +83,12 @@ def _raise_fd_limit() -> None:
 
 
 _raise_fd_limit()
+
+# ingest.py logs routine per-file data-quality notices ("no workbook match",
+# "orphan feedback file") at WARNING via the stdlib logger; those already
+# surface in the ingestion report, so keep them out of the console by
+# default — real errors still propagate at ERROR and above.
+logging.getLogger("matcher.pipeline.ingest").setLevel(logging.ERROR)
 
 app = typer.Typer(name="dsm", help="Demand-Supply Matcher CLI")
 
@@ -130,6 +143,17 @@ def _describe_parsed_role(role: Role) -> str:
         parts.append(f"exclude_supply_states={role.exclude_supply_states}")
     parts.append(f"start_date={role.start_date}")
     return " | ".join(parts)
+
+
+def _print_rejection(verdict: RelevanceVerdict, query: str, output_json: bool) -> None:
+    if output_json:
+        typer.echo(json.dumps({"status": "rejected", "reason": verdict.reason, "query": query}))
+    else:
+        typer.echo("No match run — this doesn't look like a staffing request.")
+        typer.echo(f"  reason: {verdict.reason}")
+        typer.echo(
+            '  try rephrasing with a real skill or role, e.g. "Python engineer, available ASAP"'
+        )
 
 
 @app.command()
@@ -205,8 +229,14 @@ def match(
         if ambiguities:
             for amb in ambiguities:
                 typer.echo(f"  warning: {amb}", err=True)
-            if not yes:
-                typer.confirm("Proceed with these defaults?", abort=True)
+
+        plausibility = check_domain_plausibility(free_text, role, lm=query_lm)
+        if plausibility is not None and not plausibility.in_domain:
+            _print_rejection(plausibility, free_text, output_json)
+            return
+
+        if ambiguities and not yes:
+            typer.confirm("Proceed with these defaults?", abort=True)
         resolved_role_id = "FREE-TEXT"
     else:
         _found = next((r for r in roles if r.id == role_id), None)
@@ -262,6 +292,22 @@ def match(
         from sentence_transformers import SentenceTransformer
 
         embedding_model = SentenceTransformer(config.embedding_model)
+
+    if free_text is not None:
+        verdict = check_skill_evidence(
+            role,
+            consultants,
+            roles,
+            adjacency_map,
+            config.scoring_config,
+            index_client=index_client,
+            embedding_model=embedding_model,
+            lm=query_lm,
+            query_text=free_text,
+        )
+        if verdict is not None and not verdict.in_domain:
+            _print_rejection(verdict, free_text, output_json)
+            return
 
     with stage_timer("match", _telemetry.current_telemetry):
         ranked, gaps = match_role(
