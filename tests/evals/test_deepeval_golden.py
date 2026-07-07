@@ -12,9 +12,7 @@ import pytest
 import yaml
 
 GOLDEN_PATH = Path("evals/golden/roles.yaml")
-_FIXTURE_WORKBOOK = Path("evals/fixtures/eval_data.xlsx")
-_REAL_WORKBOOK = Path("data/demand-supply.xlsx")
-WORKBOOK_PATH = _REAL_WORKBOOK if _REAL_WORKBOOK.exists() else _FIXTURE_WORKBOOK
+WORKBOOK_PATH = Path("evals/fixtures/eval_data.xlsx")
 
 
 def _entries() -> list[dict]:  # type: ignore[type-arg]
@@ -35,12 +33,7 @@ def test_eval_pass_rate(golden_entries: list[dict]) -> None:  # type: ignore[typ
     pytest.importorskip("deepeval")
 
     from matcher.config import AppConfig, load_adjacency
-    from matcher.pipeline.ingest import (
-        ingest_consultants,
-        ingest_consultants_from_workbook,
-        ingest_feedback,
-        ingest_roles,
-    )
+    from matcher.pipeline.ingest import ingest_consultants_from_workbook, ingest_roles
     from matcher.pipeline.match import match_role
     from matcher.pipeline.normalise import canonicalise_locations, dedup_by_email, scrub_pii
     from matcher.scoring.confidence import attach_confidence_levels
@@ -49,14 +42,8 @@ def test_eval_pass_rate(golden_entries: list[dict]) -> None:  # type: ignore[typ
     config = AppConfig.from_yaml(Path("config/default.yaml"))
     adjacency_map = load_adjacency(Path("config/skill_adjacency.yaml"))
 
-    workbook = WORKBOOK_PATH
-    roles = ingest_roles(workbook)
-    consultants = ingest_consultants_from_workbook(workbook)
-    if workbook != config.data_dir / "demand-supply.xlsx":
-        pass  # fixture workbook has no PDF profiles or feedback files
-    else:
-        consultants = ingest_consultants(config.data_dir / "profiles", consultants)
-        consultants = ingest_feedback(config.data_dir / "project_feedback", consultants)
+    roles = ingest_roles(WORKBOOK_PATH)
+    consultants = ingest_consultants_from_workbook(WORKBOOK_PATH)
     consultants = canonicalise_locations(consultants)
     consultants = dedup_by_email(consultants)
     consultants = scrub_pii(consultants)
@@ -81,6 +68,9 @@ def test_eval_pass_rate(golden_entries: list[dict]) -> None:  # type: ignore[typ
         if kind == "unfillable":
             if not ranked:
                 passed += 1
+        elif kind == "gap":
+            if ranked and all("skill_gap" in c.info_flags for c in ranked):
+                passed += 1
         elif kind == "negative":
             top_emails = {c.consultant_email for c in ranked}
             if not any(e in top_emails for e in expected_emails):
@@ -103,3 +93,39 @@ def test_eval_pass_rate(golden_entries: list[dict]) -> None:  # type: ignore[typ
     assert pass_rate <= 0.85, (
         f"Pass rate {pass_rate:.2f} above 0.85 — suite not discriminating, add negatives"
     )
+
+
+def test_relevance_gate_rejects_implausible_query(golden_entries: list[dict]) -> None:  # type: ignore[type-arg]
+    # The pass-rate loop above only exercises match_role, never the query-relevance
+    # gate (pipeline/relevance.py) that's supposed to catch out-of-domain requests
+    # before ranking (see docs/what-the-demo-taught-us.html). This closes that gap
+    # against the real fixture vocabulary/consultants, not synthetic unit fixtures.
+    from matcher.config import AppConfig, load_adjacency
+    from matcher.models.role import RequiredSkill, Role
+    from matcher.pipeline.ingest import ingest_consultants_from_workbook, ingest_roles
+    from matcher.pipeline.relevance import check_skill_evidence
+
+    config = AppConfig.from_yaml(Path("config/default.yaml"))
+    adjacency_map = load_adjacency(Path("config/skill_adjacency.yaml"))
+    roles = ingest_roles(WORKBOOK_PATH)
+    consultants = ingest_consultants_from_workbook(WORKBOOK_PATH)
+
+    nonsense_role = Role(
+        id="EVAL-NONSENSE",
+        title="Query",
+        required_skills=[RequiredSkill(name="Underwater Basket Weaving")],
+    )
+    verdict = check_skill_evidence(
+        nonsense_role, consultants, roles, adjacency_map, config.scoring_config, lm=None
+    )
+    assert verdict is not None
+    assert verdict.in_domain is False
+
+    # Sanity check the other side of the gate: a real-but-unsupplied skill (COBOL,
+    # EVAL-04) must NOT be rejected here — it's a supply gap, not an out-of-domain
+    # query, and should fall through to normal ranking flagged skill_gap instead.
+    unsupplied_role = next(r for r in roles if r.id == "EVAL-04")
+    verdict = check_skill_evidence(
+        unsupplied_role, consultants, roles, adjacency_map, config.scoring_config, lm=None
+    )
+    assert verdict is None or verdict.in_domain is True

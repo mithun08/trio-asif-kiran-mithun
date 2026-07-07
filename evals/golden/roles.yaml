@@ -19,17 +19,14 @@ entries:
 
   - role_id: "EVAL-02"
     kind: negative
-    description: "Java role — Python-Data candidate with no Java skills must NOT appear in top 3"
+    description: "Java role — Python-only candidate with zero Java overlap should NOT rank in top 3. KNOWN FAILING: ties at skill_match=0 currently break by workbook insertion order, not a principled signal (FR-36 'fewest gaps + bridgeability' ranking is not yet implemented); tracked here deliberately rather than hidden. Fix ranker tie-break to resolve."
     expected_top_emails:
-      - "highfeedback.test@example.com"
+      - "python.only@example.com"
 
   - role_id: "EVAL-03"
-    kind: negative
-    description: "C++ role — Python-only consultant with no C++ skills must NOT rank above Java candidate"
-    expected_top_emails:
-      - "alice.test@example.com"
+    kind: gap
+    description: "C++ role — no consultant has C++/Embedded Systems; candidates must still surface (FR-36) but flagged skill_gap, not silently ranked as if qualified"
 
   - role_id: "EVAL-04"
-    kind: unfillable
-    description: "COBOL mainframe role — no consultant has these skills; ranked list must be empty"
-    expected_top_emails: []
+    kind: gap
+    description: "COBOL mainframe role — no consultant has these skills; a real-but-unsupplied skill must surface ranked candidates flagged skill_gap, not an empty result (FR-36)"
