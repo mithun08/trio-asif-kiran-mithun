@@ -89,7 +89,20 @@ observability:
   snapshot_retention: 50
 
 ocr:
-  enabled: true
+  # Disabled: on Streamlit Community Cloud, docling's primary (non-OCR) text
+  # extraction comes back empty for every profile (unclear why — network/model
+  # download difference in that container), which pushes every file into the OCR
+  # fallback; that fallback then can't find a usable OCR engine even with the
+  # libgl1 apt package installed (packages.txt), and something downstream tries
+  # to self-provision one via a `uv` subprocess call that fails (no venv write
+  # access at serving time), stalling ingest entirely. The synthetic demo profiles
+  # are digitally-generated PDFs that never actually need OCR — confirmed 0 of 50
+  # fall under text_floor_chars when primary extraction works (i.e. locally) — so
+  # disabling this fallback has no data-quality impact here. Re-enable if real
+  # scanned/image-only profiles are ever added and someone can debug the Cloud
+  # container's OCR engine directly. tests/unit/test_scanned_pdf.py constructs
+  # its own OCRConfig(enabled=True, ...) directly, so this default doesn't affect it.
+  enabled: false
   text_floor_chars: 50
   confidence_floor: 0.6
 
