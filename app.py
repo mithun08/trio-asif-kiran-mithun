@@ -6,6 +6,9 @@ os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 
 import logging
+import subprocess
+import sys
+import traceback
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +30,39 @@ from matcher.pipeline.orchestrate import (
 )
 from matcher.pipeline.relevance import RelevanceVerdict
 from matcher.scoring.ranker import band
+
+# --- TEMPORARY DIAGNOSTIC: trace whatever is invoking `uv` as a subprocess ---
+# Remove once the caller is identified. Patches subprocess.Popen (the primitive
+# subprocess.run/call/check_output/os.popen all build on) and os.system, and
+# prints a full stack trace to stderr the moment a command containing "uv" runs.
+_orig_popen_init = subprocess.Popen.__init__
+
+
+def _traced_popen_init(self, args, *a, **kw):  # type: ignore[no-untyped-def]
+    try:
+        cmd_str = args if isinstance(args, str) else " ".join(str(x) for x in args)
+    except Exception:
+        cmd_str = repr(args)
+    if "uv" in cmd_str.lower():
+        print(f"\n[SUBPROCESS TRACE] Popen: {cmd_str}", file=sys.stderr)
+        traceback.print_stack(file=sys.stderr)
+    return _orig_popen_init(self, args, *a, **kw)
+
+
+subprocess.Popen.__init__ = _traced_popen_init  # type: ignore[method-assign]
+
+_orig_system = os.system
+
+
+def _traced_system(command: str) -> int:
+    if "uv" in command.lower():
+        print(f"\n[SUBPROCESS TRACE] os.system: {command}", file=sys.stderr)
+        traceback.print_stack(file=sys.stderr)
+    return _orig_system(command)
+
+
+os.system = _traced_system  # type: ignore[assignment]
+# --- END TEMPORARY DIAGNOSTIC ---
 
 # Streamlit Community Cloud's dashboard secrets populate st.secrets only — they are
 # never synced into os.environ. AppConfig (pydantic-settings) reads DSM_* purely from
