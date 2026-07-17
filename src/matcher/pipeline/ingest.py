@@ -201,15 +201,27 @@ def _derive_name_from_pdf_stem(stem: str) -> str:
     return " ".join(part.capitalize() for part in parts if part)
 
 
+def _make_pdf_converter(do_ocr: bool) -> Any:
+    from docling.datamodel.base_models import InputFormat
+    from docling.datamodel.pipeline_options import PdfPipelineOptions
+    from docling.document_converter import DocumentConverter, PdfFormatOption
+
+    pipeline_options = PdfPipelineOptions(do_ocr=do_ocr)
+    return DocumentConverter(
+        format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)}
+    )
+
+
 def _extract_pdf_text(
     pdf_path: Path, ocr_config: OCRConfig | None = None
 ) -> tuple[str, list[str], float]:
-    from docling.document_converter import DocumentConverter
-
     _ocr = ocr_config if ocr_config is not None else OCRConfig()
 
     try:
-        converter = DocumentConverter()
+        # do_ocr=False here: this is the programmatic text-layer pass — docling's
+        # default pipeline has do_ocr=True and probes for an OCR engine on every
+        # file regardless of need, which is what the actual OCR attempt below is for.
+        converter = _make_pdf_converter(do_ocr=False)
         result = converter.convert(str(pdf_path))
         raw_text = result.document.export_to_text()
     except Exception:
@@ -218,9 +230,7 @@ def _extract_pdf_text(
     if len(raw_text) < _ocr.text_floor_chars:
         if _ocr.enabled:
             try:
-                from docling.document_converter import DocumentConverter as _DC
-
-                ocr_converter = _DC()
+                ocr_converter = _make_pdf_converter(do_ocr=True)
                 ocr_result = ocr_converter.convert(str(pdf_path))
                 ocr_text = ocr_result.document.export_to_text()
                 if ocr_text.strip():
