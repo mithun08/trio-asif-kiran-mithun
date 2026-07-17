@@ -22,6 +22,7 @@ dependencies = [
     "spacy>=3.7",
     "structlog>=24.0",
     "dateparser>=1.4.1",
+    "streamlit>=1.38",
 ]
 
 [project.scripts]

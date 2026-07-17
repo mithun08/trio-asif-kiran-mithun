@@ -143,6 +143,21 @@ dsm ingest --no-llm
 dsm match ROLE-01 --no-llm
 ```
 
+## Streamlit UI
+
+A chat-based UI (`app.py`) sits directly on top of `src/matcher` — no separate HTTP layer, same
+pipeline functions the CLI uses via `matcher.pipeline.orchestrate`.
+
+```bash
+uv run streamlit run app.py
+```
+
+Sidebar filters mirror the CLI flags: `--no-llm`, top-N, and hard-filter toggles for
+availability/location. The chat input routes free-text queries through the same
+`free_text_role.parse()` + match path as `dsm match --free-text`. See
+`docs/UI_DEPLOYMENT_PLAN.md` for the design decisions and `docs/DEPLOYMENT.md` for deploying to
+Streamlit Community Cloud.
+
 ## Development
 
 ```bash
@@ -239,6 +254,7 @@ The eval job runs deterministic scoring only (no API key required). Pass rate mu
 ## Project Structure
 
 ```
+app.py                   # Streamlit chat UI — thin layer on matcher.pipeline.orchestrate
 src/matcher/
   cli.py                # Typer CLI (dsm ingest, dsm match)
   config.py             # Pydantic settings + YAML loader (AppConfig)
@@ -254,6 +270,7 @@ src/matcher/
     match.py            # hard filters → score → rank
     explain.py          # LLM explanation generation
     gap.py              # gap analysis when no candidates pass filters
+    orchestrate.py      # shared ingest/match orchestration — used by both cli.py and app.py
   scoring/
     dimensions.py       # 6 scoring functions + 3-tier _best_credit + exclude-skill penalty
     filters.py          # hard filters (availability, location, exclude_locations/supply_states)
@@ -293,6 +310,8 @@ evals/
   fixtures/eval_data.xlsx   # synthetic workbook for CI eval (no real data)
 scripts/
   generate_eval_fixtures.py # regenerates evals/fixtures/eval_data.xlsx
+deploy_data/                # synthetic data/ copy, committed for Streamlit Cloud cold start
+                             # (data/ itself stays gitignored — see docs/DEPLOYMENT.md)
 ```
 
 ## Specifications

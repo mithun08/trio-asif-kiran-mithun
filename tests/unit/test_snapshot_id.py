@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from matcher.cli import _compute_snapshot_id
+from matcher.pipeline.orchestrate import _compute_snapshot_id
 
 
 def test_deterministic(tmp_path: Path) -> None:
