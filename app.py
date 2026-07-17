@@ -28,9 +28,32 @@ from matcher.pipeline.orchestrate import (
 from matcher.pipeline.relevance import RelevanceVerdict
 from matcher.scoring.ranker import band
 
+# Streamlit Community Cloud's dashboard secrets populate st.secrets only — they are
+# never synced into os.environ. AppConfig (pydantic-settings) reads DSM_* purely from
+# the environment/.env, so mirror any secrets across before the first AppConfig build.
+_secrets_error: str | None = None
+_synced_keys: list[str] = []
+try:
+    for _key, _value in st.secrets.items():
+        if isinstance(_value, str | int | float | bool):
+            os.environ.setdefault(_key, str(_value))
+            _synced_keys.append(_key)
+except Exception as _exc:
+    _secrets_error = repr(_exc)
+
 logging.getLogger("matcher.pipeline.ingest").setLevel(logging.ERROR)
 
 st.set_page_config(page_title="Demand-Supply Matcher", page_icon="🧭", layout="wide")
+
+with st.sidebar.expander("🔧 Debug: secrets/env (remove once resolved)"):
+    st.write("secrets sync error:", _secrets_error or "none")
+    st.write("keys synced from st.secrets:", _synced_keys or "none")
+    try:
+        st.write("st.secrets top-level keys:", list(st.secrets.keys()))
+    except Exception as _exc:
+        st.write("st.secrets access error:", repr(_exc))
+    st.write("DSM_OPENROUTER_API_KEY in os.environ:", "DSM_OPENROUTER_API_KEY" in os.environ)
+    st.write("DSM_DATA_DIR:", os.environ.get("DSM_DATA_DIR", "<not set>"))
 
 
 @st.cache_resource(show_spinner=False)

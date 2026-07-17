@@ -17,6 +17,7 @@ env/
 .env
 .env.*
 !.env.example
+.streamlit/secrets.toml
 
 # Data files — never commit source data
 data/*
