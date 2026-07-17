@@ -140,22 +140,57 @@ def _render_rejection(verdict: RelevanceVerdict) -> None:
     st.caption('try rephrasing with a real skill or role, e.g. "Python engineer, available ASAP"')
 
 
+def _render_assistant_content(turn: dict[str, Any]) -> None:
+    kind = turn["kind"]
+    if kind == "error":
+        st.error(turn["text"])
+    elif kind == "rejected":
+        _render_rejection(turn["verdict"])
+    elif kind == "match":
+        if turn.get("interpreted"):
+            st.caption(f"interpreted as: {turn['interpreted']}")
+        for amb in turn.get("ambiguities", []):
+            st.caption(f"warning: {amb}")
+        _render_match(turn["output"], turn["filtered_out"], turn["scoring_config"])
+
+
 def _render_turn(turn: dict[str, Any]) -> None:
     with st.chat_message(turn["role"]):
         if turn["role"] == "user":
             st.markdown(turn["text"])
-            return
-        kind = turn["kind"]
-        if kind == "error":
-            st.error(turn["text"])
-        elif kind == "rejected":
-            _render_rejection(turn["verdict"])
-        elif kind == "match":
-            if turn.get("interpreted"):
-                st.caption(f"interpreted as: {turn['interpreted']}")
-            for amb in turn.get("ambiguities", []):
-                st.caption(f"warning: {amb}")
-            _render_match(turn["output"], turn["filtered_out"], turn["scoring_config"])
+        else:
+            _render_assistant_content(turn)
+
+
+def _compute_turn(
+    ctx: MatchContext, *, role_id: str | None, free_text: str | None, **run_kwargs: Any
+) -> dict[str, Any]:
+    try:
+        role, resolved_role_id, ambiguities, verdict = resolve_role(ctx, role_id, free_text)
+    except RoleNotFoundError as exc:
+        return {"role": "assistant", "kind": "error", "text": str(exc)}
+
+    if verdict is not None:
+        return {"role": "assistant", "kind": "rejected", "verdict": verdict}
+
+    try:
+        result = run_match(ctx, role, resolved_role_id, free_text_query=free_text, **run_kwargs)
+    except RuntimeError as exc:
+        return {"role": "assistant", "kind": "error", "text": str(exc)}
+
+    if isinstance(result, RelevanceVerdict):
+        return {"role": "assistant", "kind": "rejected", "verdict": result}
+
+    output, filtered_out = result
+    return {
+        "role": "assistant",
+        "kind": "match",
+        "output": output,
+        "filtered_out": filtered_out,
+        "ambiguities": ambiguities,
+        "interpreted": describe_parsed_role(role) if free_text is not None else None,
+        "scoring_config": ctx.config.scoring_config,
+    }
 
 
 def _submit_query(
@@ -165,49 +200,11 @@ def _submit_query(
     st.session_state.history.append({"role": "user", "text": label})
     _render_turn(st.session_state.history[-1])
 
-    turn: dict[str, Any]
-    try:
-        role, resolved_role_id, ambiguities, verdict = resolve_role(ctx, role_id, free_text)
-    except RoleNotFoundError as exc:
-        turn = {"role": "assistant", "kind": "error", "text": str(exc)}
+    with st.chat_message("assistant"):
+        with st.spinner("Matching consultants..."):
+            turn = _compute_turn(ctx, role_id=role_id, free_text=free_text, **run_kwargs)
         st.session_state.history.append(turn)
-        _render_turn(turn)
-        return
-
-    if verdict is not None:
-        turn = {"role": "assistant", "kind": "rejected", "verdict": verdict}
-        st.session_state.history.append(turn)
-        _render_turn(turn)
-        return
-
-    try:
-        result = run_match(
-            ctx, role, resolved_role_id, free_text_query=free_text, **run_kwargs
-        )
-    except RuntimeError as exc:
-        turn = {"role": "assistant", "kind": "error", "text": str(exc)}
-        st.session_state.history.append(turn)
-        _render_turn(turn)
-        return
-
-    if isinstance(result, RelevanceVerdict):
-        turn = {"role": "assistant", "kind": "rejected", "verdict": result}
-        st.session_state.history.append(turn)
-        _render_turn(turn)
-        return
-
-    output, filtered_out = result
-    turn = {
-        "role": "assistant",
-        "kind": "match",
-        "output": output,
-        "filtered_out": filtered_out,
-        "ambiguities": ambiguities,
-        "interpreted": describe_parsed_role(role) if free_text is not None else None,
-        "scoring_config": ctx.config.scoring_config,
-    }
-    st.session_state.history.append(turn)
-    _render_turn(turn)
+        _render_assistant_content(turn)
 
 
 st.title("Demand-Supply Matcher")
